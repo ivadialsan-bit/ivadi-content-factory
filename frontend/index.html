@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f1419;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #6366f1;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #2a3142;
+        }
+        
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #6366f1;
+        }
+        
+        .stat {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #4f46e5;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Factory Dashboard</h1>
+            <p class="subtitle">VK Content Factory Management</p>
+        </header>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>API Status</h2>
+                <div id="api-status" class="status offline">Checking...</div>
+                <div class="stat-label">Backend Connection</div>
+            </div>
+            
+            <div class="card">
+                <h2>Total Posts</h2>
+                <div class="stat" id="total-posts">0</div>
+                <div class="stat-label">Published this month</div>
+            </div>
+            
+            <div class="card">
+                <h2>Total Accounts</h2>
+                <div class="stat" id="total-accounts">0</div>
+                <div class="stat-label">Connected communities</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Quick Actions</h2>
+            <div class="button-group">
+                <button onclick="generatePost()">Generate Post</button>
+                <button onclick="fetchAccounts()">Load Accounts</button>
+                <button onclick="fetchPosts()">Load Posts</button>
+                <button onclick="fetchPatterns()">Load Patterns</button>
+            </div>
+        </div>
+        
+        <div id="error-container"></div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h2>Response</h2>
+            <pre id="response" style="background: #0f1419; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;"></pre>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://147.45.97.143:8000';
+        
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    document.getElementById('api-status').className = 'status online';
+                    document.getElementById('api-status').textContent = 'Online';
+                } else {
+                    document.getElementById('api-status').textContent = 'Error';
+                }
+            } catch (e) {
+                document.getElementById('api-status').textContent = 'Offline';
+            }
+        }
+        
+        async function fetchAccounts() {
+            try {
+                clearError();
+                const response = await fetch(`${API_URL}/api/accounts`);
+                const data = await response.json();
+                document.getElementById('total-accounts').textContent = data.length;
+                document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                showError(`Error fetching accounts: ${e.message}`);
+            }
+        }
+        
+        async function fetchPosts() {
+            try {
+                clearError();
+                const response = await fetch(`${API_URL}/api/posts`);
+                const data = await response.json();
+                document.getElementById('total-posts').textContent = data.length;
+                document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                showError(`Error fetching posts: ${e.message}`);
+            }
+        }
+        
+        async function fetchPatterns() {
+            try {
+                clearError();
+                const response = await fetch(`${API_URL}/api/patterns`);
+                const data = await response.json();
+                document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                showError(`Error fetching patterns: ${e.message}`);
+            }
+        }
+        
+        async function generatePost() {
+            showError('Generate Post feature coming soon!');
+        }
+        
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+        
+        function clearError() {
+            document.getElementById('error-container').innerHTML = '';
+        }
+        
+        // Check API status on load
+        window.addEventListener('load', checkApiStatus);
+    </script>
+</body>
+</html>

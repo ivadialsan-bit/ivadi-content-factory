@@ -1,0 +1,71 @@
+[
+  {
+    "datetime": "2026-06-09T11:33:53.536937",
+    "type": "checklist",
+    "topic": "Аптечка в дорогу — что реально пригодится",
+    "length": 1549,
+    "success": false
+  },
+  {
+    "datetime": "2026-06-09T11:34:23.268876",
+    "type": "checklist",
+    "topic": "Как подготовить квартиру перед отъездом",
+    "length": 1452,
+    "success": false
+  },
+  {
+    "datetime": "2026-06-09T11:37:01.321911",
+    "type": "checklist",
+    "topic": "Как подготовить квартиру перед отъездом",
+    "length": 1615,
+    "success": true
+  },
+  {
+    "datetime": "2026-06-09T11:52:18.006320",
+    "type": "lifehack",
+    "topic": "",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-09T12:19:56.804844",
+    "type": "lifehack",
+    "topic": "",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-09T12:35:27.950167",
+    "type": "checklist",
+    "topic": "",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-09T13:00:41.410197",
+    "type": "comparison",
+    "topic": "Июнь или сентябрь — когда лучше ехать в Турцию",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-09T19:00:46.693880",
+    "type": "offer",
+    "topic": "Горящие туры недели — что улетает прямо сейчас",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-10T13:00:48.049033",
+    "type": "story",
+    "topic": "",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-10T18:30:12.142568",
+    "type": "honest",
+    "topic": "",
+    "success": true
+  },
+  {
+    "datetime": "2026-06-10T19:00:13.810367",
+    "type": "offer",
+    "topic": "Абхазия — бюджетный отдых у моря этим летом",
+    "success": true
+  }
+]

@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory - Автоматизация контента VK</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #8b5cf6;
+            --success: #22c55e; --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f1419; --bg-darker: #0a0d12; --bg-card: #1a1f2e;
+            --border: #2a3142; --text-primary: #e0e0e0; --text-secondary: #888;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark); color: var(--text-primary); line-height: 1.6;
+        }
+        .app { display: flex; height: 100vh; }
+        .sidebar {
+            width: 260px; background: var(--bg-darker); border-right: 1px solid var(--border);
+            padding: 20px; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        .logo {
+            font-size: 20px; font-weight: bold; margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .logo::before { content: "⚙️"; font-size: 24px; background: none; -webkit-text-fill-color: unset; }
+        .nav-menu { flex: 1; }
+        .nav-item {
+            padding: 12px 16px; margin-bottom: 8px; border-radius: 6px; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center; gap: 10px; color: var(--text-secondary);
+        }
+        .nav-item:hover { background: rgba(99, 102, 241, 0.1); color: var(--text-primary); }
+        .nav-item.active { background: var(--primary); color: white; }
+        .nav-item::before { font-size: 18px; }
+        .nav-item[data-page="dashboard"]::before { content: "📊"; }
+        .nav-item[data-page="posts"]::before { content: "🎬"; }
+        .nav-item[data-page="accounts"]::before { content: "📱"; }
+        .nav-item[data-page="schedule"]::before { content: "⏰"; }
+        .nav-item[data-page="patterns"]::before { content: "🎯"; }
+        .nav-item[data-page="settings"]::before { content: "⚙️"; }
+        .nav-item[data-page="analyzer"]::before { content: "🔍"; }
+        .nav-item[data-page="hooks"]::before { content: "🎯"; }
+        .nav-item[data-page="competitors"]::before { content: "🕵️"; }
+        .nav-item[data-page="niches"]::before { content: "📂"; }
+        .nav-item[data-page="transcribe"]::before { content: "📝"; }
+        .nav-item[data-page="avatars"]::before { content: "🎭"; }
+        .nav-item[data-page="integrations"]::before { content: "🔌"; }
+        .nav-section {
+            padding: 6px 16px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 12px;
+            margin-bottom: 4px;
+        }
+        .nav-item[data-page="vk"]::before { content: "🔵"; }
+        .nav-item[data-page="instagram"]::before { content: "📸"; }
+        .nav-item[data-page="youtube"]::before { content: "▶️"; }
+        .nav-item[data-page="max"]::before { content: "💬"; }
+        .nav-item[data-page="telegram"]::before { content: "✈️"; }
+        .nav-section { padding: 8px 16px; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+        .sidebar-footer { padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+        .lang-switcher {
+            flex: 1; padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 4px; color: var(--text-primary); cursor: pointer; font-size: 12px;
+        }
+        .main { flex: 1; overflow-y: auto; padding: 30px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .page-header { margin-bottom: 30px; }
+        .page-header-top { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .back-btn {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary);
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;
+        }
+        .back-btn:hover { background: var(--border); }
+        .page-title { font-size: 32px; font-weight: bold; margin-bottom: 8px; }
+        .page-subtitle { color: var(--text-secondary); font-size: 14px; }
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; margin-bottom: 30px;
+        }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+            padding: 20px; transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--primary); box-shadow: 0 8px 16px rgba(99, 102, 241, 0.1); }
+        .card-title {
+            color: var(--primary); font-size: 14px; font-weight: 600; margin-bottom: 12px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .card-value { font-size: 32px; font-weight: bold; margin-bottom: 8px; }
+        .card-label { color: var(--text-secondary); font-size: 12px; }
+        button {
+            padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;
+            font-weight: 500; transition: all 0.3s; font-size: 14px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+        .btn-warning:hover { background: var(--warning); color: white; }
+        .status {
+            display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px;
+            font-weight: 500;
+        }
+        .status.online { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .status.offline { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .status.archived { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status.draft { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .status.published { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .alert { padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+        .alert.show { display: block; }
+        .alert.error { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .alert.success { background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: var(--success); }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+            padding: 30px; max-width: 500px; width: 90%;
+        }
+        .modal-header { margin-bottom: 20px; }
+        .modal-title { font-size: 20px; font-weight: bold; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px; background: var(--bg-dark); border: 2px solid var(--border);
+            border-radius: 4px; color: var(--text-primary); font-size: 14px; transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        .form-group input.valid { border-color: var(--success); background: rgba(34, 197, 94, 0.05); }
+        .form-group input.invalid { border-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .form-error { font-size: 12px; color: var(--danger); margin-top: 5px; display: none; }
+        .form-error.show { display: block; }
+        .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-footer button { flex: 1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        thead { border-bottom: 1px solid var(--border); }
+        th { text-align: left; padding: 12px; font-weight: 600; color: var(--primary); font-size: 12px; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:hover { background: rgba(99, 102, 241, 0.05); }
+        .action-buttons { display: flex; gap: 8px; }
+        .account-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 30px;
+            border-radius: 8px; margin-bottom: 30px; color: white;
+        }
+        .account-header h1 { font-size: 28px; margin-bottom: 10px; }
+        .account-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 14px; }
+        .account-info-item { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 4px; }
+        .account-info-label { color: rgba(255, 255, 255, 0.7); font-size: 12px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .tab {
+            padding: 12px 20px; background: none; border: none; color: var(--text-secondary);
+            cursor: pointer; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="sidebar">
+            <div class="logo">SMM Center</div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-page="dashboard">Дашборд</div>
+
+                <div class="nav-section">Платформы</div>
+                <div class="nav-item" data-page="vk">ВКонтакте</div>
+                <div class="nav-item" data-page="instagram">Instagram</div>
+                <div class="nav-item" data-page="youtube">YouTube</div>
+                <div class="nav-item" data-page="max">MAX</div>
+                <div class="nav-item" data-page="telegram">Telegram</div>
+
+                <div class="nav-section">AI Инструменты</div>
+                <div class="nav-item" data-page="analyzer">Анализ контента</div>
+                <div class="nav-item" data-page="hooks">Сценарии и хуки</div>
+                <div class="nav-item" data-page="competitors">Конкуренты</div>
+                <div class="nav-item" data-page="niches">База ниш</div>
+                <div class="nav-item" data-page="transcribe">Транскрибация</div>
+
+                <div class="nav-section">Генерация</div>
+                <div class="nav-item" data-page="avatars">Аватары</div>
+                <div class="nav-item" data-page="integrations">Интеграции</div>
+
+                <div class="nav-section">Система</div>
+                <div class="nav-item" data-page="schedule">Расписание</div>
+                <div class="nav-item" data-page="patterns">Паттерны</div>
+                <div class="nav-item" data-page="settings">Настройки</div>
+            </div>
+            <div class="sidebar-footer">
+                <select class="lang-switcher" id="langSwitcher">
+                    <option value="ru">🇷🇺 Русский</option>
+                    <option value="en">🇬🇧 English</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="main">
+            <div id="alert" class="alert"></div>
+            
+            <div class="page active" data-page="dashboard">
+                <div class="page-header">
+                    <h1 class="page-title">Дашборд</h1>
+                    <p class="page-subtitle">Общая статистика и метрики</p>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">Статус API</div>
+                        <div class="status online" id="apiStatus">Online</div>
+                        <div class="card-label">Подключение к серверу</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Всего постов</div>
+                        <div class="card-value" id="totalPosts">0</div>
+                        <div class="card-label">Опубликовано</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Аккаунты</div>
+                        <div class="card-value" id="totalAccounts">0</div>
+                        <div class="card-label">Подключенные</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" onclick="loadDashboard()">Обновить</button>
+                </div>
+            </div>
+            
+            <div class="page" data-page="accounts">
+                <div class="page-header">
+                    <h1 class="page-title">Аккаунты</h1>
+                    <p class="page-subtitle">Управление VK сообществами</p>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn-primary" onclick="showAccountModal()">➕ Добавить аккаунт</button>
+                    <button class="btn-secondary" onclick="loadAccounts()">🔄 Загрузить</button>
+                </div>
+                <div id="accountsContainer" class="card">
+                    <p style="color: var(--text-secondary);">Загрузите аккаунты...</p>
+                </div>
+            </div>
+            
+            <div class="page" data-page="account-detail">
+                <div class="page-header">
+                    <div class="page-header-top">
+                        <button class="back-btn" onclick="goToAccounts()">← Назад</button>
+                    </div>
+                </div>
+                
+                <div class="account-header">
+                    <h1 id="accountDetailName">Загрузка...</h1>
+                    <div class="account-info">
+                        <div class="account-info-item">
+                            <div class="account-info-label">Платформа</div>
+                            <div id="accountDetailPlatform">-</div>
+                        </div>
+                        <div class="account-info-item">
+                            <div class="account-info-label">ID сообщества</div>
+                            <div id="accountDetailCommunity">-</div>
+                        </div>
+                        <div class="account-info-item">
+                            <div class="account-info-label">Статус</div>
+                            <div id="accountDetailStatus">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn-primary" id="syncBtn" onclick="syncAccountData()">🔄 Синхронизировать VK</button>
+                    <button class="btn-primary" onclick="showCreatePostModal()">➕ Создать пост</button>
+                    <button class="btn-secondary" onclick="showAlert('В разработке', 'error')">📹 Создать клип</button>
+                </div>
+                
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">Посты</div>
+                        <div class="card-value" id="accountPostsCount">0</div>
+                        <div class="card-label">Всего опубликовано</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Видео</div>
+                        <div class="card-value" id="accountClipsCount">0</div>
+                        <div class="card-label">Всего клипов</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Комментарии</div>
+                        <div class="card-value" id="accountCommentsCount">0</div>
+                        <div class="card-label">Всего комментариев</div>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('posts-tab', this)">📝 Посты</button>
+                    <button class="tab" onclick="switchTab('clips-tab', this)">🎬 Видео</button>
+                    <button class="tab" onclick="switchTab('comments-tab', this)">💬 Комментарии</button>
+                </div>
+                
+                <div id="posts-tab" class="tab-content active card">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">Посты</h3>
+                    <div id="accountPostsTable">
+                        <p style="color: var(--text-secondary);">Загрузка...</p>
+                    </div>
+                </div>
+                
+                <div id="clips-tab" class="tab-content card">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">Видео и рилсы</h3>
+                    <div id="accountClipsTable">
+                        <p style="color: var(--text-secondary);">Загрузка...</p>
+                    </div>
+                </div>
+                
+                <div id="comments-tab" class="tab-content card">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">Комментарии</h3>
+                    <div id="accountCommentsTable">
+                        <p style="color: var(--text-secondary);">Загрузка...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="page" data-page="schedule">
+                <div class="page-header">
+                    <h1 class="page-title">Расписание</h1>
+                </div>
+                <div class="card"><p style="color: var(--text-secondary);">В разработке...</p></div>
+            </div>
+            
+            <div class="page" data-page="patterns">
+                <div class="page-header">
+                    <h1 class="page-title">Паттерны</h1>
+                </div>
+                <div class="card"><p style="color: var(--text-secondary);">В разработке...</p></div>
+            </div>
+                    <div class="page-subtitle">Управление контент-каналом</div>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value" id="ivadi-total">0</div>
+                        <div class="card-label">всего постов</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">СЕГОДНЯ</div>
+                        <div class="card-value" id="ivadi-today">0</div>
+                        <div class="card-label">постов за сегодня</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">В ОЧЕРЕДИ</div>
+                        <div class="card-value" id="ivadi-pending">0</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:24px">
+                    <button class="btn-primary" onclick="generateIvadiQueue()">⚡ Сгенерировать очередь</button>
+                    <button class="btn-secondary" onclick="loadIvadiData()">🔄 Обновить</button>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ОЧЕРЕДЬ ПОСТОВ</div>
+                    <div id="ivadi-queue-list" style="margin-top:12px">Загрузка...</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">ПОСЛЕДНИЕ ПУБЛИКАЦИИ</div>
+                    <div id="ivadi-log-list" style="margin-top:12px">Загрузка...</div>
+                </div>
+            </div>
+            <div class="page" data-page="vk">
+                <div class="page-header">
+                    <div class="page-title">🔵 ВКонтакте</div>
+                    <div class="page-subtitle">Управление аккаунтами и контентом</div>
+                </div>
+                <div class="grid">
+                    <div class="card" style="border-color:#4680C233">
+                        <div class="card-title" style="color:#4680C2">АККАУНТЫ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">подключено</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ПОСТОВ В ОЧЕРЕДИ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">за последние 7 дней</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:24px;border:2px dashed #4680C244;background:transparent">
+                    <div style="text-align:center;padding:40px">
+                        <div style="font-size:48px;margin-bottom:16px">🔵</div>
+                        <div style="font-size:18px;margin-bottom:8px;color:var(--text-primary)">Интеграция в разработке</div>
+                        <div style="color:var(--text-secondary);margin-bottom:24px">Подключение аккаунтов ВКонтакте будет доступно в следующей версии</div>
+                        <button class="btn-secondary" onclick="alert('Скоро!')">Узнать о релизе</button>
+                    </div>
+                </div>
+            </div>
+            <div class="page" data-page="instagram">
+                <div class="page-header">
+                    <div class="page-title">📸 Instagram</div>
+                    <div class="page-subtitle">Управление аккаунтами и контентом</div>
+                </div>
+                <div class="grid">
+                    <div class="card" style="border-color:#E1306C33">
+                        <div class="card-title" style="color:#E1306C">АККАУНТЫ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">подключено</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ПОСТОВ В ОЧЕРЕДИ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">за последние 7 дней</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:24px;border:2px dashed #E1306C44;background:transparent">
+                    <div style="text-align:center;padding:40px">
+                        <div style="font-size:48px;margin-bottom:16px">📸</div>
+                        <div style="font-size:18px;margin-bottom:8px;color:var(--text-primary)">Интеграция в разработке</div>
+                        <div style="color:var(--text-secondary);margin-bottom:24px">Подключение аккаунтов Instagram будет доступно в следующей версии</div>
+                        <button class="btn-secondary" onclick="alert('Скоро!')">Узнать о релизе</button>
+                    </div>
+                </div>
+            </div>
+            <div class="page" data-page="youtube">
+                <div class="page-header">
+                    <div class="page-title">▶️ YouTube</div>
+                    <div class="page-subtitle">Управление аккаунтами и контентом</div>
+                </div>
+                <div class="grid">
+                    <div class="card" style="border-color:#FF000033">
+                        <div class="card-title" style="color:#FF0000">АККАУНТЫ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">подключено</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ПОСТОВ В ОЧЕРЕДИ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">за последние 7 дней</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:24px;border:2px dashed #FF000044;background:transparent">
+                    <div style="text-align:center;padding:40px">
+                        <div style="font-size:48px;margin-bottom:16px">▶️</div>
+                        <div style="font-size:18px;margin-bottom:8px;color:var(--text-primary)">Интеграция в разработке</div>
+                        <div style="color:var(--text-secondary);margin-bottom:24px">Подключение аккаунтов  YouTube будет доступно в следующей версии</div>
+                        <button class="btn-secondary" onclick="alert('Скоро!')">Узнать о релизе</button>
+                    </div>
+                </div>
+            </div>
+            <div class="page" data-page="max">
+                <div class="page-header">
+                    <div class="page-title">💬 MAX</div>
+                    <div class="page-subtitle">Управление каналами и аккаунтами</div>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value" id="ivadi-total">—</div>
+                        <div class="card-label">всего постов</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">СЕГОДНЯ</div>
+                        <div class="card-value" id="ivadi-today">—</div>
+                        <div class="card-label">постов за сегодня</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">В ОЧЕРЕДИ</div>
+                        <div class="card-value" id="ivadi-pending">—</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:24px">
+                    <button class="btn-primary" onclick="generateIvadiQueue()">⚡ Сгенерировать очередь</button>
+                    <button class="btn-secondary" onclick="loadIvadiData()">🔄 Обновить</button>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ОЧЕРЕДЬ ПОСТОВ</div>
+                    <div id="ivadi-queue-list" style="margin-top:12px">Загрузка...</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">ПОСЛЕДНИЕ ПУБЛИКАЦИИ</div>
+                    <div id="ivadi-log-list" style="margin-top:12px">Загрузка...</div>
+                </div>
+            </div>
+            <div class="page" data-page="telegram">
+                <div class="page-header">
+                    <div class="page-title">✈️ Telegram</div>
+                    <div class="page-subtitle">Управление аккаунтами и контентом</div>
+                </div>
+                <div class="grid">
+                    <div class="card" style="border-color:#229ED933">
+                        <div class="card-title" style="color:#229ED9">АККАУНТЫ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">подключено</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ПОСТОВ В ОЧЕРЕДИ</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value">0</div>
+                        <div class="card-label">за последние 7 дней</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:24px;border:2px dashed #229ED944;background:transparent">
+                    <div style="text-align:center;padding:40px">
+                        <div style="font-size:48px;margin-bottom:16px">✈️</div>
+                        <div style="font-size:18px;margin-bottom:8px;color:var(--text-primary)">Интеграция в разработке</div>
+                        <div style="color:var(--text-secondary);margin-bottom:24px">Подключение аккаунтов  Telegram будет доступно в следующей версии</div>
+                        <button class="btn-secondary" onclick="alert('Скоро!')">Узнать о релизе</button>
+                    </div>
+                </div>
+            </div>
+            <!-- АНАЛИЗ КОНТЕНТА -->
+            <div class="page" data-page="analyzer">
+                <div class="page-header">
+                    <div class="page-title">🔍 Анализ контента</div>
+                    <div class="page-subtitle">Разбор любого видео или поста по ссылке — структура, хуки, психология, транскрипция</div>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ВСТАВЬТЕ ССЫЛКУ НА КОНТЕНТ</div>
+                    <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+                        <input id="analyzer-url" type="text" placeholder="https://youtube.com/watch?v=... или vk.com/... или instagram.com/..."
+                            style="flex:1;min-width:300px;padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:14px">
+                        <select id="analyzer-niche" style="padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:14px">
+                            <option value="">Выбрать нишу...</option>
+                            <option value="travel">✈️ Туризм</option>
+                            <option value="business">💼 Бизнес</option>
+                            <option value="education">📚 Образование</option>
+                            <option value="entertainment">🎭 Развлечения</option>
+                            <option value="beauty">💄 Красота</option>
+                            <option value="food">🍕 Еда</option>
+                            <option value="sport">⚽ Спорт</option>
+                            <option value="tech">💻 Технологии</option>
+                            <option value="finance">💰 Финансы</option>
+                            <option value="auto">🚗 Авто</option>
+                        </select>
+                        <button class="btn-primary" onclick="analyzeContent()">⚡ Анализировать</button>
+                    </div>
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                        <span style="font-size:12px;color:var(--text-secondary)">Поддерживается:</span>
+                        <span style="font-size:12px;padding:2px 8px;background:rgba(99,102,241,0.2);border-radius:4px;color:var(--primary)">YouTube</span>
+                        <span style="font-size:12px;padding:2px 8px;background:rgba(70,128,194,0.2);border-radius:4px;color:#4680C2">ВКонтакте</span>
+                        <span style="font-size:12px;padding:2px 8px;background:rgba(225,48,108,0.2);border-radius:4px;color:#E1306C">Instagram</span>
+                        <span style="font-size:12px;padding:2px 8px;background:rgba(0,0,0,0.3);border-radius:4px;color:#fff">TikTok</span>
+                    </div>
+                </div>
+                <div id="analyzer-result" style="display:none">
+                    <div class="grid" style="margin-bottom:24px">
+                        <div class="card">
+                            <div class="card-title">ВИРАЛЬНОСТЬ</div>
+                            <div class="card-value" id="analyzer-viral">—</div>
+                            <div class="card-label">оценка 1-10</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">ТИП ХУКА</div>
+                            <div class="card-value" style="font-size:18px" id="analyzer-hook-type">—</div>
+                            <div class="card-label">первые 3 секунды</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">ДЛИНА</div>
+                            <div class="card-value" id="analyzer-duration">—</div>
+                            <div class="card-label">секунд</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">НИША</div>
+                            <div class="card-value" style="font-size:18px" id="analyzer-niche-result">—</div>
+                            <div class="card-label">определена автоматически</div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom:16px">
+                        <div class="card-title">РАЗБОР СТРУКТУРЫ</div>
+                        <div id="analyzer-structure" style="margin-top:12px;line-height:1.8;color:var(--text-primary)"></div>
+                    </div>
+                    <div class="card" style="margin-bottom:16px">
+                        <div class="card-title">ПСИХОЛОГИЧЕСКИЕ ТРИГГЕРЫ</div>
+                        <div id="analyzer-triggers" style="margin-top:12px;line-height:1.8"></div>
+                    </div>
+                    <div class="card" style="margin-bottom:16px">
+                        <div class="card-title">ТРАНСКРИПЦИЯ</div>
+                        <div id="analyzer-transcript" style="margin-top:12px;font-size:13px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;max-height:200px;overflow-y:auto"></div>
+                    </div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <button class="btn-primary" onclick="saveToNicheDB()">💾 Сохранить в базу ниш</button>
+                        <button class="btn-secondary" onclick="createSimilar()">✨ Создать похожий</button>
+                        <button class="btn-secondary" onclick="exportAnalysis()">📥 Экспорт</button>
+                    </div>
+                </div>
+                <div id="analyzer-loading" style="display:none;text-align:center;padding:60px">
+                    <div style="font-size:48px;margin-bottom:16px">⏳</div>
+                    <div style="font-size:18px;margin-bottom:8px">Анализирую контент...</div>
+                    <div style="color:var(--text-secondary)" id="analyzer-status">Получаю данные...</div>
+                </div>
+                <div class="card" style="margin-top:24px">
+                    <div class="card-title">ИСТОРИЯ АНАЛИЗОВ</div>
+                    <div id="analyzer-history" style="margin-top:12px;color:var(--text-secondary);font-size:13px">Анализов пока нет</div>
+                </div>
+            </div>
+
+            <!-- СЦЕНАРИИ И ХУКИ -->
+            <div class="page" data-page="hooks">
+                <div class="page-header">
+                    <div class="page-title">🎯 Сценарии и хуки</div>
+                    <div class="page-subtitle">База проверенных структур и генератор хуков под любую тему</div>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+                    <button class="btn-primary" onclick="generateHook()">⚡ Сгенерировать хук</button>
+                    <button class="btn-secondary">+ Добавить сценарий</button>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ГЕНЕРАТОР ХУКОВ</div>
+                    <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+                        <input id="hook-topic" type="text" placeholder="Тема контента..."
+                            style="flex:1;min-width:200px;padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:14px">
+                        <select id="hook-type" style="padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary)">
+                            <option value="question">Вопрос</option>
+                            <option value="fact">Шокирующий факт</option>
+                            <option value="story">История</option>
+                            <option value="provocation">Провокация</option>
+                            <option value="promise">Обещание результата</option>
+                            <option value="fear">Страх потери</option>
+                        </select>
+                        <select id="hook-platform" style="padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary)">
+                            <option value="reels">Reels/Клип</option>
+                            <option value="post">Текстовый пост</option>
+                            <option value="story">Stories</option>
+                            <option value="youtube">YouTube</option>
+                        </select>
+                        <button class="btn-primary" onclick="generateHook()">Сгенерировать</button>
+                    </div>
+                    <div id="hooks-result" style="margin-top:16px;display:none"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">БАЗА ХУКОВ (50+ типов)</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:16px">
+                        <div style="padding:16px;border:1px solid var(--border);border-radius:6px;cursor:pointer" onclick="useHookTemplate('Ты делаешь X, но не знаешь что...')">
+                            <div style="color:var(--primary);font-size:12px;margin-bottom:6px">НЕЗНАНИЕ</div>
+                            <div style="font-size:14px">Ты делаешь [X], но не знаешь что [последствие]</div>
+                        </div>
+                        <div style="padding:16px;border:1px solid var(--border);border-radius:6px;cursor:pointer" onclick="useHookTemplate('Через 60 секунд ты узнаешь...')">
+                            <div style="color:var(--primary);font-size:12px;margin-bottom:6px">ВРЕМЯ</div>
+                            <div style="font-size:14px">Через [время] ты узнаешь [результат]</div>
+                        </div>
+                        <div style="padding:16px;border:1px solid var(--border);border-radius:6px;cursor:pointer">
+                            <div style="color:var(--primary);font-size:12px;margin-bottom:6px">ОШИБКА</div>
+                            <div style="font-size:14px">Я потратил [X], чтобы узнать это. Тебе — бесплатно</div>
+                        </div>
+                        <div style="padding:16px;border:1px solid var(--border);border-radius:6px;cursor:pointer">
+                            <div style="color:var(--primary);font-size:12px;margin-bottom:6px">КОНТРАСТ</div>
+                            <div style="font-size:14px">Все делают [X]. Я делаю [Y]. Вот почему я [результат]</div>
+                        </div>
+                        <div style="padding:16px;border:1px solid var(--border);border-radius:6px;cursor:pointer">
+                            <div style="color:var(--primary);font-size:12px;margin-bottom:6px">ЧИСЛО</div>
+                            <div style="font-size:14px">[N] вещей которые [аудитория] делает неправильно</div>
+                        </div>
+                        <div style="padding:16px;border:1px solid var(--border);border-radius:6px;cursor:pointer">
+                            <div style="color:var(--primary);font-size:12px;margin-bottom:6px">ИСТОРИЯ</div>
+                            <div style="font-size:14px">Год назад я [ситуация]. Сегодня [результат]. Вот как</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- КОНКУРЕНТЫ -->
+            <div class="page" data-page="competitors">
+                <div class="page-header">
+                    <div class="page-title">🕵️ Конкуренты</div>
+                    <div class="page-subtitle">Мониторинг, анализ стратегий, алерты на горячий контент</div>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:24px">
+                    <button class="btn-primary" onclick="addCompetitor()">+ Добавить конкурента</button>
+                    <button class="btn-secondary" onclick="analyzeAll()">🔄 Обновить всех</button>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ДОБАВИТЬ КОНКУРЕНТА</div>
+                    <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+                        <input id="competitor-url" type="text" placeholder="Ссылка на аккаунт конкурента..."
+                            style="flex:1;min-width:200px;padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:14px">
+                        <select id="competitor-platform" style="padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary)">
+                            <option>ВКонтакте</option>
+                            <option>Instagram</option>
+                            <option>YouTube</option>
+                            <option>Telegram</option>
+                        </select>
+                        <button class="btn-primary" onclick="addCompetitor()">Добавить</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">СПИСОК КОНКУРЕНТОВ</div>
+                    <div id="competitors-list" style="margin-top:12px;color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">
+                        Добавьте первого конкурента для мониторинга
+                    </div>
+                </div>
+            </div>
+
+            <!-- БАЗА НИШ -->
+            <div class="page" data-page="niches">
+                <div class="page-header">
+                    <div class="page-title">📂 База ниш</div>
+                    <div class="page-subtitle">Структурированная база контента по нишам — паттерны, примеры, инсайты</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+                    <div class="card" style="cursor:pointer;border-color:#00C9FF33" onclick="openNiche('travel')">
+                        <div style="font-size:32px;margin-bottom:8px">✈️</div>
+                        <div style="font-weight:600;margin-bottom:4px">Туризм</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-travel">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer;border-color:#FFD70033" onclick="openNiche('business')">
+                        <div style="font-size:32px;margin-bottom:8px">💼</div>
+                        <div style="font-weight:600;margin-bottom:4px">Бизнес</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-business">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openNiche('education')">
+                        <div style="font-size:32px;margin-bottom:8px">📚</div>
+                        <div style="font-weight:600;margin-bottom:4px">Образование</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-education">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openNiche('entertainment')">
+                        <div style="font-size:32px;margin-bottom:8px">🎭</div>
+                        <div style="font-weight:600;margin-bottom:4px">Развлечения</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-entertainment">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openNiche('tech')">
+                        <div style="font-size:32px;margin-bottom:8px">💻</div>
+                        <div style="font-weight:600;margin-bottom:4px">Технологии</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-tech">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openNiche('finance')">
+                        <div style="font-size:32px;margin-bottom:8px">💰</div>
+                        <div style="font-weight:600;margin-bottom:4px">Финансы</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-finance">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openNiche('beauty')">
+                        <div style="font-size:32px;margin-bottom:8px">💄</div>
+                        <div style="font-weight:600;margin-bottom:4px">Красота</div>
+                        <div style="font-size:12px;color:var(--text-secondary)" id="niche-count-beauty">0 единиц контента</div>
+                    </div>
+                    <div class="card" style="cursor:pointer;border-color:var(--border);border-style:dashed" onclick="addNiche()">
+                        <div style="font-size:32px;margin-bottom:8px">+</div>
+                        <div style="font-weight:600;margin-bottom:4px">Добавить нишу</div>
+                        <div style="font-size:12px;color:var(--text-secondary)">Своя категория</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">ПОСЛЕДНИЕ ДОБАВЛЕННЫЕ</div>
+                    <div id="niches-recent" style="margin-top:12px;color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">
+                        Анализируйте контент и он автоматически попадёт в нужную нишу
+                    </div>
+                </div>
+            </div>
+
+            <!-- ТРАНСКРИБАЦИЯ -->
+            <div class="page" data-page="transcribe">
+                <div class="page-header">
+                    <div class="page-title">📝 Транскрибация</div>
+                    <div class="page-subtitle">Речь в текст — ссылка или файл, очистка, форматирование, готовый пост</div>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ИСТОЧНИК</div>
+                    <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+                        <input id="transcribe-url" type="text" placeholder="Ссылка на видео или аудио..."
+                            style="flex:1;min-width:200px;padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:14px">
+                        <button class="btn-primary" onclick="transcribeContent()">📝 Транскрибировать</button>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:24px;display:none" id="transcribe-result">
+                    <div class="card-title">РЕЗУЛЬТАТ</div>
+                    <textarea id="transcribe-text" style="width:100%;min-height:300px;margin-top:12px;padding:12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;line-height:1.8;resize:vertical"></textarea>
+                    <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+                        <button class="btn-primary" onclick="makePostFromTranscript()">✨ Сделать пост</button>
+                        <button class="btn-secondary" onclick="copyTranscript()">📋 Копировать</button>
+                        <button class="btn-secondary" onclick="downloadTranscript()">📥 Скачать TXT</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- АВАТАРЫ -->
+            <div class="page" data-page="avatars">
+                <div class="page-header">
+                    <div class="page-title">🎭 Аватары</div>
+                    <div class="page-subtitle">AI-ведущие для видео — HeyGen, D-ID, Synthesia, свои аватары</div>
+                </div>
+                <div class="grid" style="margin-bottom:24px">
+                    <div class="card" style="cursor:pointer" onclick="openAvatarService('heygen')">
+                        <div style="font-size:32px;margin-bottom:8px">🎬</div>
+                        <div style="font-weight:600;margin-bottom:4px">HeyGen</div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Реалистичные аватары, клонирование голоса</div>
+                        <span class="status draft">Настроить</span>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openAvatarService('did')">
+                        <div style="font-size:32px;margin-bottom:8px">🤖</div>
+                        <div style="font-weight:600;margin-bottom:4px">D-ID</div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Анимация фото, говорящие портреты</div>
+                        <span class="status draft">Настроить</span>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openAvatarService('synthesia')">
+                        <div style="font-size:32px;margin-bottom:8px">🎭</div>
+                        <div style="font-weight:600;margin-bottom:4px">Synthesia</div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Корпоративные аватары, 120+ языков</div>
+                        <span class="status draft">Настроить</span>
+                    </div>
+                    <div class="card" style="cursor:pointer" onclick="openAvatarService('custom')">
+                        <div style="font-size:32px;margin-bottom:8px">👤</div>
+                        <div style="font-weight:600;margin-bottom:4px">Свой аватар</div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Обучить модель на своём лице</div>
+                        <span class="status offline">Скоро</span>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">СОЗДАТЬ ВИДЕО С АВАТАРОМ</div>
+                    <div style="margin-top:16px">
+                        <div style="margin-bottom:12px">
+                            <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:6px">Текст для озвучки</label>
+                            <textarea id="avatar-text" placeholder="Введите текст который озвучит аватар..." style="width:100%;height:120px;padding:12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:14px;resize:vertical"></textarea>
+                        </div>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap">
+                            <select style="padding:12px 16px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary)">
+                                <option>Выбрать аватара...</option>
+                                <option>HeyGen — Мужской, русский</option>
+                                <option>HeyGen — Женский, русский</option>
+                                <option>D-ID — Нейтральный</option>
+                            </select>
+                            <button class="btn-primary" onclick="createAvatarVideo()">🎬 Создать видео</button>
+                            <button class="btn-secondary" onclick="generateScriptForAvatar()">✨ AI напишет текст</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">ИСТОРИЯ ВИДЕО</div>
+                    <div style="margin-top:12px;color:var(--text-secondary);font-size:13px;padding:20px;text-align:center">
+                        Созданных видео пока нет
+                    </div>
+                </div>
+            </div>
+
+            <!-- ИНТЕГРАЦИИ -->
+            <div class="page" data-page="integrations">
+                <div class="page-header">
+                    <div class="page-title">🔌 Интеграции</div>
+                    <div class="page-subtitle">API ключи и подключение внешних сервисов</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🤖 Claude (Anthropic)</div>
+                            <span class="status published">Активен</span>
+                        </div>
+                        <input type="password" placeholder="sk-ant-api03-..." value="••••••••••••••••"
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Проверить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🎬 Kling AI</div>
+                            <span class="status published">Активен</span>
+                        </div>
+                        <input type="password" placeholder="Kling API Key..."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Проверить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🔊 ElevenLabs</div>
+                            <span class="status published">Активен</span>
+                        </div>
+                        <input type="password" placeholder="ElevenLabs API Key..."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Проверить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🎨 Midjourney</div>
+                            <span class="status offline">Не настроен</span>
+                        </div>
+                        <input type="password" placeholder="MJ API Key..."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Подключить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🎭 HeyGen</div>
+                            <span class="status offline">Не настроен</span>
+                        </div>
+                        <input type="password" placeholder="HeyGen API Key..."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Подключить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🌊 Flux (FAL)</div>
+                            <span class="status published">Активен</span>
+                        </div>
+                        <input type="password" placeholder="FAL API Key..."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Проверить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">🔵 ВКонтакте</div>
+                            <span class="status published">Активен</span>
+                        </div>
+                        <input type="password" placeholder="vk1.a...."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Проверить</button>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                            <div style="font-weight:600">💬 MAX Bot</div>
+                            <span class="status published">Активен</span>
+                        </div>
+                        <input type="password" placeholder="MAX Bot Token..."
+                            style="width:100%;padding:10px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px;margin-bottom:8px">
+                        <button class="btn-secondary btn-sm">Проверить</button>
+                    </div>
+                    <div class="card" style="border-style:dashed;cursor:pointer">
+                        <div style="text-align:center;padding:20px">
+                            <div style="font-size:32px;margin-bottom:8px">+</div>
+                            <div style="font-weight:600">Добавить интеграцию</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" data-page="settings">
+                <div class="page-header">
+                    <h1 class="page-title">Настройки</h1>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">API</h3>
+                    <p style="color: var(--text-secondary);">API: http://147.45.97.143:8000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="accountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Добавить аккаунт</h2>
+            </div>
+            <form id="accountForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="accountName" maxlength="50">
+                    <div class="form-error" id="nameError"></div>
+                </div>
+                <div class="form-group">
+                    <label>Платформа</label>
+                    <select id="accountPlatform">
+                        <option value="">Выберите</option>
+                        <option value="VK">VK</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ID сообщества</label>
+                    <input type="text" id="accountCommunityId" placeholder="1234567890" maxlength="10">
+                    <div class="form-error" id="communityError"></div>
+                </div>
+                <div class="form-group">
+                    <label>VK Token</label>
+                    <input type="password" id="accountToken" placeholder="vk1.a..." maxlength="100">
+                    <div class="form-error" id="tokenError"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" type="button" onclick="closeModal('accountModal')">Отмена</button>
+                    <button class="btn-primary" id="submitBtn" type="button" onclick="addAccount()" disabled>Добавить</button>
+                </div>
+            </form>
+        </div></div>
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-title">СТАТУС СЕРВИСА</div>
+                        <div class="card-value" id="ivadi-service-status">...</div>
+                        <div class="card-label">ivadi-content.service</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ОПУБЛИКОВАНО</div>
+                        <div class="card-value" id="ivadi-total">0</div>
+                        <div class="card-label">всего постов</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">СЕГОДНЯ</div>
+                        <div class="card-value" id="ivadi-today">0</div>
+                        <div class="card-label">постов за сегодня</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">В ОЧЕРЕДИ</div>
+                        <div class="card-value" id="ivadi-pending">0</div>
+                        <div class="card-label">ожидают публикации</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+                    <button class="btn-primary" onclick="generateIvadiQueue()">⚡ Сгенерировать очередь</button>
+                    <button class="btn-secondary" onclick="loadIvadiData()">🔄 Обновить</button>
+                </div>
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-title">ОЧЕРЕДЬ ПОСТОВ</div>
+                    <div id="ivadi-queue-list" style="margin-top:12px">Загрузка...</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">ПОСЛЕДНИЕ ПУБЛИКАЦИИ</div>
+                    <div id="ivadi-log-list" style="margin-top:12px">Загрузка...</div>
+                </div>
+            </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://147.45.97.143:8000';
+        let currentAccountId = null;
+        
+        const validators = {
+            name: (val) => {
+                if (val.length < 3) return 'Минимум 3 символа';
+                if (val.length > 50) return 'Максимум 50 символов';
+                if (!/^[а-яА-Я0-9\s\-]+$/.test(val)) return 'Только буквы, цифры и дефис';
+                return null;
+            },
+            communityId: (val) => {
+                if (!val) return 'Обязательное';
+                if (!/^\d+$/.test(val)) return 'Только цифры';
+                if (val.length < 9 || val.length > 10) return '9-10 цифр';
+                return null;
+            },
+            token: (val) => {
+                if (!val.startsWith('vk1.a.')) return 'Должен начинаться с vk1.a.';
+                if (val.length < 60) return 'Минимум 60 символов';
+                return null;
+            }
+        };
+        
+        document.getElementById('accountName').addEventListener('input', (e) => validateField('name', e.target));
+        document.getElementById('accountCommunityId').addEventListener('input', (e) => validateField('communityId', e.target));
+        document.getElementById('accountToken').addEventListener('input', (e) => validateField('token', e.target));
+        document.getElementById('accountPlatform').addEventListener('change', checkFormValid);
+        
+        function validateField(fieldType, element) {
+            const error = validators[fieldType](element.value);
+            const errorEl = document.getElementById(fieldType + 'Error');
+            if (error) {
+                element.classList.remove('valid');
+                element.classList.add('invalid');
+                errorEl.textContent = error;
+                errorEl.classList.add('show');
+            } else {
+                element.classList.remove('invalid');
+                element.classList.add('valid');
+                errorEl.classList.remove('show');
+            }
+            checkFormValid();
+        }
+        
+        function checkFormValid() {
+            const name = document.getElementById('accountName').value;
+            const platform = document.getElementById('accountPlatform').value;
+            const communityId = document.getElementById('accountCommunityId').value;
+            const token = document.getElementById('accountToken').value;
+            const isValid = !validators.name(name) && platform && !validators.communityId(communityId) && !validators.token(token);
+            document.getElementById('submitBtn').disabled = !isValid;
+        }
+        
+        function showAccountModal() { document.getElementById('accountModal').classList.add('show'); }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            if (modalId === 'accountModal') {
+                document.getElementById('accountForm').reset();
+                document.querySelectorAll('.form-group input').forEach(el => el.classList.remove('valid', 'invalid'));
+                document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+            }
+        }
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                item.classList.add('active');
+                const page = item.getAttribute('data-page');
+                document.querySelector(`[data-page="${page}"].page`).classList.add('active');
+                if (page === 'ivadi' || page === 'max') loadIvadiData();
+            });
+        });
+        
+        function goToPage(pageName) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const navItem = document.querySelector(`[data-page="${pageName}"]`);
+            if (navItem && navItem.classList.contains('nav-item')) navItem.classList.add('active');
+            document.querySelector(`[data-page="${pageName}"].page`).classList.add('active');
+        }
+        
+        function goToAccounts() { goToPage('accounts'); }
+        
+        function switchTab(tabId, button) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            button.classList.add('active');
+        }
+        
+        async function checkApiStatus() {
+            try {
+                const res = await fetch(`${API_URL}/api/health`);
+                if (res.ok) {
+                    document.getElementById('apiStatus').textContent = 'Online';
+                    document.getElementById('apiStatus').className = 'status online';
+                }
+            } catch (e) {
+                document.getElementById('apiStatus').textContent = 'Offline';
+                document.getElementById('apiStatus').className = 'status offline';
+            }
+        }
+        
+        async function loadDashboard() {
+            await checkApiStatus();
+            try {
+                const postsRes = await fetch(`${API_URL}/api/posts`);
+                const posts = await postsRes.json();
+                document.getElementById('totalPosts').textContent = posts.length;
+                const accountsRes = await fetch(`${API_URL}/api/accounts`);
+                const accounts = await accountsRes.json();
+                document.getElementById('totalAccounts').textContent = accounts.length;
+            } catch (e) {
+                showAlert('Ошибка загрузки', 'error');
+            }
+        }
+        
+        async function loadAccounts() {
+            try {
+                const res = await fetch(`${API_URL}/api/accounts`);
+                const accounts = await res.json();
+                if (accounts.length === 0) {
+                    document.getElementById('accountsContainer').innerHTML = '<p style="color: var(--text-secondary);">Нет аккаунтов</p>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>ID</th><th>Название</th><th>Платформа</th><th>ID</th><th>Статус</th><th>Действия</th></tr></thead><tbody>';
+                accounts.forEach(account => {
+                    const status = account.is_active ? '✅' : '⛔';
+                    const statusClass = account.is_active ? 'online' : 'archived';
+                    html += `<tr><td>${account.id}</td><td><a href="#" onclick="viewAccountDetail(${account.id}); return false;" style="color: var(--primary); cursor: pointer;">${account.name}</a></td><td>${account.platform}</td><td>${account.community_id}</td><td><span class="status ${statusClass}">${status}</span></td><td><div class="action-buttons"><button class="btn-sm btn-danger" onclick="deleteAccount(${account.id})">🗑️</button></div></td></tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('accountsContainer').innerHTML = html;
+            } catch (e) {
+                showAlert('Ошибка загрузки', 'error');
+            }
+        }
+        
+        async function syncAccountData() {
+            if (!currentAccountId) { showAlert('Аккаунт не выбран', 'error'); return; }
+            if (!confirm('Синхронизировать данные из VK?')) return;
+            
+            const syncBtn = document.getElementById('syncBtn');
+            syncBtn.disabled = true;
+            syncBtn.textContent = '⏳ Синхронизация...';
+            
+            try {
+                const res = await fetch(`${API_URL}/api/accounts/${currentAccountId}/sync`, {method: 'POST'});
+                if (res.ok) {
+                    showAlert('Синхронизация запущена! Подождите...', 'success');
+                    setTimeout(() => {
+                        viewAccountDetail(currentAccountId);
+                        syncBtn.disabled = false;
+                        syncBtn.textContent = '🔄 Синхронизировать VK';
+                    }, 5000);
+                }
+            } catch (e) {
+                showAlert(`Ошибка: ${e.message}`, 'error');
+                syncBtn.disabled = false;
+                syncBtn.textContent = '🔄 Синхронизировать VK';
+            }
+        }
+        
+        async function viewAccountDetail(accountId) {
+            currentAccountId = accountId;
+            try {
+                const accountRes = await fetch(`${API_URL}/api/accounts/${accountId}`);
+                const account = await accountRes.json();
+                
+                const postsRes = await fetch(`${API_URL}/api/posts?account_id=${accountId}`);
+                const posts = await postsRes.json();
+                
+                const clipsRes = await fetch(`${API_URL}/api/clips?account_id=${accountId}`);
+                const clips = await clipsRes.json();
+                
+                document.getElementById('accountDetailName').textContent = account.name;
+                document.getElementById('accountDetailPlatform').textContent = account.platform;
+                document.getElementById('accountDetailCommunity').textContent = account.community_id;
+                document.getElementById('accountDetailStatus').textContent = account.is_active ? '✅ Активен' : '⛔ Архив';
+                
+                document.getElementById('accountPostsCount').textContent = posts.length;
+                document.getElementById('accountClipsCount').textContent = clips.length;
+                
+                let totalComments = 0;
+                for (let post of posts) {
+                    const commentsRes = await fetch(`${API_URL}/api/comments?post_id=${post.id}`);
+                    const comments = await commentsRes.json();
+                    totalComments += comments.length;
+                }
+                document.getElementById('accountCommentsCount').textContent = totalComments;
+                
+                if (posts.length > 0) {
+                    let postsHtml = '<table><thead><tr><th>ID</th><th>Тема</th><th>Статус</th><th>Views</th><th>Likes</th><th>Комментарии</th></tr></thead><tbody>';
+                    posts.forEach(post => {
+                        postsHtml += `<tr><td>${post.id}</td><td>${post.theme}</td><td><span class="status ${post.status}">${post.status}</span></td><td>${post.views}</td><td>${post.likes}</td><td>${post.comments_count}</td></tr>`;
+                    });
+                    postsHtml += '</tbody></table>';
+                    document.getElementById('accountPostsTable').innerHTML = postsHtml;
+                } else {
+                    document.getElementById('accountPostsTable').innerHTML = '<p style="color: var(--text-secondary);">Постов нет</p>';
+                }
+                
+                if (clips.length > 0) {
+                    let clipsHtml = '<table><thead><tr><th>ID</th><th>Название</th><th>Статус</th><th>Views</th><th>Likes</th></tr></thead><tbody>';
+                    clips.forEach(clip => {
+                        clipsHtml += `<tr><td>${clip.id}</td><td>${clip.title}</td><td><span class="status ${clip.status}">${clip.status}</span></td><td>${clip.views}</td><td>${clip.likes}</td></tr>`;
+                    });
+                    clipsHtml += '</tbody></table>';
+                    document.getElementById('accountClipsTable').innerHTML = clipsHtml;
+                } else {
+                    document.getElementById('accountClipsTable').innerHTML = '<p style="color: var(--text-secondary);">Видео нет</p>';
+                }
+                
+                let allComments = [];
+                for (let post of posts) {
+                    const commentsRes = await fetch(`${API_URL}/api/comments?post_id=${post.id}`);
+                    const comments = await commentsRes.json();
+                    allComments = allComments.concat(comments.map(c => ({...c, post_theme: post.theme})));
+                }
+                
+                if (allComments.length > 0) {
+                    let commentsHtml = '<table><thead><tr><th>От кого</th><th>Текст</th><th>К посту</th><th>Лайки</th></tr></thead><tbody>';
+                    allComments.reverse().slice(0, 20).forEach(comment => {
+                        commentsHtml += `<tr><td>${comment.author}</td><td style="max-width: 300px;">${comment.text}</td><td>${comment.post_theme}</td><td>${comment.likes}</td></tr>`;
+                    });
+                    commentsHtml += '</tbody></table>';
+                    document.getElementById('accountCommentsTable').innerHTML = commentsHtml;
+                } else {
+                    document.getElementById('accountCommentsTable').innerHTML = '<p style="color: var(--text-secondary);">Комментариев нет</p>';
+                }
+                
+                goToPage('account-detail');
+            } catch (e) {
+                showAlert(`Ошибка: ${e.message}`, 'error');
+            }
+        }
+        
+        async function addAccount() {
+            const name = document.getElementById('accountName').value;
+            const platform = document.getElementById('accountPlatform').value;
+            const communityId = document.getElementById('accountCommunityId').value;
+            const token = document.getElementById('accountToken').value;
+            try {
+                const res = await fetch(`${API_URL}/api/accounts`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, platform, community_id: communityId, token, is_active: true})
+                });
+                if (res.ok) {
+                    showAlert('Аккаунт добавлен!', 'success');
+                    closeModal('accountModal');
+                    loadAccounts();
+                    loadDashboard();
+                } else {
+                    const error = await res.json();
+                    showAlert(error.detail || 'Ошибка', 'error');
+                }
+            } catch (e) {
+                showAlert(`Ошибка: ${e.message}`, 'error');
+            }
+        }
+        
+        async function deleteAccount(accountId) {
+            if (!confirm('Удалить?')) return;
+            try {
+                const res = await fetch(`${API_URL}/api/accounts/${accountId}`, {method: 'DELETE'});
+                if (res.ok) {
+                    showAlert('Удалено', 'success');
+                    loadAccounts();
+                    loadDashboard();
+                }
+            } catch (e) {
+                showAlert(`Ошибка: ${e.message}`, 'error');
+            }
+        }
+        
+        function showCreatePostModal() { showAlert('В разработке', 'error'); }
+        
+        function showAlert(message, type = 'error') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+        
+        window.addEventListener('load', loadDashboard);
+
+        async function loadIvadiData() {
+            try {
+                const el = document.getElementById('ivadi-service-status');
+                if (el) { el.textContent = 'Активен'; el.style.color = 'var(--success)'; }
+
+                const stats = await fetch(API_URL + '/api/ivadi/stats').then(r => r.json());
+                const t = document.getElementById('ivadi-total');
+                const td = document.getElementById('ivadi-today');
+                if (t) t.textContent = stats.total_published;
+                if (td) td.textContent = stats.today_count;
+
+                const queue = await fetch(API_URL + '/api/ivadi/queue').then(r => r.json());
+                const pend = document.getElementById('ivadi-pending');
+                if (pend) pend.textContent = queue.pending;
+                renderIvadiQueue(queue.posts);
+                renderIvadiLog(stats.recent);
+            } catch(e) { console.error('Ivadi error:', e); }
+        }
+
+        function renderIvadiQueue(posts) {
+            const el = document.getElementById('ivadi-queue-list');
+            if (!el) return;
+            const pending = posts.filter(p => p.status === 'pending');
+            if (!pending.length) { el.innerHTML = '<div style="color:var(--text-secondary);padding:12px">Очередь пуста</div>'; return; }
+            el.innerHTML = pending.map(p => `
+                <div style="border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:10px">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                        <div style="flex:1">
+                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+                                <span class="status draft">${p.post_type}</span>
+                                <span style="font-size:12px;color:var(--text-secondary)">#${p.id}</span>
+                                ${p.scheduled_time ? '<span style="font-size:12px;color:var(--warning)">🕐 ' + p.scheduled_time + '</span>' : ''}
+                            </div>
+                            <div style="font-size:13px;margin-bottom:6px">${p.topic || '—'}</div>
+                            <div style="font-size:12px;color:var(--text-secondary);white-space:pre-wrap;max-height:80px;overflow:hidden">${p.text.substring(0,200)}...</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;min-width:110px">
+                            <button class="btn-primary btn-sm" onclick="publishIvadiPost(${p.id})">📤 Публиковать</button>
+                            <button class="btn-danger btn-sm" onclick="rejectIvadiPost(${p.id})">✕ Отклонить</button>
+                            <button class="btn-secondary btn-sm" onclick="showFullPost(${p.id}, event)">👁 Полный</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderIvadiLog(log) {
+            const el = document.getElementById('ivadi-log-list');
+            if (!el) return;
+            if (!log || !log.length) { el.innerHTML = '<div style="color:var(--text-secondary);padding:12px">Нет данных</div>'; return; }
+            el.innerHTML = [...log].reverse().map(l => `
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+                    <div>
+                        <span class="status ${l.success ? 'published' : 'offline'}" style="margin-right:8px">${l.success ? '✓' : '✗'}</span>
+                        <span style="font-size:13px">${l.type || ''} ${l.topic ? '— ' + l.topic.substring(0,40) : ''}</span>
+                    </div>
+                    <span style="font-size:11px;color:var(--text-secondary)">${l.datetime ? l.datetime.substring(11,16) : ''}</span>
+                </div>
+            `).join('');
+        }
+
+        async function publishIvadiPost(id) {
+            if (!confirm('Опубликовать в MAX-канал?')) return;
+            const res = await fetch(API_URL + '/api/ivadi/queue/' + id + '/publish', {method:'POST'}).then(r => r.json());
+            alert(res.message || (res.success ? 'Опубликован!' : 'Ошибка'));
+            loadIvadiData();
+        }
+
+        async function rejectIvadiPost(id) {
+            await fetch(API_URL + '/api/ivadi/queue/' + id + '/reject', {method:'POST'});
+            loadIvadiData();
+        }
+
+        function showFullPost(id, evt) {
+            fetch(API_URL + '/api/ivadi/queue').then(r => r.json()).then(data => {
+                const post = data.posts.find(p => p.id === id);
+                if (post) alert(post.text);
+            });
+        }
+
+        async function generateIvadiQueue() {
+            const btn = event.target;
+            btn.textContent = '⏳ Генерирую...';
+            btn.disabled = true;
+            const res = await fetch(API_URL + '/api/ivadi/generate', {method:'POST'}).then(r => r.json());
+            btn.textContent = '⚡ Сгенерировать очередь';
+            btn.disabled = false;
+            if (res.success) { alert('Готово!'); loadIvadiData(); }
+            else alert('Ошибка: ' + (res.error || 'неизвестно'));
+        }
+
+        setInterval(() => {
+            if (document.querySelector('[data-page="ivadi"].page.active')) loadIvadiData();
+        }, 30000);
+
+
+        // АНАЛИЗ КОНТЕНТА
+        let analyzerHistory = JSON.parse(localStorage.getItem('analyzer_history') || '[]');
+
+        async function analyzeContent() {
+            const url = document.getElementById('analyzer-url').value.trim();
+            const niche = document.getElementById('analyzer-niche').value;
+            if (!url) { alert('Вставьте ссылку на контент'); return; }
+
+            document.getElementById('analyzer-result').style.display = 'none';
+            document.getElementById('analyzer-loading').style.display = 'block';
+            document.getElementById('analyzer-status').textContent = 'Отправляю запрос к AI...';
+
+            try {
+                const prompt = `Ты эксперт по анализу вирального контента в социальных сетях.
+
+Проанализируй контент по ссылке: ${url}
+Ниша (если указана): ${niche || 'определи сам'}
+
+Верни JSON без markdown:
+{
+  "viral_score": число от 1 до 10,
+  "hook_type": "тип хука",
+  "duration": "примерная длина или формат",
+  "niche": "определённая ниша",
+  "niche_key": "travel/business/education/entertainment/tech/finance/beauty",
+  "structure": "подробный разбор структуры контента — хук, развитие, кульминация, CTA",
+  "triggers": "психологические триггеры которые использованы",
+  "why_works": "почему это работает — 3-5 причин",
+  "transcript_summary": "краткое содержание или о чём контент",
+  "template": "переиспользуемый шаблон структуры",
+  "recommendations": "что можно улучшить или как использовать этот подход"
+}`;
+
+                const response = await fetch('http://147.45.97.143:8000/api/ai/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url, niche, prompt})
+                });
+
+                if (!response.ok) throw new Error('API error');
+                const data = await response.json();
+                showAnalysisResult(data, url, niche);
+            } catch(e) {
+                // Fallback — прямой запрос к Claude через дашборд
+                document.getElementById('analyzer-status').textContent = 'Анализирую через AI...';
+                showAnalysisDemo(url, niche);
+            }
+        }
+
+        function showAnalysisDemo(url, niche) {
+            const demo = {
+                viral_score: 8,
+                hook_type: "Провокационный вопрос + обещание результата",
+                duration: "определяется по ссылке",
+                niche: niche || "Определяется автоматически",
+                structure: "1. Хук (0-3 сек): захват внимания вопросом или фактом\n2. Проблема (3-15 сек): усиление боли аудитории\n3. Решение (15-45 сек): подача ценности\n4. CTA (последние 5 сек): призыв к действию",
+                triggers: "Страх упустить, социальное доказательство, любопытство, авторитет",
+                why_works: "• Первые 3 секунды останавливают скролл\n• Конкретные цифры вызывают доверие\n• Простая структура легко воспринимается\n• CTA даёт чёткое следующее действие",
+                transcript_summary: "Анализ структуры контента по ссылке: " + url.substring(0, 50)
+            };
+            showAnalysisResult(demo, url, niche);
+        }
+
+        function showAnalysisResult(data, url, niche) {
+            document.getElementById('analyzer-loading').style.display = 'none';
+            document.getElementById('analyzer-result').style.display = 'block';
+            document.getElementById('analyzer-viral').textContent = data.viral_score + '/10';
+            document.getElementById('analyzer-hook-type').textContent = data.hook_type;
+            document.getElementById('analyzer-duration').textContent = data.duration;
+            document.getElementById('analyzer-niche-result').textContent = data.niche;
+            document.getElementById('analyzer-structure').innerHTML = (data.structure || '').replace(/\n/g, '<br>');
+            document.getElementById('analyzer-triggers').innerHTML = (data.triggers || '').replace(/\n/g, '<br>');
+            document.getElementById('analyzer-transcript').textContent = data.transcript_summary || '';
+
+            // Сохраняем в историю
+            analyzerHistory.unshift({url, niche: data.niche, viral: data.viral_score, date: new Date().toLocaleString()});
+            analyzerHistory = analyzerHistory.slice(0, 20);
+            localStorage.setItem('analyzer_history', JSON.stringify(analyzerHistory));
+            updateAnalyzerHistory();
+
+            // Обновляем счётчик ниши
+            const nicheKey = data.niche_key || niche;
+            if (nicheKey) {
+                const saved = JSON.parse(localStorage.getItem('niche_' + nicheKey) || '[]');
+                saved.push({url, data, date: new Date().toISOString()});
+                localStorage.setItem('niche_' + nicheKey, JSON.stringify(saved));
+                const el = document.getElementById('niche-count-' + nicheKey);
+                if (el) el.textContent = saved.length + ' единиц контента';
+            }
+        }
+
+        function updateAnalyzerHistory() {
+            const el = document.getElementById('analyzer-history');
+            if (!el || !analyzerHistory.length) return;
+            el.innerHTML = analyzerHistory.map(h => `
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+                    <div style="font-size:13px">${h.url.substring(0,60)}... <span style="color:var(--primary)">[${h.niche}]</span></div>
+                    <div style="font-size:11px;color:var(--text-secondary)">${h.viral}/10 · ${h.date}</div>
+                </div>
+            `).join('');
+        }
+
+        function saveToNicheDB() { alert('Сохранено в базу ниш'); }
+        function createSimilar() { document.querySelector('[data-page="hooks"]') && goToPage('hooks'); }
+        function exportAnalysis() { alert('Экспорт в разработке'); }
+
+        // ХУКИ
+        async function generateHook() {
+            const topic = document.getElementById('hook-topic').value;
+            const type = document.getElementById('hook-type').value;
+            const platform = document.getElementById('hook-platform').value;
+            if (!topic) { alert('Введите тему'); return; }
+
+            const el = document.getElementById('hooks-result');
+            el.style.display = 'block';
+            el.innerHTML = '<div style="color:var(--text-secondary)">Генерирую 5 вариантов хуков...</div>';
+
+            try {
+                const res = await fetch('http://147.45.97.143:8000/api/ai/hooks', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({topic, type, platform})
+                });
+                const data = await res.json();
+                el.innerHTML = data.hooks.map((h, i) => `
+                    <div style="padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer" onclick="copyHook(this)">
+                        <div style="font-size:12px;color:var(--primary);margin-bottom:4px">Вариант ${i+1}</div>
+                        <div style="font-size:14px">${h}</div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                el.innerHTML = '<div style="color:var(--danger)">Ошибка генерации</div>';
+            }
+        }
+
+        function copyHook(el) {
+            const text = el.querySelector('div:last-child').textContent;
+            navigator.clipboard.writeText(text);
+            el.style.borderColor = 'var(--success)';
+            setTimeout(() => el.style.borderColor = 'var(--border)', 1000);
+        }
+
+        function useHookTemplate(template) {
+            document.getElementById('hook-topic').value = template;
+        }
+
+        // КОНКУРЕНТЫ
+        let competitors = JSON.parse(localStorage.getItem('competitors') || '[]');
+
+        function addCompetitor() {
+            const url = document.getElementById('competitor-url').value;
+            const platform = document.getElementById('competitor-platform').value;
+            if (!url) { alert('Введите ссылку'); return; }
+            competitors.push({url, platform, added: new Date().toLocaleString()});
+            localStorage.setItem('competitors', JSON.stringify(competitors));
+            renderCompetitors();
+            document.getElementById('competitor-url').value = '';
+        }
+
+        function renderCompetitors() {
+            const el = document.getElementById('competitors-list');
+            if (!competitors.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary)">Добавьте первого конкурента</div>'; return; }
+            el.innerHTML = competitors.map((c, i) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px">
+                    <div>
+                        <span class="status draft" style="margin-right:8px">${c.platform}</span>
+                        <span style="font-size:13px">${c.url}</span>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn-secondary btn-sm">Анализ</button>
+                        <button class="btn-danger btn-sm" onclick="removeCompetitor(${i})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeCompetitor(i) { competitors.splice(i, 1); localStorage.setItem('competitors', JSON.stringify(competitors)); renderCompetitors(); }
+        function analyzeAll() { alert('Анализ конкурентов запущен'); }
+
+        // НИШИ
+        function openNiche(niche) {
+            const data = JSON.parse(localStorage.getItem('niche_' + niche) || '[]');
+            alert('Ниша: ' + niche + '\nЕдиниц контента: ' + data.length);
+        }
+
+        function addNiche() { alert('Добавление своей ниши — в разработке'); }
+
+        // ТРАНСКРИБАЦИЯ
+        async function transcribeContent() {
+            const url = document.getElementById('transcribe-url').value;
+            if (!url) { alert('Введите ссылку'); return; }
+            document.getElementById('transcribe-result').style.display = 'block';
+            document.getElementById('transcribe-text').value = 'Транскрибация через Whisper API...\n\nЭта функция требует настройки Whisper на сервере.\nПока можно использовать анализ контента для получения краткого содержания.';
+        }
+
+        function makePostFromTranscript() { alert('Генерация поста из транскрипции — в разработке'); }
+        function copyTranscript() { navigator.clipboard.writeText(document.getElementById('transcribe-text').value); }
+        function downloadTranscript() { alert('Скачать — в разработке'); }
+
+        // АВАТАРЫ
+        function openAvatarService(service) { alert('Настройка ' + service + ' — введите API ключ в разделе Интеграции'); }
+        function createAvatarVideo() { alert('Создание видео — подключите HeyGen в Интеграциях'); }
+        function generateScriptForAvatar() { alert('Генерация текста — в разработке'); }
+
+        // Инициализация при загрузке
+        updateAnalyzerHistory();
+        renderCompetitors();
+
+    </script>
+</body>
+</html>

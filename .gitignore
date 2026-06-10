@@ -1,0 +1,39 @@
+# secrets
+.env
+*.env
+.ivadi.env
+config.py
+google_credentials.json
+backend/.env
+
+# databases
+*.db
+*.sqlite
+*.sqlite3
+
+# logs
+*.log
+backend.log
+ivadi_cron.log
+
+# cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# generated media
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+output/
+
+# temp
+tmp/
+temp/
+
+# backups
+factory_backup/
