@@ -348,3 +348,87 @@ def get_niches():
 
     conn.close()
     return {"success": True, "items": items}
+
+
+@router.post("/item/{analysis_id}/scenario")
+def generate_scenario_from_analysis(analysis_id: int):
+    if not CLAUDE_API_KEY:
+        return {"success": False, "error": "CLAUDE_API_KEY not found in backend/.env"}
+
+    init_analyzer_db()
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    row = cur.execute("""
+        SELECT *
+        FROM content_analyses
+        WHERE id = ?
+        LIMIT 1
+    """, (analysis_id,)).fetchone()
+
+    conn.close()
+
+    if not row:
+        return {"success": False, "error": "analysis not found"}
+
+    item = dict(row)
+
+    try:
+        raw = json.loads(item.get("raw_json") or "{}")
+    except Exception:
+        raw = {}
+
+    client = anthropic.Anthropic(
+        api_key=CLAUDE_API_KEY,
+        base_url=CLAUDE_PROXY_URL
+    )
+
+    prompt = f"""
+Ты — сценарист коротких вертикальных видео.
+
+На основе анализа контента создай НОВЫЙ сценарий.
+Не копируй исходный ролик. Используй только механику, структуру, триггеры и формат.
+
+АНАЛИЗ:
+{json.dumps(raw, ensure_ascii=False, indent=2)[:12000]}
+
+Верни строго JSON без markdown.
+
+Схема:
+{{
+  "title": "короткое название",
+  "hook": "сильный хук для первых 2 секунд",
+  "script": [
+    "0-3 сек: ...",
+    "3-7 сек: ...",
+    "7-12 сек: ...",
+    "12-20 сек: ...",
+    "20-30 сек: ..."
+  ],
+  "voiceover": "готовый текст озвучки",
+  "visual_style": "стиль визуала",
+  "cta": "призыв к действию"
+}}
+"""
+
+    try:
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=2000,
+            temperature=0.5,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        text = clean_json(extract_text(msg))
+        data = json.loads(text)
+
+        return {
+            "success": True,
+            "analysis_id": analysis_id,
+            "scenario": data
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
