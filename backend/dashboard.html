@@ -168,6 +168,8 @@ select option { background: var(--bg-card); }
     <div class="nav-section">AI Инструменты</div>
     <div class="nav-item" data-page="analyzer"><span class="icon">🔍</span> Анализ контента</div>
     <div class="nav-item" data-page="assets"><span class="icon">🧩</span> Библиотека сценариев</div>
+    <div class="nav-item" data-page="posts"><span class="icon">📝</span> Библиотека постов</div>
+    <div class="nav-item" data-page="images"><span class="icon">🖼️</span> Библиотека изображений</div>
     <div class="nav-item" data-page="hooks"><span class="icon">🎯</span> Хуки и сценарии</div>
     <div class="nav-item" data-page="competitors"><span class="icon">🕵️</span> Конкуренты</div>
     <div class="nav-item" data-page="niches"><span class="icon">📂</span> База ниш</div>
@@ -405,7 +407,7 @@ let competitors = JSON.parse(localStorage.getItem('smm_competitors') || '[]');
 const pageTitles = {
   dashboard:'Дашборд',vk:'ВКонтакте',instagram:'Instagram',youtube:'YouTube',
   max:'MAX — IvadiTravel',telegram:'Telegram',analyzer:'Анализ контента',
-  hooks:'Хуки и сценарии',competitors:'Конкуренты',niches:'База ниш',
+  hooks:'Хуки и сценарии',posts:'Библиотека постов',images:'Библиотека изображений',competitors:'Конкуренты',niches:'База ниш',
   transcribe:'Транскрибация',avatars:'Аватары',integrations:'Интеграции',
   schedule:'Расписание',patterns:'Паттерны',settings:'Настройки'
 };
@@ -963,6 +965,108 @@ async function generatePostFromAsset(assetId) {
   }
 }
 
+
+async function loadGeneratedPosts() {
+  const el = document.getElementById('posts-list');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/posts').then(r => r.json());
+    const items = res.items || [];
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Постов пока нет</div>';
+      return;
+    }
+
+    el.innerHTML = items.slice().reverse().map(x => `
+      <div class="log-item" style="align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">${x.title || 'Без названия'}</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.5">${(x.post_text || '').substring(0,220)}${(x.post_text || '').length > 220 ? '...' : ''}</div>
+          <div style="font-size:11px;color:var(--accent);margin-top:8px">${x.hashtags || ''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <span class="status-badge status-active">${x.status || 'draft'}</span>
+          <button class="btn btn-primary btn-sm" onclick="generateImagePromptFromPost(${x.id}, this)">Image prompt</button>
+          <span style="font-size:11px;color:var(--text-muted)">${x.created_at || ''}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px">Ошибка загрузки: ' + e.message + '</div>';
+  }
+}
+
+async function generateImagePromptFromPost(postId, btn) {
+  const old = btn.textContent;
+  btn.textContent = 'Генерирую...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API + '/api/analyzer/posts/' + postId + '/image-prompt', {method:'POST'}).then(r => r.json());
+    btn.textContent = res.success ? 'Готово' : 'Ошибка';
+    if (res.success) loadGeneratedImages();
+  } catch(e) {
+    btn.textContent = 'Ошибка';
+  }
+
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+}
+
+async function loadGeneratedImages() {
+  const el = document.getElementById('images-list');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/images').then(r => r.json());
+    const items = res.items || [];
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Изображений пока нет</div>';
+      return;
+    }
+
+    el.innerHTML = items.slice().reverse().map(x => `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:start">
+          <img src="${x.image_url}" style="width:120px;border-radius:10px;border:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px">${x.title || 'Без названия'}</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5">${(x.prompt || '').substring(0,220)}${(x.prompt || '').length > 220 ? '...' : ''}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:8px">${x.created_at || ''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="addImageToQueue(${x.id}, this)">В очередь</button>
+            <a class="btn btn-ghost btn-sm" href="${x.image_url}" target="_blank">Открыть</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px">Ошибка загрузки: ' + e.message + '</div>';
+  }
+}
+
+async function addImageToQueue(imageId, btn) {
+  const old = btn.textContent;
+  btn.textContent = 'Добавляю...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API + '/api/analyzer/images/' + imageId + '/queue', {method:'POST'}).then(r => r.json());
+    btn.textContent = res.success ? 'В очереди' : 'Ошибка';
+    if (res.success && typeof loadMaxData === 'function') loadMaxData();
+  } catch(e) {
+    btn.textContent = 'Ошибка';
+  }
+
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+}
+
+
 async function generateHooks() {
   const topic = document.getElementById('hook-topic').value;
   if (!topic) { alert('Введите тему'); return; }
@@ -1115,6 +1219,8 @@ updateNicheCounts();
 loadNicheRecent();
 loadAnalyzerHistory();
 loadContentAssets();
+loadGeneratedPosts();
+loadGeneratedImages();
 renderCompetitors();
 setInterval(()=>{ const a=document.querySelector('.page.active'); if (!a) return; const p=a.getAttribute('data-page'); if(p==='dashboard')loadDashboard(); if(p==='max')loadMaxData(); },30000);
 
