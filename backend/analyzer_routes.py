@@ -245,6 +245,24 @@ def analyze_content(req: AnalyzeRequest):
         return {"success": False, "error": str(e)}
 
 
+ASSETS_FILE = "/root/factory/content_assets.json"
+
+
+def load_content_assets():
+    if os.path.exists(ASSETS_FILE):
+        with open(ASSETS_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return []
+    return []
+
+
+def save_content_assets(items):
+    with open(ASSETS_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=2)
+
+
 @router.get("/history")
 def get_history(limit: int = 30):
     init_analyzer_db()
@@ -432,3 +450,33 @@ def generate_scenario_from_analysis(analysis_id: int):
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+@router.post("/assets")
+def save_content_asset(asset: dict):
+    items = load_content_assets()
+
+    next_id = max([x.get("id", 0) for x in items], default=0) + 1
+
+    item = {
+        "id": next_id,
+        "source_analysis_id": asset.get("source_analysis_id"),
+        "title": asset.get("title", ""),
+        "hook": asset.get("hook", ""),
+        "script": asset.get("script", []),
+        "voiceover": asset.get("voiceover", ""),
+        "visual_style": asset.get("visual_style", ""),
+        "cta": asset.get("cta", ""),
+        "status": "new",
+        "created_at": datetime.now().isoformat(timespec="seconds")
+    }
+
+    items.append(item)
+    save_content_assets(items)
+
+    return {"success": True, "asset": item}
+
+
+@router.get("/assets")
+def get_content_assets():
+    return {"success": True, "items": load_content_assets()[-100:]}

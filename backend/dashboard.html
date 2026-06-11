@@ -638,6 +638,7 @@ async function showAnalysisItem(id) {
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
         <div style="font-size:20px;font-weight:700">Разбор #${item.id}</div>
         <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="generateScenarioFromAnalysis(${item.id})">✨ Создать сценарий</button>
           <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${item.url || ''}')">Копировать ссылку</button>
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('analysis-detail').style.display='none'">✕</button>
         </div>
@@ -689,6 +690,164 @@ async function showAnalysisItem(id) {
     el.scrollIntoView({behavior:'smooth', block:'start'});
   } catch(e) {
     alert('Ошибка загрузки анализа: ' + e.message);
+  }
+}
+
+
+
+function closeScenarioDrawer() {
+  const d = document.getElementById('scenario-drawer');
+  const o = document.getElementById('scenario-overlay');
+  if (d) d.remove();
+  if (o) o.remove();
+}
+
+function openScenarioDrawer() {
+  closeScenarioDrawer();
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="scenario-overlay" onclick="closeScenarioDrawer()" style="
+      position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;
+      backdrop-filter:blur(2px);
+    "></div>
+
+    <div id="scenario-drawer" style="
+      position:fixed;top:0;right:0;width:min(620px,92vw);height:100vh;
+      background:var(--bg-card);border-left:1px solid var(--border);
+      z-index:9999;box-shadow:-24px 0 80px rgba(0,0,0,.45);
+      padding:24px;overflow-y:auto;
+    ">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:20px;font-weight:800">Новый сценарий</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Генерация из анализа контента</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeScenarioDrawer()">✕</button>
+      </div>
+
+      <div id="scenario-drawer-content">
+        <div class="card">
+          <div class="section-title">Статус</div>
+          <div style="font-size:13px;color:var(--text-muted)">Генерирую сценарий...</div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+async function generateScenarioFromAnalysis(id) {
+  openScenarioDrawer();
+
+  const box = document.getElementById('scenario-drawer-content');
+  box.innerHTML = `
+    <div class="card">
+      <div class="section-title">Статус</div>
+      <div style="font-size:13px;color:var(--text-muted)">Генерирую сценарий...</div>
+    </div>
+  `;
+
+  try {
+    const res = await fetch(API + '/api/analyzer/item/' + id + '/scenario', {method:'POST'}).then(r => r.json());
+
+    if (!res.success) {
+      box.innerHTML = `
+        <div class="card">
+          <div class="section-title">Ошибка</div>
+          <div style="font-size:13px;color:var(--red)">${res.error || 'неизвестная ошибка'}</div>
+        </div>
+      `;
+      return;
+    }
+
+    const sc = res.scenario || {};
+    currentGeneratedScenario = sc;
+    currentScenarioAnalysisId = id;
+    const script = Array.isArray(sc.script)
+      ? sc.script.map(x => `<div style="margin-bottom:8px">• ${x}</div>`).join('')
+      : '—';
+
+    box.innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Название</div>
+        <div style="font-size:18px;font-weight:800;line-height:1.4">${sc.title || 'Без названия'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Хук</div>
+        <div style="font-size:14px;line-height:1.7">${sc.hook || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Сценарий</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${script}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Озвучка</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${sc.voiceover || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Визуал</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${sc.visual_style || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">CTA</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${sc.cta || '—'}</div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--bg-card);padding-top:12px">
+        <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('scenario-drawer-content').innerText)">Копировать сценарий</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveGeneratedScenarioAsset()">Сохранить сценарий</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeScenarioDrawer()">Закрыть</button>
+        <div id="scenario-save-status" style="width:100%;font-size:12px;color:var(--text-muted);margin-top:6px"></div>
+      </div>
+    `;
+  } catch(e) {
+    box.innerHTML = `
+      <div class="card">
+        <div class="section-title">Ошибка запроса</div>
+        <div style="font-size:13px;color:var(--red)">${e.message}</div>
+      </div>
+    `;
+  }
+}
+
+
+async function saveGeneratedScenarioAsset() {
+  if (!currentGeneratedScenario) return;
+
+  const sc = currentGeneratedScenario;
+
+  const payload = {
+    source_analysis_id: currentScenarioAnalysisId,
+    title: sc.title || '',
+    hook: sc.hook || '',
+    script: Array.isArray(sc.script) ? sc.script : [],
+    voiceover: sc.voiceover || '',
+    visual_style: sc.visual_style || '',
+    cta: sc.cta || ''
+  };
+
+  try {
+    const res = await fetch(API + '/api/analyzer/assets', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(r => r.json());
+
+    const box = document.getElementById('scenario-save-status');
+    if (box) {
+      box.textContent = res.success ? 'Сценарий сохранён в библиотеку' : 'Ошибка сохранения';
+      box.style.color = res.success ? 'var(--green)' : 'var(--red)';
+    }
+  } catch(e) {
+    const box = document.getElementById('scenario-save-status');
+    if (box) {
+      box.textContent = 'Ошибка: ' + e.message;
+      box.style.color = 'var(--red)';
+    }
   }
 }
 
