@@ -252,6 +252,7 @@ ASSETS_FILE = "/root/factory/content_assets.json"
 POSTS_FILE = "/root/factory/post_assets.json"
 IMAGE_PROMPTS_FILE = "/root/factory/image_prompt_assets.json"
 IMAGE_ASSETS_FILE = "/root/factory/image_assets.json"
+IVADI_QUEUE_FILE = "/root/factory/ivadi_queue.json"
 
 
 def load_content_assets():
@@ -311,6 +312,21 @@ def load_image_assets():
 
 def save_image_assets(items):
     with open(IMAGE_ASSETS_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=2)
+
+
+def load_ivadi_queue():
+    if os.path.exists(IVADI_QUEUE_FILE):
+        with open(IVADI_QUEUE_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return []
+    return []
+
+
+def save_ivadi_queue(items):
+    with open(IVADI_QUEUE_FILE, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
 
 
@@ -777,3 +793,50 @@ def generate_image_from_prompt(prompt_id: int):
 @router.get("/images")
 def get_images():
     return {"success": True, "items": load_image_assets()[-100:]}
+
+
+@router.post("/images/{image_id}/queue")
+def add_image_asset_to_queue(image_id: int):
+    images = load_image_assets()
+    image = next((x for x in images if x.get("id") == image_id), None)
+
+    if not image:
+        return {"success": False, "error": "image not found"}
+
+    prompts = load_image_prompt_assets()
+    prompt = next((x for x in prompts if x.get("id") == image.get("image_prompt_id")), None)
+
+    posts = load_post_assets()
+    post = None
+    if prompt:
+        post = next((x for x in posts if x.get("id") == prompt.get("post_id")), None)
+
+    if not post:
+        return {"success": False, "error": "linked post not found"}
+
+    queue = load_ivadi_queue()
+    next_id = max([x.get("id", 0) for x in queue], default=0) + 1
+
+    text_parts = [
+        post.get("post_text", ""),
+        post.get("hashtags", ""),
+        post.get("cta", "")
+    ]
+
+    item = {
+        "id": next_id,
+        "post_type": "generated",
+        "topic": post.get("title") or image.get("title") or "Generated post",
+        "text": "\n\n".join([x for x in text_parts if x]),
+        "image_url": image.get("image_url", ""),
+        "image_asset_id": image_id,
+        "source": "content_factory",
+        "scheduled_time": "09:00",
+        "status": "pending",
+        "created_at": datetime.now().isoformat(timespec="seconds")
+    }
+
+    queue.append(item)
+    save_ivadi_queue(queue)
+
+    return {"success": True, "queue_item": item}
