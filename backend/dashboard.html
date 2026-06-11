@@ -306,6 +306,35 @@ select option { background: var(--bg-card); }
       </div>
     </div>
 
+    <div class="page" data-page="posts">
+      <div style="margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px">📝 Библиотека постов</div>
+        <div style="font-size:12px;color:var(--text-muted)">Посты, созданные из сценариев</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">Посты</div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadGeneratedPosts()">Обновить</button>
+        </div>
+        <div id="posts-list"></div>
+      </div>
+    </div>
+
+    <div class="page" data-page="images">
+      <div style="margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px">🖼️ Библиотека изображений</div>
+        <div style="font-size:12px;color:var(--text-muted)">Изображения, созданные через Leonardo</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">Изображения</div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadGeneratedImages()">Обновить</button>
+        </div>
+        <div id="images-list"></div>
+      </div>
+    </div>
+
+
     <div class="page" data-page="hooks">
       <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🎯 Хуки и сценарии</div><div style="font-size:12px;color:var(--text-muted)">База структур и генератор хуков</div></div>
       <div class="card" style="margin-bottom:20px"><div class="section-title">Генератор хуков</div>
