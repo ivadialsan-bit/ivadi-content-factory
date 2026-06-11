@@ -247,6 +247,7 @@ def analyze_content(req: AnalyzeRequest):
 
 ASSETS_FILE = "/root/factory/content_assets.json"
 POSTS_FILE = "/root/factory/post_assets.json"
+IMAGE_PROMPTS_FILE = "/root/factory/image_prompt_assets.json"
 
 
 def load_content_assets():
@@ -276,6 +277,21 @@ def load_post_assets():
 
 def save_post_assets(items):
     with open(POSTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=2)
+
+
+def load_image_prompt_assets():
+    if os.path.exists(IMAGE_PROMPTS_FILE):
+        with open(IMAGE_PROMPTS_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return []
+    return []
+
+
+def save_image_prompt_assets(items):
+    with open(IMAGE_PROMPTS_FILE, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
 
 
@@ -569,3 +585,75 @@ def generate_post_from_asset(asset_id: int):
 @router.get("/posts")
 def get_posts():
     return {"success": True, "items": load_post_assets()[-100:]}
+
+
+@router.post("/posts/{post_id}/image-prompt")
+def generate_image_prompt_from_post(post_id: int):
+    posts = load_post_assets()
+    post = next((x for x in posts if x.get("id") == post_id), None)
+
+    if not post:
+        return {"success": False, "error": "post not found"}
+
+    client = anthropic.Anthropic(
+        api_key=CLAUDE_API_KEY,
+        base_url=CLAUDE_PROXY_URL
+    )
+
+    prompt = f"""
+Ты — visual director для AI image generation.
+
+На основе поста создай промпт для генерации изображения.
+
+Верни строго JSON без markdown.
+
+Схема:
+{{
+  "title": "короткое название визуала",
+  "image_prompt": "детальный prompt на английском",
+  "negative_prompt": "что исключить",
+  "style": "визуальный стиль",
+  "aspect_ratio": "9:16"
+}}
+
+ПОСТ:
+{json.dumps(post, ensure_ascii=False, indent=2)}
+"""
+
+    try:
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=1500,
+            temperature=0.5,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        data = json.loads(clean_json(extract_text(msg)))
+
+        items = load_image_prompt_assets()
+        next_id = max([x.get("id", 0) for x in items], default=0) + 1
+
+        item = {
+            "id": next_id,
+            "post_id": post_id,
+            "title": data.get("title", ""),
+            "image_prompt": data.get("image_prompt", ""),
+            "negative_prompt": data.get("negative_prompt", ""),
+            "style": data.get("style", ""),
+            "aspect_ratio": data.get("aspect_ratio", "9:16"),
+            "status": "draft",
+            "created_at": datetime.now().isoformat(timespec="seconds")
+        }
+
+        items.append(item)
+        save_image_prompt_assets(items)
+
+        return {"success": True, "image_prompt": item}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@router.get("/image-prompts")
+def get_image_prompts():
+    return {"success": True, "items": load_image_prompt_assets()[-100:]}

@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "post_id": 2,
+    "title": "Sleepless Night Energy",
+    "image_prompt": "A tired but energetic young man with dark circles under his eyes, wide awake at night, surrounded by glowing screens and coffee cups. He's sitting at a desk with a manic, sleep-deprived expression, looking like a robot powered by caffeine and determination. Neon lights in the background, digital aesthetic. The character is disheveled but somehow still intense and focused. Dark moody lighting with hints of blue and purple neon. Chaotic but creative energy visible in the scene.",
+    "negative_prompt": "sleeping, peaceful, calm, rested, healthy skin, bright daylight, organized, clean desk, relaxed expression, normal sleep schedule",
+    "style": "digital illustration, cyberpunk aesthetic, modern meme culture style, high contrast, neon accents, semi-realistic with exaggerated features",
+    "aspect_ratio": "9:16",
+    "status": "draft",
+    "created_at": "2026-06-11T14:08:50"
+  }
+]
