@@ -17,10 +17,23 @@ MAX_CHANNEL_ID = int(os.getenv("IVADI_MAX_CHANNEL_ID", "-75683421497408"))
 LOG_FILE = "/root/factory/ivadi_posts_log.json"
 
 
-def send_to_max_channel(text: str) -> bool:
+def send_to_max_channel(text: str, image_url: str = None) -> bool:
     if not MAX_BOT_TOKEN:
         print("[MAX] Токен не задан")
         return False
+
+    payload = {"text": text}
+
+    if image_url:
+        payload["attachments"] = [
+            {
+                "type": "image",
+                "payload": {
+                    "url": image_url
+                }
+            }
+        ]
+
     try:
         r = requests.post(
             "https://platform-api.max.ru/messages",
@@ -29,9 +42,13 @@ def send_to_max_channel(text: str) -> bool:
                 "Content-Type": "application/json"
             },
             params={"chat_id": MAX_CHANNEL_ID},
-            json={"text": text},
-            timeout=15
+            json=payload,
+            timeout=20
         )
+
+        if r.status_code != 200:
+            print(f"[MAX] HTTP {r.status_code}: {r.text[:500]}")
+
         return r.status_code == 200
     except Exception as e:
         print(f"[MAX] Ошибка: {e}")
@@ -74,7 +91,7 @@ def publish(post_type: str = None):
 
     if post:
         text = post["text"]
-        ok = send_to_max_channel(text)
+        ok = send_to_max_channel(text, post.get("image_url"))
         if ok:
             mark_published(post["id"])
             print(f"✅ #{post['id']} [{post['post_type']}] {post['topic'][:40]}")
@@ -88,7 +105,7 @@ def publish(post_type: str = None):
         pt = post_type or "offer"
         news_ctx = fetch_news() if pt == "news" else None
         text = generate_post(post_type=pt, direction=direction, news_context=news_ctx)
-        ok = send_to_max_channel(text)
+        ok = send_to_max_channel(text, post.get("image_url"))
         print(f"{'✅' if ok else '❌'} {pt} опубликован на лету")
         log_post(pt, "", ok)
 
