@@ -4,6 +4,8 @@ from typing import Optional
 from datetime import datetime
 import os
 import json
+import time
+import requests
 import sqlite3
 import anthropic
 from dotenv import load_dotenv
@@ -15,6 +17,7 @@ router = APIRouter(prefix="/api/analyzer", tags=["analyzer"])
 
 DB_PATH = "/root/factory/backend/factory.db"
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
+LEONARDO_API_KEY = os.getenv("LEONARDO_API_KEY")
 CLAUDE_PROXY_URL = "https://anthropic-proxy.ivadialsan.workers.dev"
 MODEL = "claude-haiku-4-5-20251001"
 
@@ -248,6 +251,7 @@ def analyze_content(req: AnalyzeRequest):
 ASSETS_FILE = "/root/factory/content_assets.json"
 POSTS_FILE = "/root/factory/post_assets.json"
 IMAGE_PROMPTS_FILE = "/root/factory/image_prompt_assets.json"
+IMAGE_ASSETS_FILE = "/root/factory/image_assets.json"
 
 
 def load_content_assets():
@@ -292,6 +296,21 @@ def load_image_prompt_assets():
 
 def save_image_prompt_assets(items):
     with open(IMAGE_PROMPTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=2)
+
+
+def load_image_assets():
+    if os.path.exists(IMAGE_ASSETS_FILE):
+        with open(IMAGE_ASSETS_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return []
+    return []
+
+
+def save_image_assets(items):
+    with open(IMAGE_ASSETS_FILE, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
 
 
@@ -657,3 +676,104 @@ def generate_image_prompt_from_post(post_id: int):
 @router.get("/image-prompts")
 def get_image_prompts():
     return {"success": True, "items": load_image_prompt_assets()[-100:]}
+
+
+@router.post("/image-prompts/{prompt_id}/image")
+def generate_image_from_prompt(prompt_id: int):
+    if not LEONARDO_API_KEY:
+        return {"success": False, "error": "LEONARDO_API_KEY not found in backend/.env"}
+
+    prompts = load_image_prompt_assets()
+    prompt_item = next((x for x in prompts if x.get("id") == prompt_id), None)
+
+    if not prompt_item:
+        return {"success": False, "error": "image prompt not found"}
+
+    headers = {
+        "Authorization": f"Bearer {LEONARDO_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    full_prompt = prompt_item.get("image_prompt", "")
+    if prompt_item.get("style"):
+        full_prompt = full_prompt + ", " + prompt_item.get("style", "")
+
+    try:
+        start = requests.post(
+            "https://cloud.leonardo.ai/api/rest/v1/generations",
+            headers=headers,
+            json={
+                "prompt": full_prompt,
+                "negative_prompt": prompt_item.get("negative_prompt", ""),
+                "modelId": "b24e16ff-06e3-43eb-8d33-4416c2d75876",
+                "width": 768,
+                "height": 1344,
+                "num_images": 1,
+                "guidance_scale": 7,
+                "alchemy": True
+            },
+            timeout=60
+        )
+
+        start_data = start.json()
+
+        if not start.ok:
+            return {"success": False, "error": start_data}
+
+        gen_id = start_data.get("sdGenerationJob", {}).get("generationId")
+
+        if not gen_id:
+            return {"success": False, "error": "generationId not found", "response": start_data}
+
+        image_url = ""
+        status = "PENDING"
+
+        for _ in range(24):
+            time.sleep(5)
+            r = requests.get(
+                f"https://cloud.leonardo.ai/api/rest/v1/generations/{gen_id}",
+                headers=headers,
+                timeout=60
+            )
+            data = r.json()
+            generation = data.get("generations_by_pk", {})
+            status = generation.get("status", "")
+
+            if status == "COMPLETE":
+                images = generation.get("generated_images", [])
+                if images:
+                    image_url = images[0].get("url", "")
+                break
+
+            if status == "FAILED":
+                return {"success": False, "error": "Leonardo generation failed", "response": data}
+
+        if not image_url:
+            return {"success": False, "error": "image not ready", "status": status}
+
+        items = load_image_assets()
+        next_id = max([x.get("id", 0) for x in items], default=0) + 1
+
+        item = {
+            "id": next_id,
+            "image_prompt_id": prompt_id,
+            "title": prompt_item.get("title", ""),
+            "image_url": image_url,
+            "generation_id": gen_id,
+            "prompt": full_prompt,
+            "status": "ready",
+            "created_at": datetime.now().isoformat(timespec="seconds")
+        }
+
+        items.append(item)
+        save_image_assets(items)
+
+        return {"success": True, "image": item}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@router.get("/images")
+def get_images():
+    return {"success": True, "items": load_image_assets()[-100:]}
