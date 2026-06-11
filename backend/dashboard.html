@@ -167,6 +167,7 @@ select option { background: var(--bg-card); }
     <div class="nav-item" data-page="telegram"><span class="icon">✈️</span> Telegram<span class="badge badge-muted">—</span></div>
     <div class="nav-section">AI Инструменты</div>
     <div class="nav-item" data-page="analyzer"><span class="icon">🔍</span> Анализ контента</div>
+    <div class="nav-item" data-page="assets"><span class="icon">🧩</span> Библиотека сценариев</div>
     <div class="nav-item" data-page="hooks"><span class="icon">🎯</span> Хуки и сценарии</div>
     <div class="nav-item" data-page="competitors"><span class="icon">🕵️</span> Конкуренты</div>
     <div class="nav-item" data-page="niches"><span class="icon">📂</span> База ниш</div>
@@ -286,6 +287,23 @@ select option { background: var(--bg-card); }
       <div class="card" style="margin-top:20px"><div class="section-title">История анализов</div><div id="analyzer-history"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Анализов пока нет</div></div></div>
       <div class="card" id="analysis-detail" style="display:none;margin-top:20px"></div>
     </div>
+    <div class="page" data-page="assets">
+      <div style="margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px">🧩 Библиотека сценариев</div>
+        <div style="font-size:12px;color:var(--text-muted)">Сохранённые сценарии из анализов</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">Сценарии</div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadContentAssets()">Обновить</button>
+        </div>
+        <div id="assets-list">
+          <div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" data-page="hooks">
       <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🎯 Хуки и сценарии</div><div style="font-size:12px;color:var(--text-muted)">База структур и генератор хуков</div></div>
       <div class="card" style="margin-bottom:20px"><div class="section-title">Генератор хуков</div>
@@ -854,6 +872,97 @@ async function saveGeneratedScenarioAsset() {
 
 function saveToNiche() { alert('✅ Сохранено в базу ниш'); }
 
+
+async function loadContentAssets() {
+  const el = document.getElementById('assets-list');
+  if (!el) return;
+
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/assets').then(r => r.json());
+    const items = res.items || [];
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Сценариев пока нет</div>';
+      return;
+    }
+
+    el.innerHTML = items.slice().reverse().map(x => `
+      <div class="log-item" style="align-items:flex-start;cursor:pointer" onclick="openAssetDrawer(${x.id})">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">${x.title || 'Без названия'}</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.5">${(x.hook || '').substring(0,140)}${(x.hook || '').length > 140 ? '...' : ''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          <span class="status-badge status-active">${x.status || 'new'}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${x.created_at || ''}</span>
+        </div>
+      </div>
+    `).join('');
+
+    window.contentAssetsCache = items;
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px">Ошибка загрузки: ' + e.message + '</div>';
+  }
+}
+
+function openAssetDrawer(id) {
+  const items = window.contentAssetsCache || [];
+  const x = items.find(a => a.id === id);
+  if (!x) return;
+
+  closeScenarioDrawer();
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="scenario-overlay" onclick="closeScenarioDrawer()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;backdrop-filter:blur(2px);"></div>
+    <div id="scenario-drawer" style="position:fixed;top:0;right:0;width:min(620px,92vw);height:100vh;background:var(--bg-card);border-left:1px solid var(--border);z-index:9999;box-shadow:-24px 0 80px rgba(0,0,0,.45);padding:24px;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:20px;font-weight:800">${x.title || 'Без названия'}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Сценарий #${x.id} · ${x.status || 'new'}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeScenarioDrawer()">✕</button>
+      </div>
+
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Хук</div><div style="font-size:14px;line-height:1.7">${x.hook || '—'}</div></div>
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Сценарий</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${Array.isArray(x.script) ? x.script.map(s => '• ' + s).join('<br>') : '—'}</div></div>
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Озвучка</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${x.voiceover || '—'}</div></div>
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Визуал</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${x.visual_style || '—'}</div></div>
+      <div class="card" style="margin-bottom:16px"><div class="section-title">CTA</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${x.cta || '—'}</div></div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="generatePostFromAsset(${x.id})">Сгенерировать пост</button>
+        <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('scenario-drawer').innerText)">Копировать</button>
+      </div>
+      <div id="post-generate-status" style="font-size:12px;color:var(--text-muted);margin-top:10px"></div>
+    </div>
+  `);
+}
+
+async function generatePostFromAsset(assetId) {
+  const box = document.getElementById('post-generate-status');
+  if (box) {
+    box.textContent = 'Генерирую пост...';
+    box.style.color = 'var(--text-muted)';
+  }
+
+  try {
+    const res = await fetch(API + '/api/analyzer/assets/' + assetId + '/post', {
+      method: 'POST'
+    }).then(r => r.json());
+
+    if (box) {
+      box.textContent = res.success ? 'Пост создан и сохранён' : 'Ошибка генерации поста';
+      box.style.color = res.success ? 'var(--green)' : 'var(--red)';
+    }
+  } catch(e) {
+    if (box) {
+      box.textContent = 'Ошибка: ' + e.message;
+      box.style.color = 'var(--red)';
+    }
+  }
+}
+
 async function generateHooks() {
   const topic = document.getElementById('hook-topic').value;
   if (!topic) { alert('Введите тему'); return; }
@@ -1005,6 +1114,7 @@ loadDashboard();
 updateNicheCounts();
 loadNicheRecent();
 loadAnalyzerHistory();
+loadContentAssets();
 renderCompetitors();
 setInterval(()=>{ const a=document.querySelector('.page.active'); if (!a) return; const p=a.getAttribute('data-page'); if(p==='dashboard')loadDashboard(); if(p==='max')loadMaxData(); },30000);
 

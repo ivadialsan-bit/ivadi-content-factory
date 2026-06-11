@@ -246,6 +246,7 @@ def analyze_content(req: AnalyzeRequest):
 
 
 ASSETS_FILE = "/root/factory/content_assets.json"
+POSTS_FILE = "/root/factory/post_assets.json"
 
 
 def load_content_assets():
@@ -260,6 +261,21 @@ def load_content_assets():
 
 def save_content_assets(items):
     with open(ASSETS_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=2)
+
+
+def load_post_assets():
+    if os.path.exists(POSTS_FILE):
+        with open(POSTS_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return []
+    return []
+
+
+def save_post_assets(items):
+    with open(POSTS_FILE, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
 
 
@@ -480,3 +496,76 @@ def save_content_asset(asset: dict):
 @router.get("/assets")
 def get_content_assets():
     return {"success": True, "items": load_content_assets()[-100:]}
+
+
+@router.post("/assets/{asset_id}/post")
+def generate_post_from_asset(asset_id: int):
+    if not CLAUDE_API_KEY:
+        return {"success": False, "error": "CLAUDE_API_KEY not found in backend/.env"}
+
+    assets = load_content_assets()
+    asset = next((x for x in assets if x.get("id") == asset_id), None)
+
+    if not asset:
+        return {"success": False, "error": "asset not found"}
+
+    client = anthropic.Anthropic(
+        api_key=CLAUDE_API_KEY,
+        base_url=CLAUDE_PROXY_URL
+    )
+
+    prompt = f"""
+Ты — профессиональный контент-маркетолог.
+
+На основе сценария создай готовый пост для соцсетей.
+
+Верни строго JSON без markdown.
+
+Схема:
+{{
+  "title": "короткое название поста",
+  "post_text": "готовый текст поста",
+  "hashtags": "#тег1 #тег2 #тег3",
+  "cta": "призыв к действию"
+}}
+
+СЦЕНАРИЙ:
+{json.dumps(asset, ensure_ascii=False, indent=2)}
+"""
+
+    try:
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=1500,
+            temperature=0.5,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        data = json.loads(clean_json(extract_text(msg)))
+
+        posts = load_post_assets()
+        next_id = max([x.get("id", 0) for x in posts], default=0) + 1
+
+        item = {
+            "id": next_id,
+            "scenario_id": asset_id,
+            "title": data.get("title", ""),
+            "post_text": data.get("post_text", ""),
+            "hashtags": data.get("hashtags", ""),
+            "cta": data.get("cta", ""),
+            "status": "draft",
+            "created_at": datetime.now().isoformat(timespec="seconds")
+        }
+
+        posts.append(item)
+        save_post_assets(posts)
+
+        return {"success": True, "post": item}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@router.get("/posts")
+def get_posts():
+    return {"success": True, "items": load_post_assets()[-100:]}
