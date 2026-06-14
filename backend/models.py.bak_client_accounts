@@ -1,0 +1,149 @@
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, ForeignKey
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from database import Base
+
+class Account(Base):
+    __tablename__ = "accounts"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), nullable=False)
+    platform = Column(String(20), nullable=False)
+    community_id = Column(String(20), unique=True, nullable=False)
+    token = Column(String(200), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    posts = relationship("Post", back_populates="account", cascade="all, delete-orphan")
+    clips = relationship("Clip", back_populates="account", cascade="all, delete-orphan")
+
+class Post(Base):
+    __tablename__ = "posts"
+    
+    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
+    theme = Column(String(100), nullable=False)
+    caption = Column(Text, nullable=True)
+    image_path = Column(String(200), nullable=True)
+    vk_url = Column(String(300), nullable=True)
+    status = Column(String(20), default="draft")
+    views = Column(Integer, default=0)
+    likes = Column(Integer, default=0)
+    comments_count = Column(Integer, default=0)
+    published_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    account = relationship("Account", back_populates="posts")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+    statistics = relationship("Statistics", back_populates="post", cascade="all, delete-orphan")
+
+class Clip(Base):
+    __tablename__ = "clips"
+    
+    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
+    title = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    video_path = Column(String(200), nullable=False)
+    thumbnail_path = Column(String(200), nullable=True)
+    duration = Column(Integer, default=0)
+    status = Column(String(20), default="draft")
+    views = Column(Integer, default=0)
+    likes = Column(Integer, default=0)
+    comments_count = Column(Integer, default=0)
+    published_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    account = relationship("Account", back_populates="clips")
+
+class Comment(Base):
+    __tablename__ = "comments"
+    
+    id = Column(Integer, primary_key=True)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    author = Column(String(100), nullable=False)
+    text = Column(Text, nullable=False)
+    likes = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    post = relationship("Post", back_populates="comments")
+
+class Statistics(Base):
+    __tablename__ = "statistics"
+    
+    id = Column(Integer, primary_key=True)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    views = Column(Integer, default=0)
+    likes = Column(Integer, default=0)
+    comments = Column(Integer, default=0)
+    shares = Column(Integer, default=0)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    post = relationship("Post", back_populates="statistics")
+
+class Pattern(Base):
+    __tablename__ = "patterns"
+    
+    id = Column(Integer, primary_key=True)
+    theme = Column(String(50), nullable=False)
+    heroes = Column(String(100), nullable=False)
+    conclusion = Column(Text, nullable=False)
+    hook = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class Client(Base):
+    __tablename__ = "clients"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    brand = Column(String(100), nullable=True)
+    niche = Column(String(100), nullable=True)
+    status = Column(String(20), default="active")
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientProject(Base):
+    __tablename__ = "client_projects"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientChannel(Base):
+    __tablename__ = "client_channels"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("client_projects.id"), nullable=True)
+    platform = Column(String(50), nullable=False)
+    url = Column(String(300), nullable=True)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientGoal(Base):
+    __tablename__ = "client_goals"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    title = Column(String(150), nullable=False)
+    target_value = Column(String(100), nullable=True)
+    period = Column(String(50), nullable=True)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientKPI(Base):
+    __tablename__ = "client_kpis"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    metric = Column(String(100), nullable=False)
+    value = Column(String(100), nullable=True)
+    period = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

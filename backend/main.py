@@ -6,6 +6,7 @@ from models import Account, Post, Statistics, Pattern
 from routes import router
 from ivadi_routes import router as ivadi_router
 from analyzer_routes import router as analyzer_router
+from client_routes import router as client_router
 from dotenv import load_dotenv
 import os
 
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(ivadi_router)
 app.include_router(analyzer_router)
+app.include_router(client_router)
 
 @app.get("/api/health")
 def health_check():

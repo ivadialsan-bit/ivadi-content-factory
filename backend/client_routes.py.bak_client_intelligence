@@ -1,0 +1,314 @@
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy.orm import Session
+
+from database import get_db
+from models import Client, ClientProject, ClientChannel, ClientGoal, ClientKPI, ClientAccountSnapshot, ClientProfile, ClientBriefFile
+from schemas import (
+    ClientCreate,
+    ClientUpdate,
+    ClientProjectCreate,
+    ClientChannelCreate,
+    ClientGoalCreate,
+    ClientKPICreate,
+    ClientAccountSnapshotCreate,
+    ClientProfileCreate,
+    ClientProfileUpdate,
+)
+
+router = APIRouter(prefix="/api/clients", tags=["clients"])
+
+
+@router.get("")
+def get_clients(db: Session = Depends(get_db)):
+    return db.query(Client).order_by(Client.created_at.desc()).all()
+
+
+@router.post("")
+def create_client(client: ClientCreate, db: Session = Depends(get_db)):
+    db_client = Client(**client.dict())
+    db.add(db_client)
+    db.commit()
+    db.refresh(db_client)
+    return db_client
+
+
+@router.get("/{client_id}")
+def get_client(client_id: int, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+    return client
+
+
+@router.patch("/{client_id}")
+def update_client(client_id: int, update: ClientUpdate, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    for field, value in update.dict(exclude_unset=True).items():
+        setattr(client, field, value)
+
+    db.commit()
+    db.refresh(client)
+    return client
+
+
+@router.delete("/{client_id}")
+def delete_client(client_id: int, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    db.query(ClientProject).filter(ClientProject.client_id == client_id).delete()
+    db.query(ClientChannel).filter(ClientChannel.client_id == client_id).delete()
+    db.query(ClientGoal).filter(ClientGoal.client_id == client_id).delete()
+    db.query(ClientKPI).filter(ClientKPI.client_id == client_id).delete()
+    db.delete(client)
+    db.commit()
+    return {"message": "Deleted"}
+
+
+@router.get("/{client_id}/overview")
+def get_client_overview(client_id: int, db: Session = Depends(get_db)):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    return {
+        "client": client,
+        "projects": db.query(ClientProject).filter(ClientProject.client_id == client_id).all(),
+        "channels": db.query(ClientChannel).filter(ClientChannel.client_id == client_id).all(),
+        "goals": db.query(ClientGoal).filter(ClientGoal.client_id == client_id).all(),
+        "kpis": db.query(ClientKPI).filter(ClientKPI.client_id == client_id).all(),
+        "account_snapshots": db.query(ClientAccountSnapshot).join(ClientChannel, ClientAccountSnapshot.channel_id == ClientChannel.id).filter(ClientChannel.client_id == client_id).order_by(ClientAccountSnapshot.created_at.desc()).all(),
+        "profile": db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first(),
+        "brief_files": db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id).order_by(ClientBriefFile.created_at.desc()).all(),
+    }
+
+
+@router.post("/projects")
+def create_client_project(project: ClientProjectCreate, db: Session = Depends(get_db)):
+    item = ClientProject(**project.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/channels")
+def create_client_channel(channel: ClientChannelCreate, db: Session = Depends(get_db)):
+    item = ClientChannel(**channel.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/goals")
+def create_client_goal(goal: ClientGoalCreate, db: Session = Depends(get_db)):
+    item = ClientGoal(**goal.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/kpis")
+def create_client_kpi(kpi: ClientKPICreate, db: Session = Depends(get_db)):
+    item = ClientKPI(**kpi.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/channels/{channel_id}/sync")
+def sync_client_channel(channel_id: int, db: Session = Depends(get_db)):
+    channel = db.query(ClientChannel).filter(ClientChannel.id == channel_id).first()
+    if not channel:
+        raise HTTPException(status_code=404, detail="Аккаунт клиента не найден")
+
+    from datetime import datetime
+    channel.last_sync_at = datetime.utcnow()
+    channel.access_status = "synced_manual"
+    db.commit()
+    db.refresh(channel)
+
+    return {
+        "message": "Синхронизация аккаунта зафиксирована",
+        "channel_id": channel.id,
+        "platform": channel.platform,
+        "last_sync_at": channel.last_sync_at
+    }
+
+
+@router.post("/account-snapshots")
+def create_account_snapshot(snapshot: ClientAccountSnapshotCreate, db: Session = Depends(get_db)):
+    item = ClientAccountSnapshot(**snapshot.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.get("/channels/{channel_id}/snapshots")
+def get_channel_snapshots(channel_id: int, db: Session = Depends(get_db)):
+    return db.query(ClientAccountSnapshot).filter(
+        ClientAccountSnapshot.channel_id == channel_id
+    ).order_by(ClientAccountSnapshot.created_at.desc()).all()
+
+
+@router.get("/{client_id}/profile")
+def get_client_profile(client_id: int, db: Session = Depends(get_db)):
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+    if not profile:
+        return None
+    return profile
+
+
+@router.post("/{client_id}/profile")
+def save_client_profile(client_id: int, profile: ClientProfileUpdate, db: Session = Depends(get_db)):
+    item = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+
+    if not item:
+        item = ClientProfile(client_id=client_id)
+        db.add(item)
+
+    for field, value in profile.dict(exclude_unset=True).items():
+        setattr(item, field, value)
+
+    from datetime import datetime
+    item.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.post("/{client_id}/brief/upload")
+async def upload_client_brief(client_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    import os
+    import json
+    from datetime import datetime
+    from openpyxl import load_workbook
+
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Нужен файл .xlsx")
+
+    upload_dir = f"/root/factory/client_briefs/{client_id}"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    safe_name = f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+    file_path = os.path.join(upload_dir, safe_name)
+
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    wb = load_workbook(file_path, data_only=True)
+    ws = wb.active
+
+    rows = []
+    headers = [cell.value for cell in ws[1]]
+
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        item = {}
+        for i, h in enumerate(headers):
+            if h:
+                item[str(h)] = row[i] if i < len(row) else None
+        if any(v for v in item.values()):
+            rows.append(item)
+
+    parsed_json = json.dumps(rows, ensure_ascii=False)
+
+    brief = ClientBriefFile(
+        client_id=client_id,
+        filename=file.filename,
+        file_path=file_path,
+        status="parsed",
+        parsed_json=parsed_json
+    )
+
+    db.add(brief)
+    db.commit()
+    db.refresh(brief)
+
+    return brief
+
+
+@router.get("/{client_id}/brief/latest")
+def get_latest_client_brief(client_id: int, db: Session = Depends(get_db)):
+    return db.query(ClientBriefFile).filter(
+        ClientBriefFile.client_id == client_id
+    ).order_by(ClientBriefFile.created_at.desc()).first()
+
+
+@router.post("/{client_id}/profile/from-brief")
+def generate_profile_from_brief(client_id: int, db: Session = Depends(get_db)):
+    import json
+    from datetime import datetime
+
+    brief = db.query(ClientBriefFile).filter(
+        ClientBriefFile.client_id == client_id
+    ).order_by(ClientBriefFile.created_at.desc()).first()
+
+    if not brief or not brief.parsed_json:
+        raise HTTPException(status_code=404, detail="Бриф не найден")
+
+    rows = json.loads(brief.parsed_json)
+
+    answers = {}
+    for row in rows:
+        key = row.get("Ключ системы")
+        value = row.get("Ответ клиента")
+        if key and value:
+            answers[key] = str(value).strip()
+
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+
+    if not profile:
+        profile = ClientProfile(client_id=client_id)
+        db.add(profile)
+
+    profile.product = answers.get("product", profile.product)
+    profile.target_audience = answers.get("target_audience", profile.target_audience)
+    profile.tone_of_voice = answers.get("tone_of_voice", profile.tone_of_voice)
+    profile.content_pillars = answers.get("content_pillars", profile.content_pillars)
+    profile.usp = answers.get("usp", profile.usp)
+    profile.offers = answers.get("offers", profile.offers)
+    profile.competitors = answers.get("competitors", profile.competitors)
+    profile.pains = answers.get("pains", profile.pains)
+    profile.desires = answers.get("desires", profile.desires)
+    profile.objections = answers.get("objections", profile.objections)
+    profile.target_platforms = answers.get("target_platforms", profile.target_platforms)
+    profile.traffic_funnel = answers.get("traffic_funnel", profile.traffic_funnel)
+
+    # усиленный автосбор из базовых полей брифа
+    company = answers.get("company_name", "")
+    niche = answers.get("niche", "")
+    geography = answers.get("geography", "")
+    average_check = answers.get("average_check", "")
+
+    if not profile.positioning:
+        parts = []
+        if company:
+            parts.append(company)
+        if niche:
+            parts.append(f"ниша: {niche}")
+        if geography:
+            parts.append(f"география: {geography}")
+        if average_check:
+            parts.append(f"средний чек: {average_check}")
+        profile.positioning = "; ".join(parts) if parts else profile.positioning
+
+    profile.profile_status = "ready"
+    profile.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(profile)
+    return profile

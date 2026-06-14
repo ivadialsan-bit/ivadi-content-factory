@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMM Command Center</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-card: #111118;
+  --bg-hover: #16161f;
+  --border: #1e1e2e;
+  --border-light: #2a2a3e;
+  --text: #e4e4f0;
+  --text-muted: #6b6b8a;
+  --text-dim: #3a3a55;
+  --accent: #7c6af7;
+  --accent-glow: rgba(124,106,247,0.15);
+  --accent-dim: rgba(124,106,247,0.08);
+  --green: #22d3a0;
+  --green-dim: rgba(34,211,160,0.12);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.12);
+  --yellow: #fbbf24;
+  --yellow-dim: rgba(251,191,36,0.12);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.12);
+  --pink: #f472b6;
+  --sidebar-w: 220px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:14px; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+.sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; }
+.sidebar-logo { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), #a78bfa); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.logo-text { font-weight: 700; font-size: 13px; letter-spacing: -0.3px; }
+.logo-badge { margin-left: auto; font-size: 9px; padding: 2px 6px; background: var(--accent-dim); color: var(--accent); border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; }
+.nav { flex: 1; padding: 8px 0; }
+.nav-section { padding: 16px 16px 4px; font-size: 10px; font-weight: 600; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 16px; margin: 1px 6px; border-radius: 6px; cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: 450; transition: all 0.15s; border: 1px solid transparent; }
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(124,106,247,0.2); font-weight: 600; }
+.nav-item .icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+.nav-item .badge { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-muted { background: var(--bg-hover); color: var(--text-muted); }
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; }
+.dot-green { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.dot-red { background: var(--red); }
+.dot-yellow { background: var(--yellow); }
+.dot-muted { background: var(--text-dim); }
+.main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 12px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
+.topbar-title { font-size: 14px; font-weight: 600; }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.content { padding: 28px; flex: 1; }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.btn { padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; font-family: inherit; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #6c5ae6; }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-light); }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+.btn-success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,211,160,0.2); }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.card:hover { border-color: var(--border-light); }
+.section-title { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 16px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; position: relative; overflow: hidden; transition: border-color 0.15s; }
+.stat-card:hover { border-color: var(--border-light); }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); opacity: 0.6; }
+.stat-card.green::before { background: var(--green); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.yellow::before { background: var(--yellow); }
+.stat-card.pink::before { background: var(--pink); }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+.stat-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; letter-spacing: -1px; }
+.stat-meta { font-size: 11px; color: var(--text-muted); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.platform-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.tag-vk { background: rgba(70,128,194,0.15); color: #60a5fa; }
+.tag-ig { background: rgba(225,48,108,0.15); color: #f472b6; }
+.tag-yt { background: rgba(255,0,0,0.12); color: #f87171; }
+.tag-max { background: rgba(0,160,220,0.15); color: #67e8f9; }
+.tag-tg { background: rgba(34,197,206,0.15); color: #67e8f9; }
+.type-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.type-lifehack { background: rgba(124,106,247,0.15); color: var(--accent); }
+.type-checklist { background: var(--green-dim); color: var(--green); }
+.type-honest { background: var(--yellow-dim); color: var(--yellow); }
+.type-offer { background: rgba(96,165,250,0.15); color: var(--blue); }
+.type-story { background: rgba(244,114,182,0.15); color: var(--pink); }
+.type-comparison { background: rgba(251,146,60,0.15); color: #fb923c; }
+.type-motivation { background: rgba(34,211,160,0.1); color: var(--green); }
+.type-news { background: rgba(248,113,113,0.12); color: var(--red); }
+.status-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.status-active { background: var(--green-dim); color: var(--green); }
+.status-inactive { background: var(--red-dim); color: var(--red); }
+.status-soon { background: var(--yellow-dim); color: var(--yellow); }
+.queue-item { padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 14px; transition: border-color 0.15s; }
+.queue-item:hover { border-color: var(--border-light); }
+.queue-content { flex: 1; min-width: 0; }
+.queue-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.queue-topic { font-size: 13px; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.queue-preview { font-size: 12px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.queue-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+input[type=text], input[type=password], textarea, select { background: var(--bg); border: 1px solid var(--border-light); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 8px 12px; outline: none; transition: border-color 0.15s; width: 100%; }
+input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus { border-color: var(--accent); }
+input[type=text]::placeholder, textarea::placeholder { color: var(--text-dim); }
+textarea { resize: vertical; line-height: 1.6; }
+select option { background: var(--bg-card); }
+.integration-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; transition: border-color 0.15s; }
+.integration-card:hover { border-color: var(--border-light); }
+.integration-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.integration-name { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+.integration-desc { font-size: 11px; color: var(--text-muted); }
+.competitor-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+.niche-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; cursor: pointer; transition: all 0.15s; text-align: center; }
+.niche-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+.niche-icon { font-size: 36px; margin-bottom: 10px; }
+.niche-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.niche-count { font-size: 11px; color: var(--text-muted); }
+.hook-template { padding: 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.hook-template:hover { border-color: var(--accent); background: var(--accent-dim); }
+.hook-type { font-size: 10px; font-weight: 600; color: var(--accent); margin-bottom: 6px; letter-spacing: 0.5px; }
+.hook-text { font-size: 13px; line-height: 1.5; }
+.platform-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.platform-icon-lg { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.platform-name { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.platform-sub { font-size: 12px; color: var(--text-muted); }
+.coming-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 40px; text-align: center; border: 1px dashed var(--border-light); border-radius: 12px; background: var(--bg-card); }
+.coming-soon-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
+.coming-soon-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.coming-soon-sub { font-size: 13px; color: var(--text-muted); max-width: 320px; line-height: 1.6; }
+.avatar-service { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; cursor: pointer; transition: all 0.15s; }
+.avatar-service:hover { border-color: var(--border-light); transform: translateY(-1px); }
+.avatar-icon { font-size: 32px; margin-bottom: 12px; }
+.avatar-name { font-weight: 600; margin-bottom: 4px; }
+.avatar-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+.log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.log-item:last-child { border-bottom: none; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+.client-tabs{display:flex;gap:8px;padding:14px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card);z-index:2}
+.client-tab{border:1px solid var(--border);background:var(--bg);color:var(--text-muted);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+.client-tab.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(124,106,247,.45)}
+.client-row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
+.client-row:last-child{border-bottom:0}
+
+</style>
+
+<style id="clients-crm-ui">
+.client-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.client-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.client-sub{color:var(--text-muted);font-size:13px}
+.client-stats{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:12px;margin-bottom:18px}
+.client-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.client-stat .num{font-size:24px;font-weight:800}
+.client-stat .label{font-size:12px;color:var(--text-muted);margin-top:4px}
+.client-layout{display:grid;grid-template-columns:360px 1fr;gap:16px}
+.client-form{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.client-form input,.client-form textarea,.client-form select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 12px;margin-bottom:10px;outline:none}
+.client-form textarea{min-height:110px;resize:vertical}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.client-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:.15s}
+.client-card:hover{transform:translateY(-2px);border-color:rgba(124,106,247,.55)}
+.client-card-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.client-name{font-size:16px;font-weight:800}
+.client-meta{color:var(--text-muted);font-size:12px;line-height:1.5}
+.client-actions{display:flex;gap:8px;margin-top:14px}
+.client-drawer{position:fixed;top:0;right:-720px;width:min(720px,94vw);height:100vh;background:var(--bg-card);border-left:1px solid var(--border);z-index:10000;box-shadow:-24px 0 80px rgba(0,0,0,.5);transition:.2s;overflow-y:auto}
+.client-drawer.open{right:0}
+.client-drawer-head{padding:22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.client-drawer-body{padding:22px}
+.client-section{border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;background:rgba(255,255,255,.02)}
+.client-section-title{font-weight:800;margin-bottom:10px}
+.client-mini-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px}
+.client-mini-form input,.client-mini-form select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px}
+.client-empty{border:1px dashed var(--border);border-radius:14px;padding:24px;text-align:center;color:var(--text-muted)}
+@media(max-width:900px){.client-layout{grid-template-columns:1fr}.client-stats{grid-template-columns:1fr}.client-mini-form{grid-template-columns:1fr}}
+</style>
+
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <span class="logo-text">SMM Center</span>
+    <span class="logo-badge">PRO</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Дашборд</div>
+    <div class="nav-section">Платформы</div>
+    <div class="nav-item" data-page="vk"><span class="icon">🔵</span> ВКонтакте<span class="badge badge-green">1</span></div>
+    <div class="nav-item" data-page="instagram"><span class="icon">📸</span> Instagram<span class="badge badge-muted">—</span></div>
+    <div class="nav-item" data-page="youtube"><span class="icon">▶️</span> YouTube<span class="badge badge-muted">—</span></div>
+    <div class="nav-item" data-page="max"><span class="icon">💬</span> MAX<span class="badge badge-green">✓</span></div>
+    <div class="nav-item" data-page="telegram"><span class="icon">✈️</span> Telegram<span class="badge badge-muted">—</span></div>
+    <div class="nav-section">Клиенты</div>
+    <div class="nav-item" data-page="clients"><span class="icon">👥</span> Клиенты</div>
+    <div class="nav-section">AI Инструменты</div>
+    <div class="nav-item" data-page="analyzer"><span class="icon">🔍</span> Анализ контента</div>
+    <div class="nav-item" data-page="assets"><span class="icon">🧩</span> Библиотека сценариев</div>
+    <div class="nav-item" data-page="posts"><span class="icon">📝</span> Библиотека постов</div>
+    <div class="nav-item" data-page="images"><span class="icon">🖼️</span> Библиотека изображений</div>
+    <div class="nav-item" data-page="hooks"><span class="icon">🎯</span> Хуки и сценарии</div>
+    <div class="nav-item" data-page="competitors"><span class="icon">🕵️</span> Конкуренты</div>
+    <div class="nav-item" data-page="niches"><span class="icon">📂</span> База ниш</div>
+    <div class="nav-item" data-page="transcribe"><span class="icon">📝</span> Транскрибация</div>
+    <div class="nav-section">Генерация</div>
+    <div class="nav-item" data-page="avatars"><span class="icon">🎭</span> Аватары</div>
+    <div class="nav-item" data-page="integrations"><span class="icon">🔌</span> Интеграции</div>
+    <div class="nav-section">Система</div>
+    <div class="nav-item" data-page="schedule"><span class="icon">⏰</span> Расписание</div>
+    <div class="nav-item" data-page="patterns"><span class="icon">🎯</span> Паттерны</div>
+    <div class="nav-item" data-page="settings"><span class="icon">⚙️</span> Настройки</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="font-size:11px;color:var(--text-muted)"><span class="dot dot-green"></span>Все сервисы работают</div>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title" id="topbar-title">Дашборд</div></div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="refreshPage()">↻ Обновить</button>
+      <button class="btn btn-primary btn-sm">+ Создать пост</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="page active" data-page="dashboard">
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-label">ОПУБЛИКОВАНО</div><div class="stat-value" id="db-total">—</div><div class="stat-meta">всего постов</div></div>
+        <div class="stat-card blue"><div class="stat-label">СЕГОДНЯ</div><div class="stat-value" id="db-today">—</div><div class="stat-meta">постов за сегодня</div></div>
+        <div class="stat-card yellow"><div class="stat-label">В ОЧЕРЕДИ</div><div class="stat-value" id="db-pending">—</div><div class="stat-meta">ожидают публикации</div></div>
+        <div class="stat-card"><div class="stat-label">ПЛАТФОРМЫ</div><div class="stat-value">2</div><div class="stat-meta">активны</div></div>
+        <div class="stat-card"><div class="stat-label">ИНТЕГРАЦИИ</div><div class="stat-value">4</div><div class="stat-meta">подключено</div></div>
+        <div class="stat-card"><div class="stat-label">АККАУНТЫ</div><div class="stat-value">1</div><div class="stat-meta">ВК активен</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="section-title">Последние публикации</div><div id="db-log"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div></div></div>
+        <div class="card"><div class="section-title">Статус сервисов</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span><span class="dot dot-green"></span>ВКонтакте API</span><span class="status-badge status-active">активен</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span><span class="dot dot-green"></span>MAX Bot</span><span class="status-badge status-active">активен</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span><span class="dot dot-green"></span>Claude API</span><span class="status-badge status-active">активен</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span><span class="dot dot-green"></span>ivadi-content.service</span><span class="status-badge status-active">активен</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span><span class="dot dot-yellow"></span>ElevenLabs</span><span class="status-badge status-soon">не проверен</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span><span class="dot dot-muted"></span>HeyGen</span><span class="status-badge status-inactive">не настроен</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page" data-page="clients">
+      <div class="client-hero">
+        <div>
+          <div class="client-title">👥 Client CRM</div>
+          <div class="client-sub">Клиенты, проекты, каналы, цели и KPI. База для Brief, Strategy и Planner.</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="loadClients()">Обновить</button>
+          <button class="btn btn-primary" onclick="openClientCreateModal()">+ Новый клиент</button>
+        </div>
+      </div>
+
+      <div class="client-stats">
+        <div class="client-stat"><div class="num" id="clients-total">0</div><div class="label">Клиентов</div></div>
+        <div class="client-stat"><div class="num" id="clients-projects">0</div><div class="label">Проектов</div></div>
+        <div class="client-stat"><div class="num" id="clients-channels">0</div><div class="label">Аккаунтов</div></div>
+        <div class="client-stat"><div class="num" id="clients-goals">0</div><div class="label">Целей</div></div>
+      </div>
+
+      <div class="section-title">Клиенты</div>
+      <div id="clients-list" class="client-grid">
+        <div class="client-empty">Загрузка клиентов...</div>
+      </div>
+    </div>
+
+    <div class="page" data-page="vk">
+      <div class="platform-header">
+        <div class="platform-icon-lg" style="background:rgba(70,128,194,0.15)">🔵</div>
+        <div><div class="platform-name">ВКонтакте</div><div class="platform-sub">Управление сообществами</div></div>
+        <div style="margin-left:auto;display:flex;gap:8px"><button class="btn btn-ghost btn-sm">+ Аккаунт</button><button class="btn btn-primary btn-sm">⚡ Создать пост</button></div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card blue"><div class="stat-label">АККАУНТЫ</div><div class="stat-value">1</div><div class="stat-meta">club239316119</div></div>
+        <div class="stat-card"><div class="stat-label">В ОЧЕРЕДИ</div><div class="stat-value">—</div><div class="stat-meta">ожидают</div></div>
+        <div class="stat-card green"><div class="stat-label">ОПУБЛИКОВАНО</div><div class="stat-value">—</div><div class="stat-meta">за 7 дней</div></div>
+      </div>
+      <div class="card"><div class="section-title">Подключённые сообщества</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(70,128,194,0.15);display:flex;align-items:center;justify-content:center">🔵</div>
+            <div><div style="font-size:13px;font-weight:500">Мир который ты не знал</div><div style="font-size:11px;color:var(--text-muted)">club239316119</div></div>
+          </div>
+          <div style="display:flex;gap:8px"><span class="status-badge status-active">активен</span><button class="btn btn-ghost btn-sm">Синхронизировать</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="page" data-page="instagram"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(225,48,108,0.15)">📸</div><div><div class="platform-name">Instagram</div><div class="platform-sub">lena_ritzz и другие</div></div></div><div class="coming-soon"><div class="coming-soon-icon">📸</div><div class="coming-soon-title">Instagram в разработке</div><div class="coming-soon-sub">Публикация через Graph API. Настройте ключ в Интеграциях.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
+    <div class="page" data-page="youtube"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(255,0,0,0.1)">▶️</div><div><div class="platform-name">YouTube</div><div class="platform-sub">Аккаунты и видео</div></div></div><div class="coming-soon"><div class="coming-soon-icon">▶️</div><div class="coming-soon-title">YouTube в разработке</div><div class="coming-soon-sub">YouTube Data API v3 — загрузка видео и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
+    <div class="page" data-page="max">
+      <div class="platform-header">
+        <div class="platform-icon-lg" style="background:rgba(0,160,220,0.15)">💬</div>
+        <div><div class="platform-name">MAX</div><div class="platform-sub">IvadiTravel контент-канал</div></div>
+        <div style="margin-left:auto;display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="loadMaxData()">↻ Обновить</button><button class="btn btn-primary btn-sm" onclick="generateMaxQueue()">⚡ Сгенерировать очередь</button></div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card green"><div class="stat-label">ОПУБЛИКОВАНО</div><div class="stat-value" id="max-total">—</div><div class="stat-meta">всего постов</div></div>
+        <div class="stat-card blue"><div class="stat-label">СЕГОДНЯ</div><div class="stat-value" id="max-today">—</div><div class="stat-meta">постов</div></div>
+        <div class="stat-card yellow"><div class="stat-label">В ОЧЕРЕДИ</div><div class="stat-value" id="max-pending">—</div><div class="stat-meta">ожидают</div></div>
+        <div class="stat-card"><div class="stat-label">СЕРВИС</div><div class="stat-value" style="font-size:14px;padding-top:4px"><span class="dot dot-green"></span>Активен</div><div class="stat-meta">ivadi-content</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="section-title">Очередь постов</div><div id="max-queue"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div></div></div>
+      <div class="card"><div class="section-title">Последние публикации</div><div id="max-log"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div></div></div>
+    </div>
+    <div class="page" data-page="telegram"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(34,197,206,0.15)">✈️</div><div><div class="platform-name">Telegram</div><div class="platform-sub">Аккаунты и боты</div></div></div><div class="coming-soon"><div class="coming-soon-icon">✈️</div><div class="coming-soon-title">Telegram в разработке</div><div class="coming-soon-sub">Bot API — автопостинг и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
+    <div class="page" data-page="analyzer">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🔍 Анализ контента</div><div style="font-size:12px;color:var(--text-muted)">Вставьте ссылку — AI разберёт структуру, хуки и психологию</div></div>
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="analyzer-url" placeholder="https://youtube.com/... или vk.com/... или instagram.com/..." style="flex:1;min-width:260px">
+          <select id="analyzer-niche" style="width:180px"><option value="">Ниша (авто)</option><option value="travel">✈️ Туризм</option><option value="business">💼 Бизнес</option><option value="education">📚 Образование</option><option value="entertainment">🎭 Развлечения</option><option value="tech">💻 Технологии</option><option value="finance">💰 Финансы</option><option value="beauty">💄 Красота</option></select>
+          <button class="btn btn-primary" onclick="analyzeContent()">⚡ Анализировать</button>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text-muted)">Работает с:</span>
+          <span class="platform-tag tag-yt">YouTube</span><span class="platform-tag tag-vk">ВКонтакте</span><span class="platform-tag tag-ig">Instagram</span>
+        </div>
+      </div>
+      <div id="analyzer-loading" style="display:none"><div class="card" style="text-align:center;padding:48px"><div style="font-size:32px;margin-bottom:12px">⏳</div><div style="font-size:14px;font-weight:500;margin-bottom:6px">Анализирую...</div><div style="font-size:12px;color:var(--text-muted)" id="analyzer-status">Получаю данные</div></div></div>
+      <div id="analyzer-result" style="display:none">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+          <div class="stat-card green"><div class="stat-label">ВИРАЛЬНОСТЬ</div><div class="stat-value" id="ar-viral">—</div><div class="stat-meta">из 10</div></div>
+          <div class="stat-card"><div class="stat-label">ТИП ХУКА</div><div class="stat-value" style="font-size:12px;padding-top:6px" id="ar-hook">—</div><div class="stat-meta">первые 3 сек</div></div>
+          <div class="stat-card blue"><div class="stat-label">ФОРМАТ</div><div class="stat-value" style="font-size:12px;padding-top:6px" id="ar-duration">—</div><div class="stat-meta">тип контента</div></div>
+          <div class="stat-card yellow"><div class="stat-label">НИША</div><div class="stat-value" style="font-size:12px;padding-top:6px" id="ar-niche">—</div><div class="stat-meta">определена AI</div></div>
+        </div>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card"><div class="section-title">Структура</div><div id="ar-structure" style="font-size:12px;line-height:1.8;color:var(--text-muted)"></div></div>
+          <div class="card"><div class="section-title">Психологические триггеры</div><div id="ar-triggers" style="font-size:12px;line-height:1.8;color:var(--text-muted)"></div></div>
+        </div>
+        <div class="card" style="margin-bottom:16px"><div class="section-title">Почему работает</div><div id="ar-why" style="font-size:12px;line-height:1.8;color:var(--text-muted)"></div></div>
+        <div class="card" style="margin-bottom:16px"><div class="section-title">Краткое содержание</div><div id="ar-transcript" style="font-size:12px;line-height:1.8;color:var(--text-muted);white-space:pre-wrap;max-height:160px;overflow-y:auto"></div></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveToNiche()">💾 В базу ниш</button><button class="btn btn-ghost" onclick="goToPage('hooks')">✨ Создать похожий</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('analyzer-result').style.display='none'">✕</button></div>
+      </div>
+      <div class="card" style="margin-top:20px"><div class="section-title">История анализов</div><div id="analyzer-history"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Анализов пока нет</div></div></div>
+      <div class="card" id="analysis-detail" style="display:none;margin-top:20px"></div>
+    </div>
+    <div class="page" data-page="assets">
+      <div style="margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px">🧩 Библиотека сценариев</div>
+        <div style="font-size:12px;color:var(--text-muted)">Сохранённые сценарии из анализов</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">Сценарии</div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadContentAssets()">Обновить</button>
+        </div>
+        <div id="assets-list">
+          <div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" data-page="posts">
+      <div style="margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px">📝 Библиотека постов</div>
+        <div style="font-size:12px;color:var(--text-muted)">Посты, созданные из сценариев</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">Посты</div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadGeneratedPosts()">Обновить</button>
+        </div>
+        <div id="posts-list"></div>
+      </div>
+    </div>
+
+    <div class="page" data-page="images">
+      <div style="margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px">🖼️ Библиотека изображений</div>
+        <div style="font-size:12px;color:var(--text-muted)">Изображения, созданные через Leonardo</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">Изображения</div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadGeneratedImages()">Обновить</button>
+        </div>
+        <div id="images-list"></div>
+      </div>
+    </div>
+
+
+    <div class="page" data-page="hooks">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🎯 Хуки и сценарии</div><div style="font-size:12px;color:var(--text-muted)">База структур и генератор хуков</div></div>
+      <div class="card" style="margin-bottom:20px"><div class="section-title">Генератор хуков</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="hook-topic" placeholder="Тема контента..." style="flex:1;min-width:180px">
+          <select id="hook-type" style="width:160px"><option value="question">Вопрос</option><option value="fact">Факт</option><option value="story">История</option><option value="provocation">Провокация</option><option value="promise">Обещание</option><option value="fear">Страх потери</option></select>
+          <button class="btn btn-primary" onclick="generateHooks()">Генерировать</button>
+        </div>
+        <div id="hooks-result" style="margin-top:16px;display:none"></div>
+      </div>
+      <div class="card"><div class="section-title">Библиотека хуков</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:4px">
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">НЕЗНАНИЕ</div><div class="hook-text">Ты делаешь [X], но не знаешь что [последствие]</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ВРЕМЯ</div><div class="hook-text">Через [N] секунд ты узнаешь [результат]</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ОШИБКА</div><div class="hook-text">Я потратил [X], чтобы узнать это. Тебе — бесплатно</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">КОНТРАСТ</div><div class="hook-text">Все делают [X]. Я делаю [Y]. Вот почему я [результат]</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ЧИСЛО</div><div class="hook-text">[N] вещей которые [аудитория] делает неправильно</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ИСТОРИЯ</div><div class="hook-text">Год назад я [ситуация]. Сегодня [результат]. Вот как</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ПРОВОКАЦИЯ</div><div class="hook-text">Все говорят [X]. Это ложь. И вот почему</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ИНТРИГА</div><div class="hook-text">Досмотри до конца — последнее тебя удивит</div></div>
+          <div class="hook-template" onclick="useTemplate(this)"><div class="hook-type">ОБЕЩАНИЕ</div><div class="hook-text">После этого ты больше никогда не будешь [X]</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="page" data-page="competitors">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🕵️ Конкуренты</div><div style="font-size:12px;color:var(--text-muted)">Мониторинг аккаунтов и анализ стратегий</div></div>
+      <div class="card" style="margin-bottom:20px"><div class="section-title">Добавить конкурента</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="comp-url" placeholder="Ссылка на аккаунт..." style="flex:1;min-width:200px">
+          <select id="comp-platform" style="width:140px"><option>ВКонтакте</option><option>Instagram</option><option>YouTube</option><option>Telegram</option></select>
+          <input type="text" id="comp-name" placeholder="Название..." style="width:160px">
+          <button class="btn btn-primary" onclick="addCompetitor()">Добавить</button>
+        </div>
+      </div>
+      <div class="card"><div class="section-title">Список конкурентов</div><div id="competitors-list"><div style="color:var(--text-muted);font-size:12px;padding:24px 0;text-align:center">Добавьте первого конкурента</div></div></div>
+    </div>
+    <div class="page" data-page="niches">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">📂 База ниш</div><div style="font-size:12px;color:var(--text-muted)">Контент сортируется автоматически при анализе</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px">
+        <div class="niche-card" onclick="openNiche('travel')"><div class="niche-icon">✈️</div><div class="niche-name">Туризм</div><div class="niche-count" id="nc-travel">0 единиц</div></div>
+        <div class="niche-card" onclick="openNiche('business')"><div class="niche-icon">💼</div><div class="niche-name">Бизнес</div><div class="niche-count" id="nc-business">0 единиц</div></div>
+        <div class="niche-card" onclick="openNiche('education')"><div class="niche-icon">📚</div><div class="niche-name">Образование</div><div class="niche-count" id="nc-education">0 единиц</div></div>
+        <div class="niche-card" onclick="openNiche('entertainment')"><div class="niche-icon">🎭</div><div class="niche-name">Развлечения</div><div class="niche-count" id="nc-entertainment">0 единиц</div></div>
+        <div class="niche-card" onclick="openNiche('tech')"><div class="niche-icon">💻</div><div class="niche-name">Технологии</div><div class="niche-count" id="nc-tech">0 единиц</div></div>
+        <div class="niche-card" onclick="openNiche('finance')"><div class="niche-icon">💰</div><div class="niche-name">Финансы</div><div class="niche-count" id="nc-finance">0 единиц</div></div>
+        <div class="niche-card" onclick="openNiche('beauty')"><div class="niche-icon">💄</div><div class="niche-name">Красота</div><div class="niche-count" id="nc-beauty">0 единиц</div></div>
+        <div class="niche-card" style="border-style:dashed" onclick="addNiche()"><div class="niche-icon" style="opacity:0.4">+</div><div class="niche-name">Добавить нишу</div><div class="niche-count">свою категорию</div></div>
+      </div>
+      <div class="card"><div class="section-title">Последние добавленные</div><div id="niches-recent" style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Анализируйте контент — он попадёт сюда</div></div>
+    </div>
+    <div class="page" data-page="transcribe">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">📝 Транскрибация</div><div style="font-size:12px;color:var(--text-muted)">Речь в текст — ссылка или файл</div></div>
+      <div class="card" style="margin-bottom:16px"><div class="section-title">Источник</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="tr-url" placeholder="Ссылка на видео..." style="flex:1;min-width:200px"><button class="btn btn-primary" onclick="transcribe()">📝 Транскрибировать</button></div>
+      </div>
+      <div class="card" id="tr-result" style="display:none"><div class="section-title">Результат</div><textarea id="tr-text" style="height:280px;margin-bottom:12px"></textarea><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="postFromTranscript()">✨ Сделать пост</button><button class="btn btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById('tr-text').value)">📋 Копировать</button></div></div>
+    </div>
+    <div class="page" data-page="avatars">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🎭 Аватары</div><div style="font-size:12px;color:var(--text-muted)">AI-ведущие для видео</div></div>
+      <div class="grid-auto" style="margin-bottom:24px">
+        <div class="avatar-service"><div class="avatar-icon">🎬</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div class="avatar-name">HeyGen</div><span class="status-badge status-inactive">не настроен</span></div><div class="avatar-desc">Реалистичные аватары, клонирование голоса</div><button class="btn btn-ghost btn-sm" onclick="goToPage('integrations')">Настроить →</button></div>
+        <div class="avatar-service"><div class="avatar-icon">🤖</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div class="avatar-name">D-ID</div><span class="status-badge status-inactive">не настроен</span></div><div class="avatar-desc">Анимация фото, говорящие портреты</div><button class="btn btn-ghost btn-sm" onclick="goToPage('integrations')">Настроить →</button></div>
+        <div class="avatar-service"><div class="avatar-icon">🎭</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div class="avatar-name">Synthesia</div><span class="status-badge status-inactive">не настроен</span></div><div class="avatar-desc">Корпоративные аватары, 120+ языков</div><button class="btn btn-ghost btn-sm" onclick="goToPage('integrations')">Настроить →</button></div>
+        <div class="avatar-service" style="border-style:dashed"><div class="avatar-icon" style="opacity:0.5">👤</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div class="avatar-name">Свой аватар</div><span class="status-badge status-soon">скоро</span></div><div class="avatar-desc">Обучить модель на своём лице</div><button class="btn btn-ghost btn-sm" disabled>В разработке</button></div>
+      </div>
+      <div class="card"><div class="section-title">Создать видео</div><textarea id="avatar-text" placeholder="Текст для озвучки..." style="height:100px;margin-bottom:10px"></textarea><div style="display:flex;gap:10px;flex-wrap:wrap"><select style="flex:1"><option>Выбрать аватара...</option></select><button class="btn btn-primary" onclick="alert('Подключите HeyGen')">🎬 Создать</button><button class="btn btn-ghost" onclick="generateAvatarScript()">✨ AI напишет</button></div></div>
+    </div>
+    <div class="page" data-page="integrations">
+      <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🔌 Интеграции</div><div style="font-size:12px;color:var(--text-muted)">API ключи внешних сервисов</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🤖 Claude (Anthropic)</div><div class="integration-desc">Генерация текстов, анализ</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🎬 Kling AI</div><div class="integration-desc">Генерация видео и изображений</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🔊 ElevenLabs</div><div class="integration-desc">Синтез речи, клонирование голоса</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🎨 Leonardo AI</div><div class="integration-desc">Генерация изображений для постов</div></div><span class="status-badge status-active">активен</span></div><input type="password" id="leonardo-api-key" value="d42c2467-3d55-43b4-8ce7-fa760ffba0c6" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm" onclick="checkLeonardoKey()">Проверить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🎭 HeyGen</div><div class="integration-desc">AI-аватары и видео</div></div><span class="status-badge status-inactive">не настроен</span></div><input type="password" placeholder="HeyGen API Key..." style="margin-bottom:8px"><button class="btn btn-primary btn-sm">Подключить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🎨 Midjourney</div><div class="integration-desc">Изображения через Discord</div></div><span class="status-badge status-inactive">не настроен</span></div><input type="password" placeholder="MJ API Key..." style="margin-bottom:8px"><button class="btn btn-primary btn-sm">Подключить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🎬 RunwayML</div><div class="integration-desc">Генерация видео из текста</div></div><span class="status-badge status-inactive">не настроен</span></div><input type="password" placeholder="Runway API Key..." style="margin-bottom:8px"><button class="btn btn-primary btn-sm">Подключить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🔵 ВКонтакте</div><div class="integration-desc">Публикация в сообщества</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
+        <div class="integration-card"><div class="integration-header"><div><div class="integration-name">💬 MAX Bot</div><div class="integration-desc">Уведомления и IvadiTravel</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
+        <div class="integration-card" style="border-style:dashed;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:120px" onclick="alert('Скоро')"><div style="text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">+</div><div style="font-size:13px">Добавить интеграцию</div></div></div>
+      </div>
+    </div>
+    <div class="page" data-page="schedule"><div style="font-size:20px;font-weight:700;margin-bottom:24px">⏰ Расписание</div><div class="coming-soon"><div class="coming-soon-icon">⏰</div><div class="coming-soon-title">Визуальный планировщик</div><div class="coming-soon-sub">Работает через cron на сервере. Визуальный интерфейс — в следующей версии.</div></div></div>
+    <div class="page" data-page="patterns"><div style="font-size:20px;font-weight:700;margin-bottom:24px">🎯 Паттерны</div><div class="coming-soon"><div class="coming-soon-icon">🎯</div><div class="coming-soon-title">База паттернов</div><div class="coming-soon-sub">Структуры историй и сюжетные паттерны — в следующей версии.</div></div></div>
+    <div class="page" data-page="settings">
+      <div style="font-size:20px;font-weight:700;margin-bottom:24px">⚙️ Настройки</div>
+      <div class="grid-2">
+        <div class="card"><div class="section-title">Общие</div><div style="display:flex;flex-direction:column;gap:14px"><div><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Название</div><input type="text" value="SMM Command Center"></div><div><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Часовой пояс</div><select><option>UTC+3 (Москва)</option></select></div><button class="btn btn-primary btn-sm" style="width:fit-content">Сохранить</button></div></div>
+        <div class="card"><div class="section-title">Сервер</div><div style="display:flex;flex-direction:column;gap:10px;font-size:12px"><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">IP</span><span>147.45.97.143</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">OS</span><span>Ubuntu 22.04</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Python</span><span>3.10.12</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Сервис</span><span class="status-badge status-active">ivadi-content активен</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const API = '';
+let analyzerHistory = JSON.parse(localStorage.getItem('smm_analyzer') || '[]');
+let competitors = JSON.parse(localStorage.getItem('smm_competitors') || '[]');
+
+const pageTitles = {
+  dashboard:'Дашборд',vk:'ВКонтакте',instagram:'Instagram',youtube:'YouTube',
+  max:'MAX — IvadiTravel',telegram:'Telegram',analyzer:'Анализ контента',
+  hooks:'Хуки и сценарии',posts:'Библиотека постов',images:'Библиотека изображений',competitors:'Конкуренты',niches:'База ниш',
+  transcribe:'Транскрибация',avatars:'Аватары',integrations:'Интеграции',
+  clients:'Клиенты',clients:'Клиенты',schedule:'Расписание',patterns:'Паттерны',settings:'Настройки'
+};
+
+
+
+
+let currentClientId = null;
+
+async function loadClients() {
+  const box = document.getElementById('clients-list');
+  if (!box) return;
+
+  try {
+    const res = await fetch('/api/clients');
+    const clients = await res.json();
+
+    let totalProjects = 0, totalChannels = 0, totalGoals = 0;
+
+    const overviews = await Promise.all(clients.map(async c => {
+      try {
+        const r = await fetch('/api/clients/' + c.id + '/overview');
+        const o = await r.json();
+        totalProjects += (o.projects || []).length;
+        totalChannels += (o.channels || []).length;
+        totalGoals += (o.goals || []).length;
+        return {client:c, overview:o};
+      } catch {
+        return {client:c, overview:{projects:[], channels:[], goals:[], kpis:[]}};
+      }
+    }));
+
+    document.getElementById('clients-total').innerText = clients.length;
+    document.getElementById('clients-projects').innerText = totalProjects;
+    document.getElementById('clients-channels').innerText = totalChannels;
+    document.getElementById('clients-goals').innerText = totalGoals;
+
+    if (!clients.length) {
+      box.innerHTML = `
+        <div class="client-empty">
+          <div style="font-size:18px;font-weight:800;margin-bottom:8px">Клиентов пока нет</div>
+          <div style="margin-bottom:14px">Создай первого клиента и заполни проекты, каналы, цели и KPI.</div>
+          <button class="btn btn-primary" onclick="openClientCreateModal()">+ Новый клиент</button>
+        </div>`;
+      return;
+    }
+
+    box.innerHTML = overviews.map(({client:c, overview:o}) => `
+      <div class="client-card" onclick="openClientDrawer(${c.id})">
+        <div class="client-card-top">
+          <div>
+            <div class="client-name">${escapeHtml(c.name)}</div>
+            <div class="client-meta">${escapeHtml(c.brand || 'Без бренда')} · ${escapeHtml(c.niche || 'Ниша не указана')}</div>
+          </div>
+          <span class="badge ${c.status === 'archived' ? 'badge-muted' : 'badge-green'}">${statusLabel(c.status)}</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0">
+          <div class="client-stat" style="padding:10px"><div class="num" style="font-size:18px">${(o.projects||[]).length}</div><div class="label">Проекты</div></div>
+          <div class="client-stat" style="padding:10px"><div class="num" style="font-size:18px">${(o.channels||[]).length}</div><div class="label">Аккаунты</div></div>
+          <div class="client-stat" style="padding:10px"><div class="num" style="font-size:18px">${(o.goals||[]).length}</div><div class="label">Цели</div></div>
+        </div>
+
+        <div class="client-meta">${escapeHtml(c.notes || 'Заметок пока нет')}</div>
+        <div class="client-actions">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openClientDrawer(${c.id})">Открыть</button>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();archiveClient(${c.id})">В архив</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="client-empty">Не удалось загрузить клиентов</div>';
+  }
+}
+
+function openClientCreateModal() {
+  ensureClientModal();
+  document.getElementById('client-modal').classList.add('open');
+}
+
+function closeClientCreateModal() {
+  const m = document.getElementById('client-modal');
+  if (m) m.classList.remove('open');
+}
+
+function ensureClientModal() {
+  if (document.getElementById('client-modal')) return;
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="client-modal" class="client-drawer" style="right:auto;left:50%;top:50%;transform:translate(-50%,-50%);height:auto;max-height:90vh;width:min(520px,94vw);border-radius:18px;border:1px solid var(--border);display:none">
+      <div class="client-drawer-head">
+        <div>
+          <div style="font-size:22px;font-weight:800">Новый клиент</div>
+          <div class="client-sub">Создай базовую карточку клиента</div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeClientCreateModal()">Закрыть</button>
+      </div>
+      <div class="client-drawer-body">
+        <div class="client-form" style="border:0;padding:0;background:transparent">
+          <input id="client-name" placeholder="Название клиента">
+          <input id="client-brand" placeholder="Бренд">
+          <input id="client-niche" placeholder="Ниша">
+          <select id="client-status">
+            <option value="active">Активный</option>
+            <option value="paused">Пауза</option>
+            <option value="archived">Архив</option>
+          </select>
+          <textarea id="client-notes" placeholder="Заметки: продукт, особенности, ограничения, договорённости"></textarea>
+          <button class="btn btn-primary" onclick="createClient()">Создать клиента</button>
+          <div id="client-form-message" class="client-sub" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  const style = document.createElement('style');
+  style.innerHTML = '#client-modal.open{display:block!important;right:auto!important}';
+  document.head.appendChild(style);
+}
+
+async function createClient() {
+  const msg = document.getElementById('client-form-message');
+  const name = document.getElementById('client-name').value.trim();
+
+  if (!name) {
+    msg.innerText = 'Введите название клиента';
+    return;
+  }
+
+  const payload = {
+    name,
+    brand: document.getElementById('client-brand').value.trim(),
+    niche: document.getElementById('client-niche').value.trim(),
+    status: document.getElementById('client-status').value,
+    notes: document.getElementById('client-notes').value.trim()
+  };
+
+  const res = await fetch('/api/clients', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    msg.innerText = 'Не удалось создать клиента';
+    return;
+  }
+
+  closeClientCreateModal();
+  loadClients();
+}
+
+
+let currentClientData = null;
+
+function statusLabel(status) {
+  return {active:'Активный', paused:'Пауза', archived:'Архив'}[status || 'active'] || status || 'Активный';
+}
+
+function formatClientDate(v) {
+  if (!v) return '—';
+  try { return new Date(v).toLocaleDateString('ru-RU'); } catch { return '—'; }
+}
+
+async function openClientDrawer(id) {
+  currentClientId = id;
+  const res = await fetch('/api/clients/' + id + '/overview');
+  currentClientData = await res.json();
+  const c = currentClientData.client;
+
+  ensureClientDrawer();
+
+  document.getElementById('client-drawer-title').innerText = c.name;
+  document.getElementById('client-drawer-sub').innerText = `${c.brand || 'Без бренда'} · ${c.niche || 'Ниша не указана'} · ${statusLabel(c.status)}`;
+
+  renderClientWorkspace('overview');
+  document.getElementById('client-drawer').classList.add('open');
+}
+
+function renderClientWorkspace(tab) {
+  const data = currentClientData;
+  const c = data.client;
+
+  document.getElementById('client-drawer-tabs').innerHTML = `
+    ${clientTabBtn('overview','Обзор',tab)}
+    ${clientTabBtn('projects','Проекты',tab)}
+    ${clientTabBtn('channels','Аккаунты',tab)}
+    ${clientTabBtn('goals','Цели',tab)}
+    ${clientTabBtn('kpis','KPI',tab)}
+  `;
+
+  if (tab === 'overview') renderClientOverview(data);
+  if (tab === 'projects') renderClientProjects(data);
+  if (tab === 'channels') renderClientChannels(data);
+  if (tab === 'goals') renderClientGoals(data);
+  if (tab === 'kpis') renderClientKpis(data);
+}
+
+function clientTabBtn(key, label, active) {
+  return `<button class="client-tab ${key===active?'active':''}" onclick="renderClientWorkspace('${key}')">${label}</button>`;
+}
+
+function renderClientOverview(data) {
+  const c = data.client;
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="client-stats" style="grid-template-columns:repeat(4,1fr)">
+      <div class="client-stat"><div class="num">${(data.projects||[]).length}</div><div class="label">Проекты</div></div>
+      <div class="client-stat"><div class="num">${(data.channels||[]).length}</div><div class="label">Аккаунты</div></div>
+      <div class="client-stat"><div class="num">${(data.goals||[]).length}</div><div class="label">Цели</div></div>
+      <div class="client-stat"><div class="num">${(data.kpis||[]).length}</div><div class="label">KPI</div></div>
+    </div>
+
+    <div class="client-section">
+      <div class="client-section-title">Карточка клиента</div>
+      <div class="client-row"><span class="client-meta">Название</span><b>${escapeHtml(c.name)}</b></div>
+      <div class="client-row"><span class="client-meta">Бренд</span><b>${escapeHtml(c.brand || '—')}</b></div>
+      <div class="client-row"><span class="client-meta">Ниша</span><b>${escapeHtml(c.niche || '—')}</b></div>
+      <div class="client-row"><span class="client-meta">Статус</span><b>${statusLabel(c.status)}</b></div>
+      <div class="client-row"><span class="client-meta">Создан</span><b>${formatClientDate(c.created_at)}</b></div>
+    </div>
+
+    <div class="client-section">
+      <div class="client-section-title">Редактирование</div>
+      <div class="client-mini-form">
+        <input id="edit-client-name" value="${escapeAttr(c.name || '')}" placeholder="Название">
+        <input id="edit-client-brand" value="${escapeAttr(c.brand || '')}" placeholder="Бренд">
+        <select id="edit-client-status">
+          <option value="active" ${c.status === 'active' ? 'selected' : ''}>Активный</option>
+          <option value="paused" ${c.status === 'paused' ? 'selected' : ''}>Пауза</option>
+          <option value="archived" ${c.status === 'archived' ? 'selected' : ''}>Архив</option>
+        </select>
+      </div>
+      <div class="client-mini-form" style="grid-template-columns:1fr auto">
+        <input id="edit-client-niche" value="${escapeAttr(c.niche || '')}" placeholder="Ниша">
+        <button class="btn btn-primary btn-sm" onclick="saveClientEdits()">Сохранить</button>
+      </div>
+      <textarea id="edit-client-notes" style="width:100%;min-height:90px;margin-top:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(c.notes || '')}</textarea>
+    </div>
+
+    <div class="client-section" style="border-color:rgba(239,68,68,.35)">
+      <div class="client-section-title">Опасная зона</div>
+      <div class="client-meta" style="margin-bottom:10px">Удаление уберёт клиента, проекты, каналы, цели и KPI.</div>
+      <button class="btn btn-ghost btn-sm" onclick="deleteClient()">Удалить клиента</button>
+      <div id="client-danger-message" class="client-sub" style="margin-top:10px"></div>
+    </div>
+  `;
+}
+
+function renderClientProjects(data) {
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${renderClientSection('Проекты', data.projects, 'name', 'description')}
+    <div class="client-mini-form">
+      <input id="project-name" placeholder="Название проекта">
+      <input id="project-description" placeholder="Описание">
+      <button class="btn btn-primary btn-sm" onclick="addClientProject()">Добавить</button>
+    </div>`;
+}
+
+function renderClientChannels(data) {
+  const body = data.channels && data.channels.length
+    ? data.channels.map(a => `
+      <div class="log-item">
+        <div>
+          <b>${escapeHtml(a.platform || '—')}</b>
+          <div class="client-meta">${escapeHtml(a.url || 'Ссылка не указана')}</div>
+          <div class="client-meta">Доступ: ${accountStatusLabel(a.access_status)} · Последняя синхронизация: ${formatClientDate(a.last_sync_at)}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="syncClientAccount(${a.id})">Синхронизировать</button>
+      </div>
+    `).join('')
+    : '<div class="client-empty">Аккаунты ещё не подключены</div>';
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="client-section">
+      <div class="client-section-title">Аккаунты клиента</div>
+      ${body}
+    </div>
+    <div class="client-mini-form">
+      <select id="channel-platform">
+        <option>MAX</option><option>VK</option><option>Telegram</option><option>YouTube</option><option>Instagram</option>
+      </select>
+      <input id="channel-url" placeholder="Ссылка на аккаунт / канал / сообщество">
+      <button class="btn btn-primary btn-sm" onclick="addClientChannel()">Добавить</button>
+    </div>`;
+}
+
+function accountStatusLabel(status) {
+  return {
+    manual_connected: 'Добавлен вручную',
+    synced_manual: 'Синхронизирован вручную',
+    connected: 'Подключён',
+    error: 'Ошибка доступа'
+  }[status || 'manual_connected'] || status || 'Добавлен вручную';
+}
+
+async function syncClientAccount(id) {
+  const btn = event?.target;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Синхронизация...';
+  }
+
+  const res = await fetch('/api/clients/channels/' + id + '/sync', {method:'POST'});
+
+  if (!res.ok) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = 'Ошибка';
+    }
+    return;
+  }
+
+  const overview = await fetch('/api/clients/' + currentClientId + '/overview');
+  currentClientData = await overview.json();
+
+  renderClientWorkspace('channels');
+  loadClients();
+}
+
+function renderClientGoals(data) {
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${renderClientSection('Цели', data.goals, 'title', 'target_value')}
+    <div class="client-mini-form">
+      <input id="goal-title" placeholder="Цель">
+      <input id="goal-target" placeholder="План / период">
+      <button class="btn btn-primary btn-sm" onclick="addClientGoal()">Добавить</button>
+    </div>`;
+}
+
+function renderClientKpis(data) {
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${renderClientSection('KPI', data.kpis, 'metric', 'value')}
+    <div class="client-mini-form">
+      <input id="kpi-metric" placeholder="Метрика">
+      <input id="kpi-value" placeholder="Значение">
+      <button class="btn btn-primary btn-sm" onclick="addClientKPI()">Добавить</button>
+    </div>`;
+}
+
+function renderClientSection(title, items, mainKey, subKey) {
+  const body = items && items.length
+    ? items.map(i => `<div class="log-item"><b>${escapeHtml(i[mainKey] || '—')}</b><div class="client-meta">${escapeHtml(i[subKey] || '')}</div></div>`).join('')
+    : '<div class="client-empty">Пока пусто</div>';
+
+  return `<div class="client-section"><div class="client-section-title">${title}</div>${body}</div>`;
+}
+
+function ensureClientDrawer() {
+  if (document.getElementById('client-drawer')) return;
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="client-drawer" class="client-drawer">
+      <div class="client-drawer-head">
+        <div>
+          <div id="client-drawer-title" style="font-size:22px;font-weight:800"></div>
+          <div id="client-drawer-sub" class="client-sub"></div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeClientDrawer()">Закрыть</button>
+      </div>
+      <div id="client-drawer-tabs" class="client-tabs"></div><div id="client-drawer-body" class="client-drawer-body"></div>
+    </div>
+  `);
+}
+
+function closeClientDrawer() {
+  const d = document.getElementById('client-drawer');
+  if (d) d.classList.remove('open');
+}
+
+async function saveClientEdits() {
+  await fetch('/api/clients/' + currentClientId, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: document.getElementById('edit-client-name').value.trim(),
+      brand: document.getElementById('edit-client-brand').value.trim(),
+      niche: document.getElementById('edit-client-niche').value.trim(),
+      status: document.getElementById('edit-client-status').value,
+      notes: document.getElementById('edit-client-notes').value.trim()
+    })
+  });
+  await openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function archiveClient(id) {
+  await fetch('/api/clients/' + id, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({status: 'archived'})
+  });
+  loadClients();
+}
+
+async function deleteClient() {
+  const msg = document.getElementById('client-danger-message');
+  msg.innerText = 'Удаляю клиента...';
+
+  const res = await fetch('/api/clients/' + currentClientId, {method:'DELETE'});
+
+  if (!res.ok) {
+    msg.innerText = 'Не удалось удалить клиента';
+    return;
+  }
+
+  closeClientDrawer();
+  loadClients();
+}
+
+async function addClientProject() {
+  const name = document.getElementById('project-name').value.trim();
+  if (!name) return;
+  await fetch('/api/clients/projects', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, name, description: document.getElementById('project-description').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function addClientChannel() {
+  await fetch('/api/clients/channels', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, platform: document.getElementById('channel-platform').value, url: document.getElementById('channel-url').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function addClientGoal() {
+  const title = document.getElementById('goal-title').value.trim();
+  if (!title) return;
+  await fetch('/api/clients/goals', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, title, target_value: document.getElementById('goal-target').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function addClientKPI() {
+  const metric = document.getElementById('kpi-metric').value.trim();
+  if (!metric) return;
+  await fetch('/api/clients/kpis', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, metric, value: document.getElementById('kpi-value').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+function escapeHtml(v) {
+  return String(v || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function escapeAttr(v) {
+  return escapeHtml(v).replace(/"/g, '&quot;');
+}
+
+
+function goToPage(name) {
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const nav = document.querySelector('.nav-item[data-page="'+name+'"]');
+  const page = document.querySelector('.page[data-page="'+name+'"]');
+  if (nav) nav.classList.add('active');
+  if (page) page.classList.add('active');
+  if(name==='clients')loadClients();
+  document.getElementById('topbar-title').textContent = pageTitles[name] || name;
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'max') loadMaxData();
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => goToPage(item.getAttribute('data-page')));
+});
+
+function refreshPage() {
+  const active = document.querySelector('.page.active');
+  if (active) goToPage(active.getAttribute('data-page'));
+}
+
+async function loadDashboard() {
+  try {
+    const stats = await fetch(API+'/api/ivadi/stats').then(r=>r.json());
+    document.getElementById('db-total').textContent = stats.total_published;
+    document.getElementById('db-today').textContent = stats.today_count;
+    const q = await fetch(API+'/api/ivadi/queue').then(r=>r.json());
+    document.getElementById('db-pending').textContent = q.pending;
+    const log = document.getElementById('db-log');
+    if (stats.recent && stats.recent.length) {
+      log.innerHTML = [...stats.recent].reverse().slice(0,8).map(l=>`
+        <div class="log-item">
+          <div><span class="dot ${l.success?'dot-green':'dot-red'}"></span>
+          <span class="type-tag type-${l.type}" style="margin-right:6px">${l.type}</span>
+          ${l.topic ? l.topic.substring(0,35)+(l.topic.length>35?'...':'') : '—'}</div>
+          <span style="color:var(--text-muted)">${l.datetime?l.datetime.substring(11,16):''}</span>
+        </div>`).join('');
+    }
+  } catch(e) { console.log('Dashboard error:',e); }
+}
+
+async function loadMaxData() {
+  try {
+    const stats = await fetch(API+'/api/ivadi/stats').then(r=>r.json());
+    const q = await fetch(API+'/api/ivadi/queue').then(r=>r.json());
+    document.getElementById('max-total').textContent = stats.total_published;
+    document.getElementById('max-today').textContent = stats.today_count;
+    document.getElementById('max-pending').textContent = q.pending;
+    renderMaxQueue(q.posts||[]);
+    renderMaxLog(stats.recent||[]);
+  } catch(e) {
+    document.getElementById('max-queue').innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:16px 0;text-align:center">Ошибка загрузки</div>';
+  }
+}
+
+function renderMaxQueue(posts) {
+  const el = document.getElementById('max-queue');
+  const pending = posts.filter(p=>p.status==='pending');
+  if (!pending.length) { el.innerHTML='<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Очередь пуста — нажмите «Сгенерировать очередь»</div>'; return; }
+  el.innerHTML = pending.map(p=>`
+    <div class="queue-item">
+      <div class="queue-content">
+        <div class="queue-meta">
+          <span class="type-tag type-${p.post_type}">${p.post_type}</span>
+          <span style="font-size:11px;color:var(--text-muted)">#${p.id}</span>
+          ${p.scheduled_time?'<span style="font-size:11px;color:var(--yellow)">🕐 '+p.scheduled_time+'</span>':''}
+        </div>
+        <div class="queue-topic">${p.topic||'—'}</div>
+        <div class="queue-preview">${p.text?p.text.substring(0,140):''}...</div>
+      </div>
+      <div class="queue-actions">
+        <button class="btn btn-success btn-sm" onclick="publishPost(${p.id})">📤 Публиковать</button>
+        <button class="btn btn-ghost btn-sm" onclick="showFullPost(${p.id})">👁 Текст</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectPost(${p.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderMaxLog(log) {
+  const el = document.getElementById('max-log');
+  if (!log.length) { el.innerHTML='<div style="color:var(--text-muted);font-size:12px;padding:16px 0;text-align:center">Нет данных</div>'; return; }
+  el.innerHTML = [...log].reverse().slice(0,10).map(l=>`
+    <div class="log-item">
+      <div><span class="dot ${l.success?'dot-green':'dot-red'}"></span>
+      <span class="type-tag type-${l.type}" style="margin-right:6px">${l.type||'—'}</span>
+      ${l.topic?l.topic.substring(0,40):'—'}</div>
+      <span style="color:var(--text-muted)">${l.datetime?l.datetime.substring(11,16):''}</span>
+    </div>`).join('');
+}
+
+async function publishPost(id) {
+  if (!confirm('Опубликовать в MAX-канал?')) return;
+  const res = await fetch(API+'/api/ivadi/queue/'+id+'/publish',{method:'POST'}).then(r=>r.json());
+  alert(res.message||(res.success?'✅ Опубликован!':'❌ Ошибка'));
+  loadMaxData();
+}
+
+async function rejectPost(id) {
+  await fetch(API+'/api/ivadi/queue/'+id+'/reject',{method:'POST'});
+  loadMaxData();
+}
+
+function showFullPost(id) {
+  fetch(API+'/api/ivadi/queue').then(r=>r.json()).then(d=>{
+    const p = d.posts.find(x=>x.id===id);
+    if (p) alert(p.text);
+  });
+}
+
+async function generateMaxQueue() {
+  const btn = event.target;
+  btn.textContent = '⏳ Генерирую...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(API+'/api/ivadi/generate',{method:'POST'}).then(r=>r.json());
+    btn.textContent = '⚡ Сгенерировать очередь';
+    btn.disabled = false;
+    if (res.success) loadMaxData();
+    else alert('Ошибка: '+(res.error||'неизвестно'));
+  } catch(e) { btn.textContent='⚡ Сгенерировать очередь'; btn.disabled=false; }
+}
+
+async function analyzeContent() {
+  const url = document.getElementById('analyzer-url').value.trim();
+  const niche = document.getElementById('analyzer-niche').value;
+
+  if (!url) {
+    alert('Вставьте ссылку');
+    return;
+  }
+
+  try {
+    new URL(url);
+  } catch (e) {
+    alert('Введите корректную ссылку. Пример: https://www.youtube.com/shorts/...');
+    return;
+  }
+
+  document.getElementById('analyzer-result').style.display = 'none';
+  document.getElementById('analyzer-loading').style.display = 'block';
+  document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/analyze', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url, niche})
+    }).then(r => r.json());
+
+    document.getElementById('analyzer-loading').style.display = 'none';
+
+    if (!res.success) {
+      alert('Ошибка анализа: ' + (res.error || 'неизвестная ошибка'));
+      return;
+    }
+
+    const a = res.analysis || {};
+
+    document.getElementById('analyzer-result').style.display = 'block';
+    document.getElementById('ar-viral').textContent = (a.viral_score || '—') + '/10';
+    document.getElementById('ar-hook').textContent = a.hook_type || '—';
+    document.getElementById('ar-duration').textContent = a.content_format || '—';
+    document.getElementById('ar-niche').textContent = a.niche_label || a.niche || '—';
+
+    document.getElementById('ar-structure').innerHTML = (a.structure || []).map(x => '• ' + x).join('<br>');
+    document.getElementById('ar-triggers').innerHTML = (a.triggers || []).map(x => '• ' + x).join('<br>');
+    document.getElementById('ar-why').innerHTML = (a.why_works || []).map(x => '• ' + x).join('<br>');
+
+    let text = '';
+    if (a.source_basis) {
+      text += 'Источник анализа: ' + a.source_basis + '\n';
+      text += 'Точность: ' + (a.source_confidence || 'unknown') + '\n\n';
+    }
+    text += a.summary || '';
+
+    if (a.video_scenario && a.video_scenario.length) {
+      text += '\n\nСценарий видео:\n' + a.video_scenario.map(x => '• ' + x).join('\n');
+    }
+
+    if (a.adaptation && a.adaptation.length) {
+      text += '\n\nКак адаптировать:\n' + a.adaptation.map(x => '• ' + x).join('\n');
+    }
+
+    document.getElementById('ar-transcript').textContent = text;
+
+  } catch (e) {
+    document.getElementById('analyzer-loading').style.display = 'none';
+    alert('Ошибка запроса: ' + e.message);
+  }
+}
+
+async function loadAnalyzerHistory() {
+  try {
+    const data = await fetch(API + '/api/analyzer/history').then(r => r.json());
+    analyzerHistory = data.items || [];
+    renderAnalyzerHistory();
+  } catch(e) {
+    console.log('history load error', e);
+  }
+}
+
+function renderAnalyzerHistory() {
+  const el = document.getElementById('analyzer-history');
+
+  if (!analyzerHistory.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Анализов пока нет</div>';
+    return;
+  }
+
+  el.innerHTML = analyzerHistory.map(h=>`
+    <div class="log-item" onclick="showAnalysisItem(${h.id})" style="cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <span style="color:var(--accent);margin-right:6px">[${h.niche_label || h.niche || '—'}]</span>
+        <span style="font-size:12px">${(h.url || '').substring(0,70)}${(h.url || '').length>70?'...':''}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span style="font-size:11px;color:var(--yellow)">${h.viral_score || '—'}/10</span>
+        <span style="font-size:11px;color:var(--text-muted)">${h.created_at || ''}</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderList(arr) {
+  if (!arr || !arr.length) return '<div style="color:var(--text-muted);font-size:12px">—</div>';
+  return arr.map(x => `<div style="margin-bottom:6px">• ${x}</div>`).join('');
+}
+
+async function showAnalysisItem(id) {
+  try {
+    const res = await fetch(API + '/api/analyzer/item/' + id).then(r => r.json());
+    if (!res.success) {
+      alert('Анализ не найден');
+      return;
+    }
+
+    const item = res.item || {};
+    const raw = item.raw || {};
+    const el = document.getElementById('analysis-detail');
+    if (!el) return;
+
+    el.style.display = 'block';
+
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:20px;font-weight:700">Разбор #${item.id}</div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="generateScenarioFromAnalysis(${item.id})">✨ Создать сценарий</button>
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${item.url || ''}')">Копировать ссылку</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('analysis-detail').style.display='none'">✕</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+        <div class="stat-card green"><div class="stat-label">ВИРАЛЬНОСТЬ</div><div class="stat-value">${item.viral_score || '—'}/10</div><div class="stat-meta">оценка</div></div>
+        <div class="stat-card"><div class="stat-label">НИША</div><div class="stat-value" style="font-size:12px;padding-top:6px">${item.niche_label || item.niche || '—'}</div><div class="stat-meta">категория</div></div>
+        <div class="stat-card blue"><div class="stat-label">ФОРМАТ</div><div class="stat-value" style="font-size:12px;padding-top:6px">${item.content_format || '—'}</div><div class="stat-meta">тип</div></div>
+        <div class="stat-card yellow"><div class="stat-label">ДАТА</div><div class="stat-value" style="font-size:12px;padding-top:6px">${item.created_at || '—'}</div><div class="stat-meta">сохранено</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Ссылка</div>
+        <div style="font-size:12px;color:var(--text-muted);word-break:break-all">${item.url || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Хук</div>
+        <div style="font-size:13px;line-height:1.7">${item.hook_type || raw.hook_type || '—'}</div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:12px">
+        <div class="card"><div class="section-title">Структура</div><div style="font-size:12px;line-height:1.7;color:var(--text-muted)">${renderList(raw.structure)}</div></div>
+        <div class="card"><div class="section-title">Триггеры</div><div style="font-size:12px;line-height:1.7;color:var(--text-muted)">${renderList(raw.triggers)}</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Почему работает</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-muted)">${renderList(raw.why_works)}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Сценарий видео</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-muted)">${renderList(raw.video_scenario)}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Как адаптировать</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-muted)">${renderList(raw.adaptation)}</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Краткое содержание</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-muted)">${item.summary || raw.summary || '—'}</div>
+      </div>
+    `;
+
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+  } catch(e) {
+    alert('Ошибка загрузки анализа: ' + e.message);
+  }
+}
+
+
+
+function closeScenarioDrawer() {
+  const d = document.getElementById('scenario-drawer');
+  const o = document.getElementById('scenario-overlay');
+  if (d) d.remove();
+  if (o) o.remove();
+}
+
+function openScenarioDrawer() {
+  closeScenarioDrawer();
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="scenario-overlay" onclick="closeScenarioDrawer()" style="
+      position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;
+      backdrop-filter:blur(2px);
+    "></div>
+
+    <div id="scenario-drawer" style="
+      position:fixed;top:0;right:0;width:min(620px,92vw);height:100vh;
+      background:var(--bg-card);border-left:1px solid var(--border);
+      z-index:9999;box-shadow:-24px 0 80px rgba(0,0,0,.45);
+      padding:24px;overflow-y:auto;
+    ">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:20px;font-weight:800">Новый сценарий</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Генерация из анализа контента</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeScenarioDrawer()">✕</button>
+      </div>
+
+      <div id="scenario-drawer-content">
+        <div class="card">
+          <div class="section-title">Статус</div>
+          <div style="font-size:13px;color:var(--text-muted)">Генерирую сценарий...</div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+async function generateScenarioFromAnalysis(id) {
+  openScenarioDrawer();
+
+  const box = document.getElementById('scenario-drawer-content');
+  box.innerHTML = `
+    <div class="card">
+      <div class="section-title">Статус</div>
+      <div style="font-size:13px;color:var(--text-muted)">Генерирую сценарий...</div>
+    </div>
+  `;
+
+  try {
+    const res = await fetch(API + '/api/analyzer/item/' + id + '/scenario', {method:'POST'}).then(r => r.json());
+
+    if (!res.success) {
+      box.innerHTML = `
+        <div class="card">
+          <div class="section-title">Ошибка</div>
+          <div style="font-size:13px;color:var(--red)">${res.error || 'неизвестная ошибка'}</div>
+        </div>
+      `;
+      return;
+    }
+
+    const sc = res.scenario || {};
+    currentGeneratedScenario = sc;
+    currentScenarioAnalysisId = id;
+    const script = Array.isArray(sc.script)
+      ? sc.script.map(x => `<div style="margin-bottom:8px">• ${x}</div>`).join('')
+      : '—';
+
+    box.innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Название</div>
+        <div style="font-size:18px;font-weight:800;line-height:1.4">${sc.title || 'Без названия'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Хук</div>
+        <div style="font-size:14px;line-height:1.7">${sc.hook || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Сценарий</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${script}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Озвучка</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${sc.voiceover || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">Визуал</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${sc.visual_style || '—'}</div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">CTA</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${sc.cta || '—'}</div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--bg-card);padding-top:12px">
+        <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('scenario-drawer-content').innerText)">Копировать сценарий</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveGeneratedScenarioAsset()">Сохранить сценарий</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeScenarioDrawer()">Закрыть</button>
+        <div id="scenario-save-status" style="width:100%;font-size:12px;color:var(--text-muted);margin-top:6px"></div>
+      </div>
+    `;
+  } catch(e) {
+    box.innerHTML = `
+      <div class="card">
+        <div class="section-title">Ошибка запроса</div>
+        <div style="font-size:13px;color:var(--red)">${e.message}</div>
+      </div>
+    `;
+  }
+}
+
+
+async function saveGeneratedScenarioAsset() {
+  if (!currentGeneratedScenario) return;
+
+  const sc = currentGeneratedScenario;
+
+  const payload = {
+    source_analysis_id: currentScenarioAnalysisId,
+    title: sc.title || '',
+    hook: sc.hook || '',
+    script: Array.isArray(sc.script) ? sc.script : [],
+    voiceover: sc.voiceover || '',
+    visual_style: sc.visual_style || '',
+    cta: sc.cta || ''
+  };
+
+  try {
+    const res = await fetch(API + '/api/analyzer/assets', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(r => r.json());
+
+    const box = document.getElementById('scenario-save-status');
+    if (box) {
+      box.textContent = res.success ? 'Сценарий сохранён в библиотеку' : 'Ошибка сохранения';
+      box.style.color = res.success ? 'var(--green)' : 'var(--red)';
+    }
+  } catch(e) {
+    const box = document.getElementById('scenario-save-status');
+    if (box) {
+      box.textContent = 'Ошибка: ' + e.message;
+      box.style.color = 'var(--red)';
+    }
+  }
+}
+
+
+function saveToNiche() { alert('✅ Сохранено в базу ниш'); }
+
+
+async function loadContentAssets() {
+  const el = document.getElementById('assets-list');
+  if (!el) return;
+
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/assets').then(r => r.json());
+    const items = res.items || [];
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Сценариев пока нет</div>';
+      return;
+    }
+
+    el.innerHTML = items.slice().reverse().map(x => `
+      <div class="log-item" style="align-items:flex-start;cursor:pointer" onclick="openAssetDrawer(${x.id})">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">${x.title || 'Без названия'}</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.5">${(x.hook || '').substring(0,140)}${(x.hook || '').length > 140 ? '...' : ''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          <span class="status-badge status-active">${x.status || 'new'}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${x.created_at || ''}</span>
+        </div>
+      </div>
+    `).join('');
+
+    window.contentAssetsCache = items;
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px">Ошибка загрузки: ' + e.message + '</div>';
+  }
+}
+
+function openAssetDrawer(id) {
+  const items = window.contentAssetsCache || [];
+  const x = items.find(a => a.id === id);
+  if (!x) return;
+
+  closeScenarioDrawer();
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="scenario-overlay" onclick="closeScenarioDrawer()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;backdrop-filter:blur(2px);"></div>
+    <div id="scenario-drawer" style="position:fixed;top:0;right:0;width:min(620px,92vw);height:100vh;background:var(--bg-card);border-left:1px solid var(--border);z-index:9999;box-shadow:-24px 0 80px rgba(0,0,0,.45);padding:24px;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:20px;font-weight:800">${x.title || 'Без названия'}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Сценарий #${x.id} · ${x.status || 'new'}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeScenarioDrawer()">✕</button>
+      </div>
+
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Хук</div><div style="font-size:14px;line-height:1.7">${x.hook || '—'}</div></div>
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Сценарий</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${Array.isArray(x.script) ? x.script.map(s => '• ' + s).join('<br>') : '—'}</div></div>
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Озвучка</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${x.voiceover || '—'}</div></div>
+      <div class="card" style="margin-bottom:12px"><div class="section-title">Визуал</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${x.visual_style || '—'}</div></div>
+      <div class="card" style="margin-bottom:16px"><div class="section-title">CTA</div><div style="font-size:13px;line-height:1.75;color:var(--text-muted)">${x.cta || '—'}</div></div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="generatePostFromAsset(${x.id})">Сгенерировать пост</button>
+        <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('scenario-drawer').innerText)">Копировать</button>
+      </div>
+      <div id="post-generate-status" style="font-size:12px;color:var(--text-muted);margin-top:10px"></div>
+    </div>
+  `);
+}
+
+async function generatePostFromAsset(assetId) {
+  const box = document.getElementById('post-generate-status');
+  if (box) {
+    box.textContent = 'Генерирую пост...';
+    box.style.color = 'var(--text-muted)';
+  }
+
+  try {
+    const res = await fetch(API + '/api/analyzer/assets/' + assetId + '/post', {
+      method: 'POST'
+    }).then(r => r.json());
+
+    if (box) {
+      box.textContent = res.success ? 'Пост создан и сохранён' : 'Ошибка генерации поста';
+      box.style.color = res.success ? 'var(--green)' : 'var(--red)';
+    }
+  } catch(e) {
+    if (box) {
+      box.textContent = 'Ошибка: ' + e.message;
+      box.style.color = 'var(--red)';
+    }
+  }
+}
+
+
+async function loadGeneratedPosts() {
+  const el = document.getElementById('posts-list');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/posts').then(r => r.json());
+    const items = res.items || [];
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Постов пока нет</div>';
+      return;
+    }
+
+    el.innerHTML = items.slice().reverse().map(x => `
+      <div class="log-item" style="align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">${x.title || 'Без названия'}</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.5">${(x.post_text || '').substring(0,220)}${(x.post_text || '').length > 220 ? '...' : ''}</div>
+          <div style="font-size:11px;color:var(--accent);margin-top:8px">${x.hashtags || ''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <span class="status-badge status-active">${x.status || 'draft'}</span>
+          <button class="btn btn-primary btn-sm" onclick="generateImagePromptFromPost(${x.id}, this)">Image prompt</button>
+          <span style="font-size:11px;color:var(--text-muted)">${x.created_at || ''}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px">Ошибка загрузки: ' + e.message + '</div>';
+  }
+}
+
+async function generateImagePromptFromPost(postId, btn) {
+  const old = btn.textContent;
+  btn.textContent = 'Генерирую...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API + '/api/analyzer/posts/' + postId + '/image-prompt', {method:'POST'}).then(r => r.json());
+    btn.textContent = res.success ? 'Готово' : 'Ошибка';
+    if (res.success) loadGeneratedImages();
+  } catch(e) {
+    btn.textContent = 'Ошибка';
+  }
+
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+}
+
+async function loadGeneratedImages() {
+  const el = document.getElementById('images-list');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div>';
+
+  try {
+    const res = await fetch(API + '/api/analyzer/images').then(r => r.json());
+    const items = res.items || [];
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Изображений пока нет</div>';
+      return;
+    }
+
+    el.innerHTML = items.slice().reverse().map(x => `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:start">
+          <img src="${x.image_url}" style="width:120px;border-radius:10px;border:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px">${x.title || 'Без названия'}</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5">${(x.prompt || '').substring(0,220)}${(x.prompt || '').length > 220 ? '...' : ''}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:8px">${x.created_at || ''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="addImageToQueue(${x.id}, this)">В очередь</button>
+            <a class="btn btn-ghost btn-sm" href="${x.image_url}" target="_blank">Открыть</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px">Ошибка загрузки: ' + e.message + '</div>';
+  }
+}
+
+async function addImageToQueue(imageId, btn) {
+  const old = btn.textContent;
+  btn.textContent = 'Добавляю...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API + '/api/analyzer/images/' + imageId + '/queue', {method:'POST'}).then(r => r.json());
+    btn.textContent = res.success ? 'В очереди' : 'Ошибка';
+    if (res.success && typeof loadMaxData === 'function') loadMaxData();
+  } catch(e) {
+    btn.textContent = 'Ошибка';
+  }
+
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+}
+
+
+async function generateHooks() {
+  const topic = document.getElementById('hook-topic').value;
+  if (!topic) { alert('Введите тему'); return; }
+  const el = document.getElementById('hooks-result');
+  el.style.display='block';
+  el.innerHTML='<div style="color:var(--text-muted);font-size:12px">Генерирую...</div>';
+  setTimeout(()=>{
+    const types=['ВОПРОС','ФАКТ','ИСТОРИЯ','ПРОВОКАЦИЯ','ОБЕЩАНИЕ'];
+    const hooks=[
+      'Почему 90% людей делают '+topic+' неправильно?',
+      'Я потратил год чтобы разобраться в '+topic+'. Вот что узнал',
+      'Год назад я ничего не знал про '+topic+'. Сегодня всё изменилось',
+      'Все говорят что '+topic+' — это сложно. Это ложь',
+      'После этого ты больше не будешь смотреть на '+topic+' так же'
+    ];
+    el.innerHTML = hooks.map((h,i)=>`<div class="hook-template" style="margin-bottom:8px" onclick="copyHookText(this)"><div class="hook-type">${types[i]}</div><div class="hook-text">${h}</div></div>`).join('');
+  },600);
+}
+
+function copyHookText(el) {
+  navigator.clipboard.writeText(el.querySelector('.hook-text').textContent);
+  el.style.borderColor='var(--green)';
+  setTimeout(()=>el.style.borderColor='var(--border)',1000);
+}
+
+function useTemplate(el) { document.getElementById('hook-topic').value=el.querySelector('.hook-text').textContent; }
+
+function addCompetitor() {
+  const url=document.getElementById('comp-url').value;
+  const name=document.getElementById('comp-name').value||url;
+  const platform=document.getElementById('comp-platform').value;
+  if (!url) { alert('Введите ссылку'); return; }
+  competitors.push({url,name,platform,added:new Date().toLocaleString('ru')});
+  localStorage.setItem('smm_competitors',JSON.stringify(competitors));
+  renderCompetitors();
+  document.getElementById('comp-url').value='';
+  document.getElementById('comp-name').value='';
+}
+
+function renderCompetitors() {
+  const el=document.getElementById('competitors-list');
+  if (!competitors.length) { el.innerHTML='<div style="color:var(--text-muted);font-size:12px;padding:24px 0;text-align:center">Добавьте первого конкурента</div>'; return; }
+  const tags={ВКонтакте:'vk',Instagram:'ig',YouTube:'yt',Telegram:'tg'};
+  el.innerHTML=competitors.map((c,i)=>`
+    <div class="competitor-card">
+      <span class="platform-tag tag-${tags[c.platform]||'vk'}">${c.platform}</span>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${c.name}</div><div style="font-size:11px;color:var(--text-muted)">${c.url.substring(0,50)}</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm">Анализ</button><button class="btn btn-danger btn-sm" onclick="removeComp(${i})">✕</button></div>
+    </div>`).join('');
+}
+
+function removeComp(i) { competitors.splice(i,1); localStorage.setItem('smm_competitors',JSON.stringify(competitors)); renderCompetitors(); }
+
+async function updateNicheCounts() {
+  try {
+    const res = await fetch(API + '/api/analyzer/niches').then(r => r.json());
+    const stats = {};
+    (res.items || []).forEach(x => { stats[x.niche] = x; });
+
+    ['travel','business','education','entertainment','tech','finance','beauty'].forEach(n=>{
+      const el = document.getElementById('nc-'+n);
+      const item = stats[n];
+      if (!el) return;
+
+      if (!item) {
+        el.textContent = '0 единиц';
+      } else {
+        el.textContent = item.count + ' ед. · ср. ' + item.avg_viral + '/10';
+      }
+    });
+  } catch(e) {
+    console.log('niche counts error', e);
+  }
+}
+
+async function openNiche(n) {
+  try {
+    const res = await fetch(API + '/api/analyzer/niches/' + n).then(r => r.json());
+    const items = res.items || [];
+    const el = document.getElementById('niches-recent');
+    if (!el) return;
+
+    el.style.textAlign = 'left';
+    el.style.padding = '0';
+
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">В этой нише пока нет анализов</div>';
+      return;
+    }
+
+    el.innerHTML = `
+      <div style="padding:0 0 12px 0;font-size:12px;color:var(--text-muted)">
+        Показана ниша: <span style="color:var(--accent);font-weight:600">${items[0].niche_label || n}</span>
+        · ${items.length} материалов
+        · <button class="btn btn-ghost btn-sm" onclick="loadNicheRecent()">Показать все</button>
+      </div>
+    ` + items.map(x => `
+      <div class="log-item">
+        <div style="flex:1;min-width:0">
+          <span style="font-size:11px;color:var(--yellow);margin-right:8px">${x.viral_score || '—'}/10</span>
+          <span style="color:var(--accent);margin-right:8px">[${x.niche_label || x.niche || '—'}]</span>
+          <span style="font-size:12px">${(x.url || '').substring(0,80)}${(x.url || '').length>80?'...':''}</span>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${x.hook_type || ''}</div>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">${x.created_at || ''}</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.log('open niche error', e);
+  }
+}
+
+async function loadNicheRecent() {
+  try {
+    const res = await fetch(API + '/api/analyzer/history').then(r => r.json());
+    const items = (res.items || []).slice(0, 10);
+    const el = document.getElementById('niches-recent');
+    if (!el) return;
+
+    if (!items.length) {
+      el.innerHTML = 'Анализируйте контент — он попадёт сюда';
+      return;
+    }
+
+    el.style.textAlign = 'left';
+    el.style.padding = '0';
+
+    el.innerHTML = items.map(x => `
+      <div class="log-item">
+        <div style="flex:1;min-width:0">
+          <span style="font-size:11px;color:var(--yellow);margin-right:8px">${x.viral_score || '—'}/10</span>
+          <span style="color:var(--accent);margin-right:8px">[${x.niche_label || x.niche || '—'}]</span>
+          <span style="font-size:12px">${(x.url || '').substring(0,80)}${(x.url || '').length>80?'...':''}</span>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">${x.created_at || ''}</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.log('niche recent error', e);
+  }
+}
+
+function addNiche() { alert('Добавление своей ниши — в следующей версии'); }
+function transcribe() { const url=document.getElementById('tr-url').value; if (!url){alert('Введите ссылку');return;} document.getElementById('tr-result').style.display='block'; document.getElementById('tr-text').value='Транскрипция: '+url+'\n\nНастройте Whisper API в Интеграциях для полной транскрипции.'; }
+function postFromTranscript() { alert('В следующей версии'); }
+function generateAvatarScript() { document.getElementById('avatar-text').value='Привет! Сегодня расскажу как путешествовать умнее. За последний год я помог сотням людей найти идеальный тур. Вот главные секреты.'; }
+
+loadDashboard();
+updateNicheCounts();
+loadNicheRecent();
+loadAnalyzerHistory();
+loadContentAssets();
+loadGeneratedPosts();
+loadGeneratedImages();
+renderCompetitors();
+setInterval(()=>{ const a=document.querySelector('.page.active'); if (!a) return; const p=a.getAttribute('data-page'); if(p==='dashboard')loadDashboard(); if(p==='max')loadMaxData(); },30000);
+
+async function checkLeonardoKey() {
+    const key = document.getElementById('leonardo-api-key').value.trim();
+    if (!key) return;
+    try {
+        const r = await fetch('https://cloud.leonardo.ai/api/rest/v1/me', {headers:{'Authorization':'Bearer '+key}});
+        const data = await r.json();
+        const u = data.user_details?.[0];
+        if (u) {
+            const tokens = (u.subscriptionTokens||0) + (u.apiPaidTokens||0);
+            alert('✅ Leonardo подключён\nТокены: ' + tokens + ' (дневных: ' + (u.subscriptionTokens||0) + ', платных: ' + (u.apiPaidTokens||0) + ')');
+        } else { alert('❌ Ошибка: ' + JSON.stringify(data)); }
+    } catch(e) { alert('❌ Ошибка: ' + e.message); }
+}
+</script>
+</body>
+</html>

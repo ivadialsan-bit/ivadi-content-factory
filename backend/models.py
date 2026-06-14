@@ -90,3 +90,163 @@ class Pattern(Base):
     conclusion = Column(Text, nullable=False)
     hook = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class Client(Base):
+    __tablename__ = "clients"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    brand = Column(String(100), nullable=True)
+    niche = Column(String(100), nullable=True)
+    status = Column(String(20), default="active")
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientProject(Base):
+    __tablename__ = "client_projects"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientChannel(Base):
+    __tablename__ = "client_channels"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("client_projects.id"), nullable=True)
+    platform = Column(String(50), nullable=False)
+    url = Column(String(300), nullable=True)
+    status = Column(String(20), default="active")
+    access_type = Column(String(50), default="manual")
+    access_status = Column(String(50), default="manual_connected")
+    last_sync_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientGoal(Base):
+    __tablename__ = "client_goals"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    title = Column(String(150), nullable=False)
+    target_value = Column(String(100), nullable=True)
+    period = Column(String(50), nullable=True)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientKPI(Base):
+    __tablename__ = "client_kpis"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    metric = Column(String(100), nullable=False)
+    value = Column(String(100), nullable=True)
+    period = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientAccountSnapshot(Base):
+    __tablename__ = "client_account_snapshots"
+
+    id = Column(Integer, primary_key=True)
+    channel_id = Column(Integer, ForeignKey("client_channels.id"), nullable=False)
+    followers = Column(Integer, default=0)
+    posts_count = Column(Integer, default=0)
+    views = Column(Integer, default=0)
+    reach = Column(Integer, default=0)
+    likes = Column(Integer, default=0)
+    comments = Column(Integer, default=0)
+    engagement_rate = Column(Float, default=0)
+    last_post_at = Column(DateTime, nullable=True)
+    summary = Column(Text, nullable=True)
+    raw_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientProfile(Base):
+    __tablename__ = "client_profiles"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, unique=True)
+    positioning = Column(Text, nullable=True)
+    product = Column(Text, nullable=True)
+    target_audience = Column(Text, nullable=True)
+    tone_of_voice = Column(Text, nullable=True)
+    content_pillars = Column(Text, nullable=True)
+    usp = Column(Text, nullable=True)
+    offers = Column(Text, nullable=True)
+    competitors = Column(Text, nullable=True)
+    pains = Column(Text, nullable=True)
+    desires = Column(Text, nullable=True)
+    objections = Column(Text, nullable=True)
+    target_platforms = Column(Text, nullable=True)
+    traffic_funnel = Column(Text, nullable=True)
+    profile_status = Column(String(50), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientBriefFile(Base):
+    __tablename__ = "client_brief_files"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    filename = Column(String(300), nullable=True)
+    file_path = Column(String(500), nullable=True)
+    status = Column(String(50), default="uploaded")
+    parsed_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientIntelligence(Base):
+    __tablename__ = "client_intelligence"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, unique=True)
+    positioning = Column(Text, nullable=True)
+    audience_segments = Column(Text, nullable=True)
+    tone_of_voice = Column(Text, nullable=True)
+    content_pillars = Column(Text, nullable=True)
+    offers = Column(Text, nullable=True)
+    usp = Column(Text, nullable=True)
+    pains = Column(Text, nullable=True)
+    desires = Column(Text, nullable=True)
+    objections = Column(Text, nullable=True)
+    customer_journey = Column(Text, nullable=True)
+    traffic_funnel = Column(Text, nullable=True)
+    content_mix = Column(Text, nullable=True)
+    platform_strategy = Column(Text, nullable=True)
+    growth_hypothesis = Column(Text, nullable=True)
+    ai_summary = Column(Text, nullable=True)
+    status = Column(String(50), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientStrategy(Base):
+    __tablename__ = "client_strategies"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, unique=True)
+    positioning = Column(Text, nullable=True)
+    content_pillars = Column(Text, nullable=True)
+    platform_strategy = Column(Text, nullable=True)
+    funnel = Column(Text, nullable=True)
+    content_mix = Column(Text, nullable=True)
+    posting_frequency = Column(Text, nullable=True)
+    growth_hypotheses = Column(Text, nullable=True)
+    action_plan_30 = Column(Text, nullable=True)
+    risks = Column(Text, nullable=True)
+    kpi_targets = Column(Text, nullable=True)
+    ai_summary = Column(Text, nullable=True)
+    status = Column(String(50), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)

@@ -148,7 +148,114 @@ select option { background: var(--bg-card); }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+.client-tabs{display:flex;gap:8px;padding:14px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card);z-index:2}
+.client-tab{border:1px solid var(--border);background:var(--bg);color:var(--text-muted);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+.client-tab.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(124,106,247,.45)}
+.client-row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
+.client-row:last-child{border-bottom:0}
+
+
+.client-chip{
+  display:inline-flex;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:rgba(124,92,255,.08);
+  color:var(--text);
+  font-weight:700;
+}
+.client-card-mini{
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:rgba(255,255,255,.025);
+  padding:18px;
+}
 </style>
+
+<style id="clients-crm-ui">
+.client-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.client-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.client-sub{color:var(--text-muted);font-size:13px}
+.client-stats{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:12px;margin-bottom:18px}
+.client-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.client-stat .num{font-size:24px;font-weight:800}
+.client-stat .label{font-size:12px;color:var(--text-muted);margin-top:4px}
+.client-layout{display:grid;grid-template-columns:360px 1fr;gap:16px}
+.client-form{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.client-form input,.client-form textarea,.client-form select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 12px;margin-bottom:10px;outline:none}
+.client-form textarea{min-height:110px;resize:vertical}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.client-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:.15s}
+.client-card:hover{transform:translateY(-2px);border-color:rgba(124,106,247,.55)}
+.client-card-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.client-name{font-size:16px;font-weight:800}
+.client-meta{color:var(--text-muted);font-size:12px;line-height:1.5}
+.client-actions{display:flex;gap:8px;margin-top:14px}
+.client-drawer{position:fixed;top:0;right:-720px;width:min(720px,94vw);height:100vh;background:var(--bg-card);border-left:1px solid var(--border);z-index:10000;box-shadow:-24px 0 80px rgba(0,0,0,.5);transition:.2s;overflow-y:auto}
+.client-drawer.open{right:0}
+.client-drawer-head{padding:22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.client-drawer-body{padding:22px}
+.client-section{border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;background:rgba(255,255,255,.02)}
+.client-section-title{font-weight:800;margin-bottom:10px}
+.client-mini-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px}
+.client-mini-form input,.client-mini-form select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px}
+.client-empty{border:1px dashed var(--border);border-radius:14px;padding:24px;text-align:center;color:var(--text-muted)}
+@media(max-width:900px){.client-layout{grid-template-columns:1fr}.client-stats{grid-template-columns:1fr}.client-mini-form{grid-template-columns:1fr}}
+
+.client-chip{
+  display:inline-flex;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:rgba(124,92,255,.08);
+  color:var(--text);
+  font-weight:700;
+}
+.client-card-mini{
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:rgba(255,255,255,.025);
+  padding:18px;
+}
+</style>
+
+
+<style>
+.intel-hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.intel-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.intel-stats{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:12px;margin:14px 0}
+.intel-router{position:sticky;top:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:16px;margin-bottom:16px}
+.intel-router button{border:1px solid var(--border);background:var(--bg-card);color:var(--muted);border-radius:999px;padding:9px 13px;font-weight:800;cursor:pointer}
+.intel-router button:hover{color:var(--text);border-color:var(--primary)}
+.intel-section{scroll-margin-top:90px}
+.intel-grid{display:grid;gap:14px}
+.intel-grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.intel-grid-3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.client-chip{display:inline-flex;padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:rgba(124,92,255,.10);color:var(--text);font-weight:800;line-height:1.25}
+.intel-chip-list{display:flex;flex-wrap:wrap;gap:8px}
+.client-card-mini{border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.025);padding:18px;min-width:0}
+.intel-card-title{font-size:18px;font-weight:900;margin-bottom:14px;color:var(--text)}
+.intel-subtitle{color:var(--muted);font-weight:800;margin:16px 0 8px}
+.intel-text{white-space:normal;line-height:1.6;overflow-wrap:anywhere}
+.intel-big{font-size:20px;font-weight:900;line-height:1.4}
+.intel-big-text{font-size:18px}
+.intel-kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.intel-kv-label{color:var(--muted);font-size:13px}
+.intel-kv-value{line-height:1.5;overflow-wrap:anywhere}
+.intel-funnel{display:grid;gap:12px}
+.intel-funnel-step{border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.025);padding:18px}
+.intel-step-num{color:var(--muted);font-size:13px;margin-bottom:8px}
+.intel-mix{display:grid;gap:0}
+.intel-mix-row{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding:13px 0}
+@media(max-width:900px){
+  .intel-stats{grid-template-columns:repeat(2,1fr)}
+  .intel-hero{display:block}
+  .intel-actions{justify-content:flex-start;margin-top:12px}
+  .intel-kv{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body>
 <aside class="sidebar">
@@ -165,6 +272,8 @@ select option { background: var(--bg-card); }
     <div class="nav-item" data-page="youtube"><span class="icon">▶️</span> YouTube<span class="badge badge-muted">—</span></div>
     <div class="nav-item" data-page="max"><span class="icon">💬</span> MAX<span class="badge badge-green">✓</span></div>
     <div class="nav-item" data-page="telegram"><span class="icon">✈️</span> Telegram<span class="badge badge-muted">—</span></div>
+    <div class="nav-section">Клиенты</div>
+    <div class="nav-item" data-page="clients"><span class="icon">👥</span> Клиенты</div>
     <div class="nav-section">AI Инструменты</div>
     <div class="nav-item" data-page="analyzer"><span class="icon">🔍</span> Анализ контента</div>
     <div class="nav-item" data-page="assets"><span class="icon">🧩</span> Библиотека сценариев</div>
@@ -218,6 +327,31 @@ select option { background: var(--bg-card); }
         </div>
       </div>
     </div>
+    <div class="page" data-page="clients">
+      <div class="client-hero">
+        <div>
+          <div class="client-title">👥 Client CRM</div>
+          <div class="client-sub">Клиенты, проекты, каналы, цели и KPI. База для Brief, Strategy и Planner.</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="loadClients()">Обновить</button>
+          <button class="btn btn-primary" onclick="openClientCreateModal()">+ Новый клиент</button>
+        </div>
+      </div>
+
+      <div class="client-stats">
+        <div class="client-stat"><div class="num" id="clients-total">0</div><div class="label">Клиентов</div></div>
+        <div class="client-stat"><div class="num" id="clients-projects">0</div><div class="label">Проектов</div></div>
+        <div class="client-stat"><div class="num" id="clients-channels">0</div><div class="label">Аккаунтов</div></div>
+        <div class="client-stat"><div class="num" id="clients-goals">0</div><div class="label">Целей</div></div>
+      </div>
+
+      <div class="section-title">Клиенты</div>
+      <div id="clients-list" class="client-grid">
+        <div class="client-empty">Загрузка клиентов...</div>
+      </div>
+    </div>
+
     <div class="page" data-page="vk">
       <div class="platform-header">
         <div class="platform-icon-lg" style="background:rgba(70,128,194,0.15)">🔵</div>
@@ -240,7 +374,7 @@ select option { background: var(--bg-card); }
       </div>
     </div>
     <div class="page" data-page="instagram"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(225,48,108,0.15)">📸</div><div><div class="platform-name">Instagram</div><div class="platform-sub">lena_ritzz и другие</div></div></div><div class="coming-soon"><div class="coming-soon-icon">📸</div><div class="coming-soon-title">Instagram в разработке</div><div class="coming-soon-sub">Публикация через Graph API. Настройте ключ в Интеграциях.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
-    <div class="page" data-page="youtube"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(255,0,0,0.1)">▶️</div><div><div class="platform-name">YouTube</div><div class="platform-sub">Каналы и видео</div></div></div><div class="coming-soon"><div class="coming-soon-icon">▶️</div><div class="coming-soon-title">YouTube в разработке</div><div class="coming-soon-sub">YouTube Data API v3 — загрузка видео и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
+    <div class="page" data-page="youtube"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(255,0,0,0.1)">▶️</div><div><div class="platform-name">YouTube</div><div class="platform-sub">Аккаунты и видео</div></div></div><div class="coming-soon"><div class="coming-soon-icon">▶️</div><div class="coming-soon-title">YouTube в разработке</div><div class="coming-soon-sub">YouTube Data API v3 — загрузка видео и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
     <div class="page" data-page="max">
       <div class="platform-header">
         <div class="platform-icon-lg" style="background:rgba(0,160,220,0.15)">💬</div>
@@ -256,7 +390,7 @@ select option { background: var(--bg-card); }
       <div class="card" style="margin-bottom:16px"><div class="section-title">Очередь постов</div><div id="max-queue"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div></div></div>
       <div class="card"><div class="section-title">Последние публикации</div><div id="max-log"><div style="color:var(--text-muted);font-size:12px;padding:20px 0;text-align:center">Загрузка...</div></div></div>
     </div>
-    <div class="page" data-page="telegram"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(34,197,206,0.15)">✈️</div><div><div class="platform-name">Telegram</div><div class="platform-sub">Каналы и боты</div></div></div><div class="coming-soon"><div class="coming-soon-icon">✈️</div><div class="coming-soon-title">Telegram в разработке</div><div class="coming-soon-sub">Bot API — автопостинг и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
+    <div class="page" data-page="telegram"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(34,197,206,0.15)">✈️</div><div><div class="platform-name">Telegram</div><div class="platform-sub">Аккаунты и боты</div></div></div><div class="coming-soon"><div class="coming-soon-icon">✈️</div><div class="coming-soon-title">Telegram в разработке</div><div class="coming-soon-sub">Bot API — автопостинг и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
     <div class="page" data-page="analyzer">
       <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🔍 Анализ контента</div><div style="font-size:12px;color:var(--text-muted)">Вставьте ссылку — AI разберёт структуру, хуки и психологию</div></div>
       <div class="card" style="margin-bottom:20px">
@@ -438,8 +572,929 @@ const pageTitles = {
   max:'MAX — IvadiTravel',telegram:'Telegram',analyzer:'Анализ контента',
   hooks:'Хуки и сценарии',posts:'Библиотека постов',images:'Библиотека изображений',competitors:'Конкуренты',niches:'База ниш',
   transcribe:'Транскрибация',avatars:'Аватары',integrations:'Интеграции',
-  schedule:'Расписание',patterns:'Паттерны',settings:'Настройки'
+  clients:'Клиенты',clients:'Клиенты',schedule:'Расписание',patterns:'Паттерны',settings:'Настройки'
 };
+
+
+
+
+let currentClientId = null;
+
+async function loadClients() {
+  const box = document.getElementById('clients-list');
+  if (!box) return;
+
+  try {
+    const res = await fetch('/api/clients');
+    const clients = await res.json();
+
+    let totalProjects = 0, totalChannels = 0, totalGoals = 0;
+
+    const overviews = await Promise.all(clients.map(async c => {
+      try {
+        const r = await fetch('/api/clients/' + c.id + '/overview');
+        const o = await r.json();
+        totalProjects += (o.projects || []).length;
+        totalChannels += (o.channels || []).length;
+        totalGoals += (o.goals || []).length;
+        return {client:c, overview:o};
+      } catch {
+        return {client:c, overview:{projects:[], channels:[], goals:[], kpis:[]}};
+      }
+    }));
+
+    document.getElementById('clients-total').innerText = clients.length;
+    document.getElementById('clients-projects').innerText = totalProjects;
+    document.getElementById('clients-channels').innerText = totalChannels;
+    document.getElementById('clients-goals').innerText = totalGoals;
+
+    if (!clients.length) {
+      box.innerHTML = `
+        <div class="client-empty">
+          <div style="font-size:18px;font-weight:800;margin-bottom:8px">Клиентов пока нет</div>
+          <div style="margin-bottom:14px">Создай первого клиента и заполни проекты, каналы, цели и KPI.</div>
+          <button class="btn btn-primary" onclick="openClientCreateModal()">+ Новый клиент</button>
+        </div>`;
+      return;
+    }
+
+    box.innerHTML = overviews.map(({client:c, overview:o}) => `
+      <div class="client-card" onclick="openClientDrawer(${c.id})">
+        <div class="client-card-top">
+          <div>
+            <div class="client-name">${escapeHtml(c.name)}</div>
+            <div class="client-meta">${escapeHtml(c.brand || 'Без бренда')} · ${escapeHtml(c.niche || 'Ниша не указана')}</div>
+          </div>
+          <span class="badge ${c.status === 'archived' ? 'badge-muted' : 'badge-green'}">${statusLabel(c.status)}</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0">
+          <div class="client-stat" style="padding:10px"><div class="num" style="font-size:18px">${(o.projects||[]).length}</div><div class="label">Проекты</div></div>
+          <div class="client-stat" style="padding:10px"><div class="num" style="font-size:18px">${(o.channels||[]).length}</div><div class="label">Аккаунты</div></div>
+          <div class="client-stat" style="padding:10px"><div class="num" style="font-size:18px">${(o.goals||[]).length}</div><div class="label">Цели</div></div>
+        </div>
+
+        <div class="client-meta">${escapeHtml(c.notes || 'Заметок пока нет')}</div>
+        <div class="client-actions">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openClientDrawer(${c.id})">Открыть</button>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();archiveClient(${c.id})">В архив</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="client-empty">Не удалось загрузить клиентов</div>';
+  }
+}
+
+function openClientCreateModal() {
+  ensureClientModal();
+  document.getElementById('client-modal').classList.add('open');
+}
+
+function closeClientCreateModal() {
+  const m = document.getElementById('client-modal');
+  if (m) m.classList.remove('open');
+}
+
+function ensureClientModal() {
+  if (document.getElementById('client-modal')) return;
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="client-modal" class="client-drawer" style="right:auto;left:50%;top:50%;transform:translate(-50%,-50%);height:auto;max-height:90vh;width:min(520px,94vw);border-radius:18px;border:1px solid var(--border);display:none">
+      <div class="client-drawer-head">
+        <div>
+          <div style="font-size:22px;font-weight:800">Новый клиент</div>
+          <div class="client-sub">Создай базовую карточку клиента</div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeClientCreateModal()">Закрыть</button>
+      </div>
+      <div class="client-drawer-body">
+        <div class="client-form" style="border:0;padding:0;background:transparent">
+          <input id="client-name" placeholder="Название клиента">
+          <input id="client-brand" placeholder="Бренд">
+          <input id="client-niche" placeholder="Ниша">
+          <select id="client-status">
+            <option value="active">Активный</option>
+            <option value="paused">Пауза</option>
+            <option value="archived">Архив</option>
+          </select>
+          <textarea id="client-notes" placeholder="Заметки: продукт, особенности, ограничения, договорённости"></textarea>
+          <button class="btn btn-primary" onclick="createClient()">Создать клиента</button>
+          <div id="client-form-message" class="client-sub" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  const style = document.createElement('style');
+  style.innerHTML = '#client-modal.open{display:block!important;right:auto!important}';
+  document.head.appendChild(style);
+}
+
+async function createClient() {
+  const msg = document.getElementById('client-form-message');
+  const name = document.getElementById('client-name').value.trim();
+
+  if (!name) {
+    msg.innerText = 'Введите название клиента';
+    return;
+  }
+
+  const payload = {
+    name,
+    brand: document.getElementById('client-brand').value.trim(),
+    niche: document.getElementById('client-niche').value.trim(),
+    status: document.getElementById('client-status').value,
+    notes: document.getElementById('client-notes').value.trim()
+  };
+
+  const res = await fetch('/api/clients', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    msg.innerText = 'Не удалось создать клиента';
+    return;
+  }
+
+  closeClientCreateModal();
+  loadClients();
+}
+
+
+let currentClientData = null;
+
+function statusLabel(status) {
+  return {active:'Активный', paused:'Пауза', archived:'Архив'}[status || 'active'] || status || 'Активный';
+}
+
+function formatClientDate(v) {
+  if (!v) return '—';
+  try { return new Date(v).toLocaleDateString('ru-RU'); } catch { return '—'; }
+}
+
+async function openClientDrawer(id) {
+  currentClientId = id;
+  const res = await fetch('/api/clients/' + id + '/overview');
+  currentClientData = await res.json();
+  const c = currentClientData.client;
+
+  ensureClientDrawer();
+
+  document.getElementById('client-drawer-title').innerText = c.name;
+  document.getElementById('client-drawer-sub').innerText = `${c.brand || 'Без бренда'} · ${c.niche || 'Ниша не указана'} · ${statusLabel(c.status)}`;
+
+  renderClientWorkspace('overview');
+  document.getElementById('client-drawer').classList.add('open');
+}
+
+function renderClientWorkspace(tab) {
+  const data = currentClientData;
+  const c = data.client;
+
+  document.getElementById('client-drawer-tabs').innerHTML = `
+    ${clientTabBtn('overview','Обзор',tab)}
+    ${clientTabBtn('projects','Проекты',tab)}
+    ${clientTabBtn('channels','Аккаунты',tab)}
+    ${clientTabBtn('profile','Профиль',tab)}
+    ${clientTabBtn('brief','Бриф',tab)}
+    ${clientTabBtn('intelligence','Карта клиента',tab)}
+    ${clientTabBtn('strategy','Стратегия',tab)}
+    ${clientTabBtn('goals','Цели',tab)}
+    ${clientTabBtn('kpis','KPI',tab)}
+  `;
+
+  if (tab === 'overview') renderClientOverview(data);
+  if (tab === 'projects') renderClientProjects(data);
+  if (tab === 'channels') renderClientChannels(data);
+  if (tab === 'profile') renderClientProfile(data);
+  if (tab === 'brief') renderClientBrief(data);
+  if (tab === 'intelligence') renderClientIntelligence(data);
+  if (tab === 'strategy') renderClientStrategy(data);
+  if (tab === 'goals') renderClientGoals(data);
+  if (tab === 'kpis') renderClientKpis(data);
+}
+
+function clientTabBtn(key, label, active) {
+  return `<button class="client-tab ${key===active?'active':''}" onclick="renderClientWorkspace('${key}')">${label}</button>`;
+}
+
+function renderClientOverview(data) {
+  const c = data.client;
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="client-stats" style="grid-template-columns:repeat(4,1fr)">
+      <div class="client-stat"><div class="num">${(data.projects||[]).length}</div><div class="label">Проекты</div></div>
+      <div class="client-stat"><div class="num">${(data.channels||[]).length}</div><div class="label">Аккаунты</div></div>
+      <div class="client-stat"><div class="num">${(data.goals||[]).length}</div><div class="label">Цели</div></div>
+      <div class="client-stat"><div class="num">${(data.kpis||[]).length}</div><div class="label">KPI</div></div>
+    </div>
+
+    <div class="client-section">
+      <div class="client-section-title">Карточка клиента</div>
+      <div class="client-row"><span class="client-meta">Название</span><b>${escapeHtml(c.name)}</b></div>
+      <div class="client-row"><span class="client-meta">Бренд</span><b>${escapeHtml(c.brand || '—')}</b></div>
+      <div class="client-row"><span class="client-meta">Ниша</span><b>${escapeHtml(c.niche || '—')}</b></div>
+      <div class="client-row"><span class="client-meta">Статус</span><b>${statusLabel(c.status)}</b></div>
+      <div class="client-row"><span class="client-meta">Создан</span><b>${formatClientDate(c.created_at)}</b></div>
+    </div>
+
+    <div class="client-section">
+      <div class="client-section-title">Редактирование</div>
+      <div class="client-mini-form">
+        <input id="edit-client-name" value="${escapeAttr(c.name || '')}" placeholder="Название">
+        <input id="edit-client-brand" value="${escapeAttr(c.brand || '')}" placeholder="Бренд">
+        <select id="edit-client-status">
+          <option value="active" ${c.status === 'active' ? 'selected' : ''}>Активный</option>
+          <option value="paused" ${c.status === 'paused' ? 'selected' : ''}>Пауза</option>
+          <option value="archived" ${c.status === 'archived' ? 'selected' : ''}>Архив</option>
+        </select>
+      </div>
+      <div class="client-mini-form" style="grid-template-columns:1fr auto">
+        <input id="edit-client-niche" value="${escapeAttr(c.niche || '')}" placeholder="Ниша">
+        <button class="btn btn-primary btn-sm" onclick="saveClientEdits()">Сохранить</button>
+      </div>
+      <textarea id="edit-client-notes" style="width:100%;min-height:90px;margin-top:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(c.notes || '')}</textarea>
+    </div>
+
+    <div class="client-section" style="border-color:rgba(239,68,68,.35)">
+      <div class="client-section-title">Опасная зона</div>
+      <div class="client-meta" style="margin-bottom:10px">Удаление уберёт клиента, проекты, каналы, цели и KPI.</div>
+      <button class="btn btn-ghost btn-sm" onclick="deleteClient()">Удалить клиента</button>
+      <div id="client-danger-message" class="client-sub" style="margin-top:10px"></div>
+    </div>
+  `;
+}
+
+function renderClientProjects(data) {
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${renderClientSection('Проекты', data.projects, 'name', 'description')}
+    <div class="client-mini-form">
+      <input id="project-name" placeholder="Название проекта">
+      <input id="project-description" placeholder="Описание">
+      <button class="btn btn-primary btn-sm" onclick="addClientProject()">Добавить</button>
+    </div>`;
+}
+
+function renderClientChannels(data) {
+  const snapshots = data.account_snapshots || [];
+
+  const body = data.channels && data.channels.length
+    ? data.channels.map(a => {
+      const snap = snapshots.find(s => s.channel_id === a.id);
+
+      return `
+      <div class="client-section">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div class="client-section-title">${escapeHtml(a.platform || '—')}</div>
+            <div class="client-meta">${escapeHtml(a.url || 'Ссылка не указана')}</div>
+            <div class="client-meta">Доступ: ${accountStatusLabel(a.access_status)} · Последняя синхронизация: ${formatClientDate(a.last_sync_at)}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="syncClientAccount(${a.id})">Синхронизировать</button>
+        </div>
+
+        ${snap ? `
+          <div class="client-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+            <div class="client-stat"><div class="num">${snap.followers || 0}</div><div class="label">Подписчики</div></div>
+            <div class="client-stat"><div class="num">${snap.posts_count || 0}</div><div class="label">Публикации</div></div>
+            <div class="client-stat"><div class="num">${snap.views || 0}</div><div class="label">Просмотры</div></div>
+            <div class="client-stat"><div class="num">${snap.engagement_rate || 0}%</div><div class="label">ER</div></div>
+          </div>
+
+          <div class="client-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+            <div class="client-stat"><div class="num">${snap.reach || 0}</div><div class="label">Охват</div></div>
+            <div class="client-stat"><div class="num">${snap.likes || 0}</div><div class="label">Лайки</div></div>
+            <div class="client-stat"><div class="num">${snap.comments || 0}</div><div class="label">Комментарии</div></div>
+          </div>
+
+          <div class="client-empty" style="text-align:left">
+            <b>AI-вывод</b>
+            <div style="margin-top:8px">${escapeHtml(snap.summary || 'Вывод пока не сформирован')}</div>
+            <div class="client-meta" style="margin-top:8px">Срез: ${formatClientDate(snap.created_at)}</div>
+          </div>
+        ` : `
+          <div class="client-empty">Статистики пока нет. Нажми “Синхронизировать” после подключения реального API или добавь тестовый срез.</div>
+        `}
+      </div>`;
+    }).join('')
+    : '<div class="client-empty">Аккаунты ещё не подключены</div>';
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${body}
+    <div class="client-mini-form">
+      <select id="channel-platform">
+        <option>MAX</option><option>VK</option><option>Telegram</option><option>YouTube</option><option>Instagram</option>
+      </select>
+      <input id="channel-url" placeholder="Ссылка на аккаунт / канал / сообщество">
+      <button class="btn btn-primary btn-sm" onclick="addClientChannel()">Добавить</button>
+    </div>`;
+}
+
+function accountStatusLabel(status) {
+  return {
+    manual_connected: 'Добавлен вручную',
+    synced_manual: 'Синхронизирован вручную',
+    connected: 'Подключён',
+    error: 'Ошибка доступа'
+  }[status || 'manual_connected'] || status || 'Добавлен вручную';
+}
+
+async function syncClientAccount(id) {
+  const btn = event?.target;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Синхронизация...';
+  }
+
+  const res = await fetch('/api/clients/channels/' + id + '/sync', {method:'POST'});
+
+  if (!res.ok) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = 'Ошибка';
+    }
+    return;
+  }
+
+  const overview = await fetch('/api/clients/' + currentClientId + '/overview');
+  currentClientData = await overview.json();
+
+  renderClientWorkspace('channels');
+  loadClients();
+}
+
+function renderClientGoals(data) {
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${renderClientSection('Цели', data.goals, 'title', 'target_value')}
+    <div class="client-mini-form">
+      <input id="goal-title" placeholder="Цель">
+      <input id="goal-target" placeholder="План / период">
+      <button class="btn btn-primary btn-sm" onclick="addClientGoal()">Добавить</button>
+    </div>`;
+}
+
+
+
+
+
+
+function tryParseJsonValue(v) {
+  if (!v) return null;
+  if (typeof v !== 'string') return v;
+  const t = v.trim();
+  if (!(t.startsWith('{') || t.startsWith('['))) return v;
+  try { return JSON.parse(t); } catch { return v; }
+}
+
+function niceKey(key) {
+  const map = {
+    primary: 'Основной',
+    secondary: 'Дополнительно',
+    lead_magnet: 'Лид-магнит',
+    role: 'Роль',
+    focus: 'Фокус',
+    frequency: 'Частота',
+    goal: 'Цель',
+    reels: 'Reels',
+    carousel_posts: 'Карусели',
+    static_posts: 'Посты',
+    stories: 'Stories',
+    educational_content: 'Обучающий контент',
+    user_generated_content: 'UGC',
+    stage_1_awareness: 'Охват',
+    stage_2_engagement: 'Вовлечение',
+    stage_3_consideration: 'Интерес',
+    stage_4_nurture: 'Прогрев',
+    stage_5_conversion: 'Продажа',
+    stage_6_retention: 'Повторные продажи',
+    instagram: 'Instagram',
+    vk: 'VK',
+    max: 'MAX',
+    telegram: 'Telegram',
+    youtube: 'YouTube'
+  };
+  return map[key] || String(key).replaceAll('_', ' ');
+}
+
+function chipList(items) {
+  if (!items) return '<div class="client-empty">Пока не заполнено</div>';
+  if (!Array.isArray(items)) items = [items];
+  return `<div class="intel-chip-list">
+    ${items.map(x => `<span class="client-chip">${escapeHtml(String(x))}</span>`).join('')}
+  </div>`;
+}
+
+function kvRow(label, value) {
+  if (!value) return '';
+  return `
+    <div class="intel-kv">
+      <div class="intel-kv-label">${escapeHtml(niceKey(label))}</div>
+      <div class="intel-kv-value">${escapeHtml(Array.isArray(value) ? value.join(', ') : String(value))}</div>
+    </div>
+  `;
+}
+
+function intelligenceCard(id, title, body) {
+  return `
+    <section id="intel-${id}" class="client-section intel-section">
+      <div class="client-section-title">${title}</div>
+      ${body || '<div class="client-empty">Пока не заполнено</div>'}
+    </section>
+  `;
+}
+
+function renderAudienceSegments(value) {
+  const arr = tryParseJsonValue(value);
+  if (!Array.isArray(arr)) return `<div class="intel-text">${escapeHtml(String(value || ''))}</div>`;
+
+  return `<div class="intel-grid intel-grid-3">
+    ${arr.map(seg => `
+      <div class="client-card-mini intel-persona">
+        <div class="intel-card-title">${escapeHtml(seg.name || 'Сегмент')}</div>
+        ${kvRow('Возраст', seg.age || '')}
+        ${kvRow('Доход', seg.income || '')}
+        ${kvRow('Локация', seg.location || '')}
+        ${kvRow('Описание', seg.description || seg.characteristics || '')}
+        ${seg.pain_points ? `<div class="intel-subtitle">Боли</div>${chipList(seg.pain_points)}` : ''}
+        ${seg.desires ? `<div class="intel-subtitle">Желания</div>${chipList(seg.desires)}` : ''}
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function renderTone(value) {
+  const t = tryParseJsonValue(value);
+  if (!t || typeof t !== 'object') return `<div class="intel-text">${escapeHtml(String(value || ''))}</div>`;
+
+  return `
+    <div class="intel-grid intel-grid-2">
+      <div class="client-card-mini">
+        <div class="intel-subtitle">Основной тон</div>
+        <div class="intel-big">${escapeHtml(t.primary || '—')}</div>
+      </div>
+      <div class="client-card-mini">
+        <div class="intel-subtitle">Стиль общения</div>
+        <div class="intel-text">${escapeHtml(t.style || '—')}</div>
+      </div>
+    </div>
+    <div class="intel-subtitle">Дополнительные характеристики</div>
+    ${chipList(t.secondary)}
+    <div class="intel-subtitle">Ключевые слова</div>
+    ${chipList(t.key_words || t.keywords || t.key_phrases)}
+  `;
+}
+
+function renderListBlock(value) {
+  const v = tryParseJsonValue(value);
+  if (Array.isArray(v)) return chipList(v);
+  if (typeof v === 'object' && v) {
+    return `<div class="intel-list-table">
+      ${Object.entries(v).map(([k,val]) => kvRow(k, Array.isArray(val) ? val.join(', ') : val)).join('')}
+    </div>`;
+  }
+  return `<div class="intel-text">${escapeHtml(String(value || ''))}</div>`;
+}
+
+function renderFunnel(value) {
+  const f = tryParseJsonValue(value);
+  if (!f || typeof f !== 'object') return renderListBlock(value);
+
+  return `<div class="intel-funnel">
+    ${Object.entries(f).map(([k,v], idx) => `
+      <div class="intel-funnel-step">
+        <div class="intel-step-num">Шаг ${idx + 1}</div>
+        <div class="intel-card-title">${escapeHtml(niceKey(k))}</div>
+        <div class="intel-text">${escapeHtml(String(v))}</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function renderContentMix(value) {
+  const mix = tryParseJsonValue(value);
+  if (!mix || typeof mix !== 'object') return renderListBlock(value);
+
+  return `<div class="intel-mix">
+    ${Object.entries(mix).map(([k,v]) => `
+      <div class="intel-mix-row">
+        <div>${escapeHtml(niceKey(k))}</div>
+        <b>${escapeHtml(String(v))}</b>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function renderPlatformStrategy(value) {
+  const platforms = tryParseJsonValue(value);
+  if (!platforms || typeof platforms !== 'object') return renderListBlock(value);
+
+  return `<div class="intel-grid intel-grid-2">
+    ${Object.entries(platforms).map(([platform,data]) => `
+      <div class="client-card-mini intel-platform">
+        <div class="intel-card-title">${escapeHtml(niceKey(platform))}</div>
+        ${typeof data === 'object'
+          ? Object.entries(data).map(([k,v]) => kvRow(k, Array.isArray(v) ? v.join(', ') : v)).join('')
+          : `<div class="intel-text">${escapeHtml(String(data))}</div>`
+        }
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function scrollIntel(id) {
+  const el = document.getElementById('intel-' + id);
+  if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderClientIntelligence(data) {
+  const i = data.intelligence || null;
+  const hasBrief = data.brief_files && data.brief_files.length;
+  const accounts = data.channels ? data.channels.length : 0;
+  const goals = data.goals ? data.goals.length : 0;
+  const kpis = data.kpis ? data.kpis.length : 0;
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="client-section intel-hero">
+      <div>
+        <div class="client-section-title">Карта клиента</div>
+        <div class="client-meta">Единая карта для стратегии, контент-плана, воронки и роста.</div>
+        ${i ? `<div class="client-meta" style="margin-top:8px">Статус: ${escapeHtml(i.status || 'draft')} · Обновлено: ${formatClientDate(i.updated_at)}</div>` : ''}
+      </div>
+      <div class="intel-actions">
+        <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('brief')">Бриф</button>
+        <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('profile')">Профиль</button>
+        <button id="generate-intelligence-btn" class="btn btn-primary btn-sm" onclick="generateClientIntelligence()">Обновить карту</button>
+      </div>
+    </div>
+
+    <div class="intel-stats">
+      <div class="stat-card"><b>${hasBrief ? '✓' : '—'}</b><span>Бриф</span></div>
+      <div class="stat-card"><b>${accounts}</b><span>Аккаунты</span></div>
+      <div class="stat-card"><b>${goals}</b><span>Цели</span></div>
+      <div class="stat-card"><b>${kpis}</b><span>KPI</span></div>
+      <div class="stat-card"><b>${i ? 'ready' : 'draft'}</b><span>Карта</span></div>
+    </div>
+
+    ${i ? `
+      <div class="intel-router">
+        <button onclick="scrollIntel('summary')">Сводка</button>
+        <button onclick="scrollIntel('audience')">Аудитория</button>
+        <button onclick="scrollIntel('funnel')">Воронка</button>
+        <button onclick="scrollIntel('mix')">Контент-микс</button>
+        <button onclick="scrollIntel('platforms')">Платформы</button>
+        <button onclick="scrollIntel('risks')">Риски</button>
+        <button onclick="scrollIntel('next')">Следующие действия</button>
+      </div>
+
+      ${intelligenceCard('summary', 'Сводка', `
+        <div class="intel-grid intel-grid-2">
+          <div>
+            <div class="intel-subtitle">Позиционирование</div>
+            <div class="intel-text">${escapeHtml(i.positioning || '')}</div>
+          </div>
+          <div>
+            <div class="intel-subtitle">УТП</div>
+            <div class="intel-text">${escapeHtml(i.usp || '')}</div>
+          </div>
+        </div>
+      `)}
+
+      ${intelligenceCard('audience', 'Аудитория', renderAudienceSegments(i.audience_segments))}
+      ${intelligenceCard('tone', 'Tone of Voice', renderTone(i.tone_of_voice))}
+      ${intelligenceCard('pillars', 'Контентные столбы', renderListBlock(i.content_pillars))}
+      ${intelligenceCard('offers', 'Офферы', renderListBlock(i.offers))}
+      ${intelligenceCard('risks', 'Боли, желания и возражения', `
+        <div class="intel-grid intel-grid-3">
+          <div>${renderListBlock(i.pains)}</div>
+          <div>${renderListBlock(i.desires)}</div>
+          <div>${renderListBlock(i.objections)}</div>
+        </div>
+      `)}
+      ${intelligenceCard('funnel', 'Воронка перелива трафика', renderFunnel(i.traffic_funnel))}
+      ${intelligenceCard('mix', 'Контент-микс', renderContentMix(i.content_mix))}
+      ${intelligenceCard('platforms', 'Стратегия по платформам', renderPlatformStrategy(i.platform_strategy))}
+      ${intelligenceCard('growth', 'Гипотеза роста', `<div class="intel-text intel-big-text">${escapeHtml(i.growth_hypothesis || '')}</div>`)}
+      ${intelligenceCard('next', 'Следующие действия', `
+        <div class="intel-grid intel-grid-3">
+          <div class="client-card-mini">
+            <div class="intel-card-title">1. Стратегия</div>
+            <div class="intel-text">Сформировать контент-стратегию на основе карты клиента.</div>
+          </div>
+          <div class="client-card-mini">
+            <div class="intel-card-title">2. Контент-план</div>
+            <div class="intel-text">Разложить цели на месячный план публикаций по платформам.</div>
+          </div>
+          <div class="client-card-mini">
+            <div class="intel-card-title">3. Аналитика</div>
+            <div class="intel-text">Подключить регулярные срезы метрик и рост-гипотезы.</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" disabled>Создать стратегию — следующий модуль</button>
+          <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('goals')">Проверить цели</button>
+          <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('kpis')">Проверить KPI</button>
+        </div>
+      `)}
+      ${intelligenceCard('ai', 'AI-резюме', `<div class="intel-text intel-big-text">${escapeHtml(i.ai_summary || '')}</div>`)}
+    ` : `
+      <div class="client-empty">Карта клиента ещё не сформирована. Нажми “Обновить карту”.</div>
+    `}
+  `;
+}
+
+async function generateClientIntelligence() {
+  const btn = document.getElementById('generate-intelligence-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Генерация...';
+  }
+
+  const res = await fetch('/api/clients/' + currentClientId + '/generate-intelligence', { method: 'POST' });
+
+  if (!res.ok) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = 'Ошибка генерации';
+    }
+    return;
+  }
+
+  const overview = await fetch('/api/clients/' + currentClientId + '/overview');
+  currentClientData = await overview.json();
+  renderClientWorkspace('intelligence');
+}
+
+
+function renderClientBrief(data) {
+  const latest = data.brief_files && data.brief_files.length ? data.brief_files[0] : null;
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="client-section">
+      <div class="client-section-title">Excel-бриф клиента</div>
+      <div class="client-meta" style="margin-bottom:12px">
+        Загрузи заполненный .xlsx-файл. Система распарсит ответы и сохранит их в карточке клиента.
+      </div>
+
+      <input id="brief-file-input" type="file" accept=".xlsx" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px;margin-bottom:10px">
+      <button class="btn btn-primary btn-sm" onclick="uploadClientBrief()">Загрузить бриф</button>
+      <div id="brief-upload-status" class="client-sub" style="margin-top:10px"></div>
+    </div>
+
+    <div class="client-section">
+      <div class="client-section-title">Последний бриф</div>
+      ${latest ? `
+        <div class="client-row"><span class="client-meta">Файл</span><b>${escapeHtml(latest.filename || '—')}</b></div>
+        <div class="client-row"><span class="client-meta">Статус</span><b>${escapeHtml(latest.status || '—')}</b></div>
+        <div class="client-row"><span class="client-meta">Загружен</span><b>${formatClientDate(latest.created_at)}</b></div>
+        <div class="client-empty" style="text-align:left;margin-top:12px;max-height:260px;overflow:auto">
+          <b>Извлечённые ответы</b>
+          <pre style="white-space:pre-wrap;font-size:12px;line-height:1.5;margin-top:10px">${escapeHtml(latest.parsed_json || '')}</pre>
+        </div>
+      ` : `
+        <div class="client-empty">Бриф ещё не загружен</div>
+      `}
+    </div>
+  `;
+}
+
+async function uploadClientBrief() {
+  const input = document.getElementById('brief-file-input');
+  const status = document.getElementById('brief-upload-status');
+
+  if (!input.files || !input.files.length) {
+    status.innerText = 'Выбери .xlsx файл';
+    return;
+  }
+
+  const form = new FormData();
+  form.append('file', input.files[0]);
+
+  status.innerText = 'Загрузка и парсинг...';
+
+  const res = await fetch('/api/clients/' + currentClientId + '/brief/upload', {
+    method: 'POST',
+    body: form
+  });
+
+  if (!res.ok) {
+    status.innerText = 'Не удалось загрузить бриф';
+    return;
+  }
+
+  const overview = await fetch('/api/clients/' + currentClientId + '/overview');
+  currentClientData = await overview.json();
+
+  renderClientWorkspace('brief');
+}
+
+function renderClientProfile(data) {
+  const p = data.profile || {};
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="client-section">
+      <div class="client-section-title">Карта клиента</div>
+
+      <textarea id="profile-positioning" placeholder="Позиционирование" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.positioning || '')}</textarea>
+
+      <textarea id="profile-product" placeholder="Продукт / услуга" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.product || '')}</textarea>
+
+      <textarea id="profile-target-audience" placeholder="Целевая аудитория" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.target_audience || '')}</textarea>
+
+      <textarea id="profile-tone" placeholder="Tone of Voice" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.tone_of_voice || '')}</textarea>
+
+      <textarea id="profile-pillars" placeholder="Контентные столбы" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.content_pillars || '')}</textarea>
+
+      <textarea id="profile-funnel" placeholder="Воронка перелива трафика" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.traffic_funnel || '')}</textarea>
+
+      <div class="client-mini-form" style="grid-template-columns:1fr 1fr">
+        <textarea id="profile-usp" placeholder="УТП" style="min-height:70px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.usp || '')}</textarea>
+        <textarea id="profile-offers" placeholder="Офферы" style="min-height:70px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.offers || '')}</textarea>
+      </div>
+
+      <div class="client-mini-form" style="grid-template-columns:1fr 1fr">
+        <textarea id="profile-pains" placeholder="Боли аудитории" style="min-height:70px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.pains || '')}</textarea>
+        <textarea id="profile-desires" placeholder="Желания аудитории" style="min-height:70px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.desires || '')}</textarea>
+      </div>
+
+      <textarea id="profile-objections" placeholder="Возражения" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.objections || '')}</textarea>
+
+      <textarea id="profile-platforms" placeholder="Целевые платформы" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.target_platforms || '')}</textarea>
+
+      <textarea id="profile-competitors" placeholder="Конкуренты" style="width:100%;min-height:70px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px">${escapeHtml(p.competitors || '')}</textarea>
+
+      <div class="client-mini-form" style="grid-template-columns:1fr auto">
+        <select id="profile-status">
+          <option value="draft" ${p.profile_status === 'draft' ? 'selected' : ''}>Черновик</option>
+          <option value="ready" ${p.profile_status === 'ready' ? 'selected' : ''}>Готов</option>
+          <option value="needs_update" ${p.profile_status === 'needs_update' ? 'selected' : ''}>Нужно обновить</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="saveClientProfile()">Сохранить профиль</button>
+      </div>
+    </div>
+  `;
+}
+
+async function saveClientProfile() {
+  const payload = {
+    positioning: document.getElementById('profile-positioning').value.trim(),
+    product: document.getElementById('profile-product').value.trim(),
+    target_audience: document.getElementById('profile-target-audience').value.trim(),
+    tone_of_voice: document.getElementById('profile-tone').value.trim(),
+    content_pillars: document.getElementById('profile-pillars').value.trim(),
+    traffic_funnel: document.getElementById('profile-funnel').value.trim(),
+    usp: document.getElementById('profile-usp').value.trim(),
+    offers: document.getElementById('profile-offers').value.trim(),
+    pains: document.getElementById('profile-pains').value.trim(),
+    desires: document.getElementById('profile-desires').value.trim(),
+    objections: document.getElementById('profile-objections').value.trim(),
+    target_platforms: document.getElementById('profile-platforms').value.trim(),
+    competitors: document.getElementById('profile-competitors').value.trim(),
+    profile_status: document.getElementById('profile-status').value
+  };
+
+  await fetch('/api/clients/' + currentClientId + '/profile', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  const overview = await fetch('/api/clients/' + currentClientId + '/overview');
+  currentClientData = await overview.json();
+  renderClientWorkspace('profile');
+}
+
+function renderClientKpis(data) {
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${renderClientSection('KPI', data.kpis, 'metric', 'value')}
+    <div class="client-mini-form">
+      <input id="kpi-metric" placeholder="Метрика">
+      <input id="kpi-value" placeholder="Значение">
+      <button class="btn btn-primary btn-sm" onclick="addClientKPI()">Добавить</button>
+    </div>`;
+}
+
+function renderClientSection(title, items, mainKey, subKey) {
+  const body = items && items.length
+    ? items.map(i => `<div class="log-item"><b>${escapeHtml(i[mainKey] || '—')}</b><div class="client-meta">${escapeHtml(i[subKey] || '')}</div></div>`).join('')
+    : '<div class="client-empty">Пока пусто</div>';
+
+  return `<div class="client-section"><div class="client-section-title">${title}</div>${body}</div>`;
+}
+
+function ensureClientDrawer() {
+  if (document.getElementById('client-drawer')) return;
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="client-drawer" class="client-drawer">
+      <div class="client-drawer-head">
+        <div>
+          <div id="client-drawer-title" style="font-size:22px;font-weight:800"></div>
+          <div id="client-drawer-sub" class="client-sub"></div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeClientDrawer()">Закрыть</button>
+      </div>
+      <div id="client-drawer-tabs" class="client-tabs"></div><div id="client-drawer-body" class="client-drawer-body"></div>
+    </div>
+  `);
+}
+
+function closeClientDrawer() {
+  const d = document.getElementById('client-drawer');
+  if (d) d.classList.remove('open');
+}
+
+async function saveClientEdits() {
+  await fetch('/api/clients/' + currentClientId, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: document.getElementById('edit-client-name').value.trim(),
+      brand: document.getElementById('edit-client-brand').value.trim(),
+      niche: document.getElementById('edit-client-niche').value.trim(),
+      status: document.getElementById('edit-client-status').value,
+      notes: document.getElementById('edit-client-notes').value.trim()
+    })
+  });
+  await openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function archiveClient(id) {
+  await fetch('/api/clients/' + id, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({status: 'archived'})
+  });
+  loadClients();
+}
+
+async function deleteClient() {
+  const msg = document.getElementById('client-danger-message');
+  msg.innerText = 'Удаляю клиента...';
+
+  const res = await fetch('/api/clients/' + currentClientId, {method:'DELETE'});
+
+  if (!res.ok) {
+    msg.innerText = 'Не удалось удалить клиента';
+    return;
+  }
+
+  closeClientDrawer();
+  loadClients();
+}
+
+async function addClientProject() {
+  const name = document.getElementById('project-name').value.trim();
+  if (!name) return;
+  await fetch('/api/clients/projects', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, name, description: document.getElementById('project-description').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function addClientChannel() {
+  await fetch('/api/clients/channels', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, platform: document.getElementById('channel-platform').value, url: document.getElementById('channel-url').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function addClientGoal() {
+  const title = document.getElementById('goal-title').value.trim();
+  if (!title) return;
+  await fetch('/api/clients/goals', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, title, target_value: document.getElementById('goal-target').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+async function addClientKPI() {
+  const metric = document.getElementById('kpi-metric').value.trim();
+  if (!metric) return;
+  await fetch('/api/clients/kpis', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({client_id: currentClientId, metric, value: document.getElementById('kpi-value').value.trim()})
+  });
+  openClientDrawer(currentClientId);
+  loadClients();
+}
+
+function escapeHtml(v) {
+  return String(v || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function escapeAttr(v) {
+  return escapeHtml(v).replace(/"/g, '&quot;');
+}
+
 
 function goToPage(name) {
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -448,6 +1503,7 @@ function goToPage(name) {
   const page = document.querySelector('.page[data-page="'+name+'"]');
   if (nav) nav.classList.add('active');
   if (page) page.classList.add('active');
+  if(name==='clients')loadClients();
   document.getElementById('topbar-title').textContent = pageTitles[name] || name;
   if (name === 'dashboard') loadDashboard();
   if (name === 'max') loadMaxData();
@@ -1266,6 +2322,105 @@ async function checkLeonardoKey() {
         } else { alert('❌ Ошибка: ' + JSON.stringify(data)); }
     } catch(e) { alert('❌ Ошибка: ' + e.message); }
 }
+
+function renderClientStrategy(data) {
+  const s = data.strategy;
+  const body = document.getElementById('client-drawer-body');
+
+  if (!s || s.status !== 'ready') {
+    body.innerHTML = `
+      <div style="padding:32px">
+        <div class="client-section-title">Контент-стратегия</div>
+        <div class="client-empty" style="margin-top:16px">Стратегия ещё не сформирована. Нажми "Создать стратегию".</div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="generateClientStrategy()">Создать стратегию</button>
+      </div>`;
+    return;
+  }
+
+  function parseField(val) {
+    if (!val) return null;
+    try { return JSON.parse(val); } catch(e) { return val; }
+  }
+
+  function renderList(arr, title) {
+    if (!arr || !arr.length) return '';
+    const items = Array.isArray(arr) ? arr : [arr];
+    return `<div class="intel-card" style="margin-bottom:16px">
+      <div class="intel-card-title">${title}</div>
+      <ul style="margin:0;padding-left:20px">${items.map(i => `<li style="margin-bottom:6px">${typeof i === 'object' ? JSON.stringify(i, null, 2) : i}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  function renderDict(obj, title) {
+    if (!obj || typeof obj !== 'object') return '';
+    return `<div class="intel-card" style="margin-bottom:16px">
+      <div class="intel-card-title">${title}</div>
+      ${Object.entries(obj).map(([k,v]) => `<div style="margin-bottom:8px"><span style="color:var(--accent);font-weight:700">${k}:</span> ${typeof v === 'object' ? '<pre style=\"margin:4px 0;font-size:12px;white-space:pre-wrap\">' + JSON.stringify(v, null, 2) + '</pre>' : v}</div>`).join('')}
+    </div>`;
+  }
+
+  function renderText(val, title) {
+    if (!val) return '';
+    return `<div class="intel-card" style="margin-bottom:16px">
+      <div class="intel-card-title">${title}</div>
+      <div style="color:var(--text-secondary);line-height:1.6">${val}</div>
+    </div>`;
+  }
+
+  const positioning = parseField(s.positioning);
+  const pillars = parseField(s.content_pillars);
+  const platform = parseField(s.platform_strategy);
+  const funnel = parseField(s.funnel);
+  const mix = parseField(s.content_mix);
+  const freq = parseField(s.posting_frequency);
+  const hypotheses = parseField(s.growth_hypotheses);
+  const plan = parseField(s.action_plan_30);
+  const risks = parseField(s.risks);
+  const kpi = parseField(s.kpi_targets);
+  const summary = s.ai_summary;
+
+  body.innerHTML = `
+    <div style="padding:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div class="client-section-title">Контент-стратегия</div>
+        <button id="generate-strategy-btn" class="btn btn-primary btn-sm" onclick="generateClientStrategy()">Обновить стратегию</button>
+      </div>
+
+      ${summary ? `<div class="intel-card" style="margin-bottom:20px;background:var(--accent-dim);border-color:rgba(124,106,247,.3)">
+        <div class="intel-card-title">AI-резюме стратегии</div>
+        <div style="color:var(--text-secondary);line-height:1.6">${summary}</div>
+      </div>` : ''}
+
+      ${renderText(typeof positioning === 'string' ? positioning : JSON.stringify(positioning), 'Позиционирование')}
+      ${renderList(Array.isArray(pillars) ? pillars : [pillars], 'Контентные столбы')}
+      ${renderDict(typeof platform === 'object' ? platform : null, 'Стратегия по платформам')}
+      ${renderDict(typeof funnel === 'object' ? funnel : null, 'Воронка')}
+      ${renderDict(typeof mix === 'object' ? mix : null, 'Контент-микс')}
+      ${renderDict(typeof freq === 'object' ? freq : null, 'Частота публикаций')}
+      ${renderList(Array.isArray(hypotheses) ? hypotheses : [], 'Гипотезы роста')}
+      ${renderList(Array.isArray(plan) ? plan : [], 'План действий на 30 дней')}
+      ${renderList(Array.isArray(risks) ? risks : [], 'Риски')}
+      ${renderDict(typeof kpi === 'object' ? kpi : null, 'KPI-ориентиры')}
+    </div>`;
+}
+
+async function generateClientStrategy() {
+  const btn = document.getElementById('generate-strategy-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Генерация...'; }
+
+  const res = await fetch('/api/clients/' + currentClientId + '/generate-strategy', { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json();
+    showNotification('Ошибка: ' + (err.detail || 'неизвестная ошибка'), 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Обновить стратегию'; }
+    return;
+  }
+
+  await loadClientData(currentClientId);
+  renderClientWorkspace('strategy');
+  showNotification('Стратегия сформирована', 'success');
+}
+
 </script>
 </body>
 </html>
