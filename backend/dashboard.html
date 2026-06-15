@@ -2580,14 +2580,26 @@ async function analyzeContent() {
     }
     text += a.summary || '';
 
-    if (a.video_scenario && a.video_scenario.length) {
-      text += '\n\nСценарий видео:\n' + a.video_scenario.map(x => '• ' + x).join('\n');
+    const acc = a.account_analysis;
+    if (acc) {
+      text += '\n\n— АККАУНТ —\n';
+      if (acc.positioning) text += 'Позиционирование: ' + acc.positioning + '\n';
+      if (acc.tone_of_voice) text += 'Tone: ' + acc.tone_of_voice + '\n';
+      if (acc.audience) text += 'Аудитория: ' + acc.audience + '\n';
+      if (acc.posting_frequency) text += 'Частота: ' + acc.posting_frequency + '\n';
+      if (acc.content_pillars && acc.content_pillars.length) text += 'Столбы: ' + acc.content_pillars.join(', ') + '\n';
     }
-
-    if (a.adaptation && a.adaptation.length) {
-      text += '\n\nКак адаптировать:\n' + a.adaptation.map(x => '• ' + x).join('\n');
+    const ca = a.content_analysis;
+    if (ca) {
+      text += '\n— КОНТЕНТ —\n';
+      if (ca.hook) text += 'Хук: ' + ca.hook + '\n';
+      if (ca.visual_style) text += 'Визуал: ' + ca.visual_style + '\n';
+      if (ca.caption_style) text += 'Подписи: ' + ca.caption_style + '\n';
+      if (ca.cta) text += 'CTA: ' + ca.cta + '\n';
     }
-
+    if (a.weaknesses && a.weaknesses.length) text += '\n— СЛАБЫЕ МЕСТА —\n' + a.weaknesses.map(x => '• ' + x).join('\n');
+    if (a.adaptation && a.adaptation.length) text += '\n\n— КАК ИСПОЛЬЗОВАТЬ —\n' + a.adaptation.map(x => '• ' + x).join('\n');
+    if (a.video_scenario && a.video_scenario.length) text += '\n\nСценарий видео:\n' + a.video_scenario.map(x => '• ' + x).join('\n');
     document.getElementById('ar-transcript').textContent = text;
 
   } catch (e) {
