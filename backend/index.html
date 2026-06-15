@@ -4115,9 +4115,19 @@ function ytGenerateBranding() {
       if(img.url) {
         document.getElementById('yt-brand-avatar-placeholder').innerHTML =
           `<img src="${img.url}" style="width:150px;height:150px;border-radius:50%;object-fit:cover">`;
-        const dl = document.getElementById('yt-brand-avatar-dl');
-        dl.href = img.url;
-        dl.style.display = 'inline-block';
+        // Save avatar to server
+        fetch('/api/youtube/save-avatar', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({url: img.url, name: selectedName||'avatar'})
+        }).then(r => r.json()).then(saved => {
+          const dl = document.getElementById('yt-brand-avatar-dl');
+          dl.href = saved.url;
+          dl.download = saved.filename;
+          dl.target = '_blank';
+          dl.style.display = 'inline-block';
+          ytBrandingData._avatar_url = saved.url;
+        });
       }
 
       // Step 3: Banner with text
@@ -4144,10 +4154,19 @@ function ytGenerateBranding() {
         if(banner.banner_data_url) {
           document.getElementById('yt-brand-banner-placeholder').innerHTML =
             `<img src="${banner.banner_data_url}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover">`;
-          const dl = document.getElementById('yt-brand-banner-dl');
-          dl.href = banner.banner_data_url;
-          dl.download = selectedName.replace(/\s+/g,'-') + '-banner.jpg';
-          dl.style.display = 'inline-block';
+          // Save to server and get direct URL
+          fetch('/api/youtube/save-banner', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({banner_base64: banner.banner_base64, name: selectedName})
+          }).then(r => r.json()).then(saved => {
+            const dl = document.getElementById('yt-brand-banner-dl');
+            dl.href = saved.url;
+            dl.download = saved.filename;
+            dl.target = '_blank';
+            dl.style.display = 'inline-block';
+            ytBrandingData._banner_url = saved.url;
+          });
         }
         document.getElementById('yt-brand-step-4').style.opacity = '1';
         document.getElementById('yt-brand-icon-4').textContent = '✅';
@@ -4333,12 +4352,36 @@ function loadYTProfiles() {
             </div>
             <!-- Plan viewer -->
             <div id="yt-plan-result-${p.id}" style="display:none"></div>
+            <!-- Next action -->
+            <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:12px;margin-top:4px">
+              <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">⚡ СЛЕДУЮЩИЙ ШАГ</div>
+              <div style="font-size:13px">Сгенерируй контент-план → выбери первое видео → создай SEO-пакет → загрузи Short</div>
+            </div>
+            <!-- First videos -->
+            ${(p.first_10_videos||[]).length ? `
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">🚀 Первые видео</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                ${(p.first_10_videos||[]).slice(0,5).map((v,i) => `
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:6px;background:var(--bg-secondary);border-radius:6px">
+                    <span style="color:var(--accent);font-weight:700;min-width:20px">#${i+1}</span>
+                    <span style="flex:1">${v}</span>
+                    <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="ytTab('seo');document.getElementById('yt-seo-topic').value='${v.replace(/'/g,'').replace(/`/g,'')}';document.getElementById('yt-seo-niche').value='${(p.niche||'').replace(/'/g,'')}'" >SEO →</button>
+                  </div>`).join('')}
+              </div>
+            </div>` : ''}
+            <!-- Downloads -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${p.avatar_url ? `<a href="${p.avatar_url}" download="avatar.jpg" target="_blank" class="btn btn-ghost btn-sm">⬇️ Аватар</a>` : ''}
+              ${p.banner_url ? `<a href="${p.banner_url}" download="banner.jpg" target="_blank" class="btn btn-ghost btn-sm">⬇️ Баннер</a>` : ''}
+            </div>
             <!-- Actions -->
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-ghost btn-sm" onclick="ytGeneratePlan(${p.id})">📅 План на 30 дней</button>
+              <button class="btn btn-primary btn-sm" onclick="ytGeneratePlan(${p.id})">📅 План на 30 дней</button>
               <button class="btn btn-ghost btn-sm" onclick="ytTab('seo');document.getElementById('yt-seo-niche').value='${(p.niche||'').replace(/'/g,'')}'">✨ SEO</button>
               <button class="btn btn-ghost btn-sm" onclick="ytTab('upload')">📤 Загрузить видео</button>
-              <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="ytDeleteProfile(${p.id})">✕</button>
+              <button class="btn btn-ghost btn-sm" onclick="ytTab('branding')">🎨 Новый брендинг</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="ytDeleteProfile(${p.id})">✕ Удалить</button>
             </div>
           </div>
         </div>

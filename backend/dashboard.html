@@ -2586,7 +2586,7 @@ async function analyzeContent() {
       fd.append('context', context);
       if (hasScreenshots) { for (const f of screenshots.files) fd.append('files', f); }
       for (const f of clipboardImages) fd.append('files', f);
-      res = await fetch(API + '/api/analyzer/analyze-with-screenshots', {method:'POST', body: fd}).then(r => r.json());
+      res = await (async () => { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 90000); try { const r = await fetch(API + '/api/analyzer/analyze-with-screenshots', {method:'POST', body: fd, signal: controller.signal}); clearTimeout(timer); return r.json(); } catch(e) { clearTimeout(timer); throw e; } })();
     } else {
       document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
       res = await fetch(API + '/api/analyzer/analyze', {

@@ -971,7 +971,7 @@ URL: {url or "не указан"}
 
     try:
         msg = client.messages.create(
-            model="claude-opus-4-6" if files else MODEL,
+            model=MODEL,
             max_tokens=3000,
             temperature=0.3,
             messages=[{"role": "user", "content": content_parts}]

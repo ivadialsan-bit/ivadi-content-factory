@@ -771,3 +771,41 @@ def generate_banner_with_text(data: dict):
         "banner_base64": b64,
         "banner_data_url": f"data:image/jpeg;base64,{b64}"
     }
+
+
+@router.post("/save-banner")
+def save_banner(data: dict):
+    import base64, uuid
+    b64 = data.get("banner_base64", "")
+    name = data.get("name", "banner").replace(" ", "-")
+    if not b64:
+        raise HTTPException(status_code=400, detail="No banner data")
+    
+    # Save to static directory
+    static_dir = "/root/factory/backend/static"
+    os.makedirs(static_dir, exist_ok=True)
+    filename = f"{name}-{uuid.uuid4().hex[:8]}.jpg"
+    filepath = f"{static_dir}/{filename}"
+    
+    with open(filepath, "wb") as f:
+        f.write(base64.b64decode(b64))
+    
+    return {"url": f"/static/{filename}", "filename": filename}
+
+@router.post("/save-avatar") 
+def save_avatar(data: dict):
+    import uuid, subprocess
+    url = data.get("url", "")
+    name = data.get("name", "avatar").replace(" ", "-")
+    if not url:
+        raise HTTPException(status_code=400, detail="No avatar URL")
+    
+    static_dir = "/root/factory/backend/static"
+    os.makedirs(static_dir, exist_ok=True)
+    filename = f"{name}-avatar-{uuid.uuid4().hex[:8]}.jpg"
+    filepath = f"{static_dir}/{filename}"
+    
+    cmd = ["curl", "-sL", "--max-time", "15", "-o", filepath, url]
+    subprocess.run(cmd, timeout=20)
+    
+    return {"url": f"/static/{filename}", "filename": filename}
