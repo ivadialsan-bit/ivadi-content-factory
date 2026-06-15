@@ -196,3 +196,9 @@ class ClientIntelligenceUpdate(BaseModel):
     growth_hypothesis: str | None = None
     ai_summary: str | None = None
     status: str | None = None
+
+
+class ClientContentPlanCreate(BaseModel):
+    client_id: int
+    month: str | None = None
+    year: int | None = None

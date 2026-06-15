@@ -288,3 +288,18 @@ class TgChannel(Base):
     is_active = Column(Boolean, default=True)
     last_checked_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ClientContentPlan(Base):
+    __tablename__ = "client_content_plans"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    month = Column(String(20), nullable=True)
+    year = Column(Integer, nullable=True)
+    platform_focus = Column(Text, nullable=True)
+    posts_json = Column(Text, nullable=True)
+    summary = Column(Text, nullable=True)
+    status = Column(String(50), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)

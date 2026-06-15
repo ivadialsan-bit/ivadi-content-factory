@@ -1121,6 +1121,7 @@ function renderClientWorkspace(tab) {
     ${clientTabBtn('brief','Бриф',tab)}
     ${clientTabBtn('intelligence','Карта клиента',tab)}
     ${clientTabBtn('strategy','Стратегия',tab)}
+    ${clientTabBtn('plan','Контент-план',tab)}
     ${clientTabBtn('goals','Цели',tab)}
     ${clientTabBtn('kpis','KPI',tab)}
   `;
@@ -1134,6 +1135,7 @@ function renderClientWorkspace(tab) {
   if (tab === 'strategy') renderClientStrategy(data);
   if (tab === 'goals') renderClientGoals(data);
   if (tab === 'kpis') renderClientKpis(data);
+  if (tab === 'plan') renderClientContentPlan(data);
 }
 
 function clientTabBtn(key, label, active) {
@@ -3221,3 +3223,195 @@ function renderClientChannels(data) {
 </script>
 </body>
 </html>
+<script>
+async function renderClientContentPlan(data) {
+  const body = document.getElementById('client-drawer-body');
+  body.innerHTML = '<div style="padding:24px;color:var(--text-muted)">Загрузка...</div>';
+
+  let plan = data.content_plan || null;
+
+  if (!plan || plan.status !== 'ready') {
+    body.innerHTML = `
+      <div class="strat-empty">
+        <div style="font-size:40px;margin-bottom:12px">📅</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">Контент-план не сформирован</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Убедись что заполнены: Бриф, Профиль, Карта клиента и Стратегия</div>
+        <button class="btn btn-primary" onclick="generateContentPlan()">Создать контент-план</button>
+      </div>`;
+    return;
+  }
+
+  let posts = [];
+  let summary = {};
+  let platforms = [];
+  try { posts = JSON.parse(plan.posts_json || '[]'); } catch {}
+  try { summary = JSON.parse(plan.summary || '{}'); } catch {}
+  try { platforms = JSON.parse(plan.platform_focus || '[]'); } catch {}
+
+  const goalColors = {охват:'#3b82f6', вовлечение:'#8b5cf6', продажа:'#f59e0b', прогрев:'#10b981', лиды:'#ef4444'};
+
+  const weeks = {1:[],2:[],3:[],4:[]};
+  posts.forEach(p => {
+    const w = Math.ceil(p.day / 7);
+    const wk = w > 4 ? 4 : w;
+    weeks[wk].push(p);
+  });
+
+  function postCard(p) {
+    const color = goalColors[p.goal] || '#6b7280';
+    return `
+      <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid ${color}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:11px;color:var(--text-muted)">День ${p.day} · ${p.date||''}</div>
+          <div style="display:flex;gap:6px">
+            <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--accent-dim);color:var(--accent)">${p.platform||''}</span>
+            <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-card);color:var(--text-muted)">${p.format||''}</span>
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px">${p.topic||''}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-style:italic">"${p.hook||''}"</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${color}22;color:${color}">🎯 ${p.goal||''}</span>
+          ${p.pillar ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-card);color:var(--text-muted)">📌 ${p.pillar}</span>` : ''}
+          ${p.cta ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-card);color:var(--text-muted)">➡️ ${p.cta}</span>` : ''}
+        </div>
+        ${p.notes ? `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">${p.notes}</div>` : ''}
+      </div>`;
+  }
+
+  body.innerHTML = `
+    <div style="padding:20px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--text-primary)">📅 Контент-план · ${plan.month||''} ${plan.year||''}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Платформы: ${platforms.join(', ') || '—'} · Постов: ${summary.total_posts||posts.length}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="generateContentPlan()">🔄 Обновить</button>
+      </div>
+
+      ${summary.month_summary ? `
+        <div style="background:var(--accent-dim);border-radius:10px;padding:14px;margin-bottom:16px;border-left:3px solid var(--accent)">
+          <div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px">ФОКУС МЕСЯЦА</div>
+          <div style="font-size:13px;color:var(--text-primary);line-height:1.5">${summary.month_summary}</div>
+        </div>` : ''}
+
+      ${summary.weekly_breakdown ? `
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+          ${Object.entries(summary.weekly_breakdown).map(([k,v],i) => `
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px">
+              <div style="font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:4px">НЕДЕЛЯ ${i+1}</div>
+              <div style="font-size:12px;color:var(--text-primary)">${v}</div>
+            </div>`).join('')}
+        </div>` : ''}
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-sm ${currentPlanView==='week'?'btn-primary':'btn-secondary'}" onclick="setPlanView('week')">По неделям</button>
+        <button class="btn btn-sm ${currentPlanView==='list'?'btn-primary':'btn-secondary'}" onclick="setPlanView('list')">Список</button>
+        <button class="btn btn-sm ${currentPlanView==='calendar'?'btn-primary':'btn-secondary'}" onclick="setPlanView('calendar')">Календарь</button>
+      </div>
+
+      <div id="plan-view-container">
+        ${renderPlanWeekView(weeks)}
+      </div>
+
+      ${summary.ai_summary ? `
+        <div style="margin-top:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">AI-РЕКОМЕНДАЦИИ</div>
+          <div style="font-size:13px;color:var(--text-primary);line-height:1.6">${summary.ai_summary}</div>
+        </div>` : ''}
+    </div>`;
+
+  window._planPosts = posts;
+  window._planWeeks = weeks;
+}
+
+let currentPlanView = 'week';
+
+function setPlanView(view) {
+  currentPlanView = view;
+  const container = document.getElementById('plan-view-container');
+  if (!container) return;
+  if (view === 'week') container.innerHTML = renderPlanWeekView(window._planWeeks||{});
+  if (view === 'list') container.innerHTML = renderPlanListView(window._planPosts||[]);
+  if (view === 'calendar') container.innerHTML = renderPlanCalendarView(window._planPosts||[]);
+}
+
+function renderPlanWeekView(weeks) {
+  const goalColors = {охват:'#3b82f6', вовлечение:'#8b5cf6', продажа:'#f59e0b', прогрев:'#10b981', лиды:'#ef4444'};
+  return Object.entries(weeks).map(([wk, posts]) => `
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">Неделя ${wk}</div>
+      ${posts.length ? posts.map(p => {
+        const color = goalColors[p.goal] || '#6b7280';
+        return `<div style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid ${color}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--text-muted)">День ${p.day} · ${p.date||''}</div>
+            <div style="display:flex;gap:6px">
+              <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--accent-dim);color:var(--accent)">${p.platform||''}</span>
+              <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-card);color:var(--text-muted)">${p.format||''}</span>
+            </div>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px">${p.topic||''}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-style:italic">"${p.hook||''}"</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${color}22;color:${color}">🎯 ${p.goal||''}</span>
+            ${p.pillar ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-card);color:var(--text-muted)">📌 ${p.pillar}</span>` : ''}
+            ${p.cta ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-card);color:var(--text-muted)">➡️ ${p.cta}</span>` : ''}
+          </div>
+        </div>`;
+      }).join('') : '<div style="font-size:12px;color:var(--text-muted);padding:8px">Нет постов</div>'}
+    </div>`).join('');
+}
+
+function renderPlanListView(posts) {
+  const goalColors = {охват:'#3b82f6', вовлечение:'#8b5cf6', продажа:'#f59e0b', прогрев:'#10b981', лиды:'#ef4444'};
+  return `<div>${posts.map(p => {
+    const color = goalColors[p.goal] || '#6b7280';
+    return `<div style="display:grid;grid-template-columns:40px 80px 90px 1fr 80px;gap:10px;align-items:center;padding:10px 12px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;border-left:3px solid ${color}">
+      <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-align:center">${p.day}</div>
+      <div style="font-size:11px;color:var(--accent)">${p.platform||''}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${p.format||''}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${p.topic||''}</div>
+        ${p.pillar ? `<div style="font-size:11px;color:var(--text-muted)">📌 ${p.pillar}</div>` : ''}
+      </div>
+      <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${color}22;color:${color};text-align:center">${p.goal||''}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderPlanCalendarView(posts) {
+  const days = {};
+  posts.forEach(p => { days[p.day] = p; });
+  const goalColors = {охват:'#3b82f6', вовлечение:'#8b5cf6', продажа:'#f59e0b', прогрев:'#10b981', лиды:'#ef4444'};
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => {
+    html += `<div style="text-align:center;font-size:10px;font-weight:600;color:var(--text-muted);padding:4px">${d}</div>`;
+  });
+  for (let i = 1; i <= 31; i++) {
+    const p = days[i];
+    const color = p ? (goalColors[p.goal] || '#6b7280') : 'transparent';
+    html += `<div style="min-height:60px;background:var(--bg-main);border:1px solid var(--border);border-radius:6px;padding:4px;${p?'border-left:2px solid '+color:''}">
+      <div style="font-size:10px;color:var(--text-muted);font-weight:600">${i}</div>
+      ${p ? `<div style="font-size:9px;color:var(--accent);margin-top:2px">${p.platform||''}</div>
+             <div style="font-size:9px;color:var(--text-primary);line-height:1.3;margin-top:1px">${(p.topic||'').substring(0,25)}${(p.topic||'').length>25?'...':''}</div>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+async function generateContentPlan() {
+  const body = document.getElementById('client-drawer-body');
+  body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Генерируем контент-план через Claude...</div>';
+  try {
+    const res = await fetch(`/api/clients/${currentClientId}/generate-content-plan`, {method:'POST'});
+    if (!res.ok) throw new Error(await res.text());
+    const plan = await res.json();
+    currentClientData.content_plan = plan;
+    renderClientContentPlan(currentClientData);
+  } catch(e) {
+    body.innerHTML = `<div style="padding:24px;color:#ef4444">Ошибка: ${e.message}</div>`;
+  }
+}
+</script>

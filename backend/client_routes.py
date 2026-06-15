@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Client, ClientProject, ClientChannel, ClientGoal, ClientKPI, ClientAccountSnapshot, ClientProfile, ClientBriefFile, ClientIntelligence, ClientStrategy
+from models import Client, ClientProject, ClientChannel, ClientGoal, ClientKPI, ClientAccountSnapshot, ClientProfile, ClientBriefFile, ClientIntelligence, ClientStrategy, ClientContentPlan
 from schemas import (
     ClientCreate,
     ClientUpdate,
@@ -87,6 +87,7 @@ def get_client_overview(client_id: int, db: Session = Depends(get_db)):
         "brief_files": db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id).order_by(ClientBriefFile.created_at.desc()).all(),
         "intelligence": db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id).first(),
         "strategy": db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id).first(),
+        "content_plan": db.query(ClientContentPlan).filter(ClientContentPlan.client_id == client_id).order_by(ClientContentPlan.created_at.desc()).first(),
     }
 
 
@@ -517,7 +518,7 @@ def generate_client_strategy(client_id: int, db: Session = Depends(get_db)):
     try:
         msg = ai_client.messages.create(
             model=MODEL,
-            max_tokens=8000,
+            max_tokens=6000,
             temperature=0.4,
             system=system_prompt,
             messages=[{"role": "user", "content": user_prompt}]
@@ -573,3 +574,121 @@ def generate_client_strategy(client_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(strategy)
     return strategy
+
+
+@router.get("/{client_id}/content-plan/latest")
+def get_latest_content_plan(client_id: int, db: Session = Depends(get_db)):
+    from models import ClientContentPlan
+    plan = db.query(ClientContentPlan).filter(
+        ClientContentPlan.client_id == client_id
+    ).order_by(ClientContentPlan.created_at.desc()).first()
+    if not plan:
+        return None
+    return plan
+
+
+@router.post("/{client_id}/generate-content-plan")
+def generate_content_plan(client_id: int, db: Session = Depends(get_db)):
+    import os
+    import json
+    from datetime import datetime
+    import anthropic
+    from dotenv import load_dotenv
+    from prompt_loader import load_prompt
+    from models import ClientContentPlan
+
+    load_dotenv("/root/factory/backend/.env")
+
+    CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
+    CLAUDE_PROXY_URL = os.getenv("CLAUDE_PROXY_URL", "http://127.0.0.1:8010")
+    MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
+
+    if not CLAUDE_API_KEY:
+        raise HTTPException(status_code=500, detail="CLAUDE_API_KEY not found")
+
+    client_obj = db.query(Client).filter(Client.id == client_id).first()
+    if not client_obj:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    strategy = db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id).first()
+    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id).first()
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id).all()
+    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id).all()
+    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id).all()
+
+    def clean(obj):
+        if obj is None:
+            return {}
+        d = obj.__dict__.copy()
+        d.pop("_sa_instance_state", None)
+        return d
+
+    now = datetime.utcnow()
+    input_data = {
+        "client": {"name": client_obj.name, "brand": client_obj.brand, "niche": client_obj.niche},
+        "month": now.strftime("%B %Y"),
+        "strategy": clean(strategy),
+        "intelligence": clean(intelligence),
+        "profile": clean(profile),
+        "goals": [clean(g) for g in goals],
+        "kpis": [clean(k) for k in kpis],
+        "channels": [clean(c) for c in channels],
+    }
+
+    system_prompt = load_prompt("content_plan_prompt.txt")
+    user_prompt = (
+        f"Составь контент-план на первые 2 недели (15 постов максимум) для {now.strftime('%B %Y')} для клиента. "
+        "Ответ строго JSON.\n\n"
+        + json.dumps(input_data, ensure_ascii=False, default=str)
+    )
+
+    ai_client = anthropic.Anthropic(api_key=CLAUDE_API_KEY, base_url=CLAUDE_PROXY_URL)
+
+    try:
+        msg = ai_client.messages.create(
+            model=MODEL,
+            max_tokens=6000,
+            temperature=0.4,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Claude connection failed: {str(e)}")
+
+    text = ""
+    for block in msg.content:
+        if getattr(block, "type", None) == "text":
+            text += block.text
+
+    text = text.strip().replace("```json", "").replace("```", "").strip()
+
+    if not text.endswith("}"):
+        last = text.rfind("}")
+        if last != -1:
+            text = text[:last+1]
+
+    try:
+        data = json.loads(text)
+    except Exception:
+        print("CONTENT PLAN RAW:", text[:3000])
+        raise HTTPException(status_code=500, detail="Claude content plan JSON error")
+
+    plan = ClientContentPlan(
+        client_id=client_id,
+        month=now.strftime("%B"),
+        year=now.year,
+        platform_focus=json.dumps(data.get("platform_focus", []), ensure_ascii=False),
+        posts_json=json.dumps(data.get("posts", []), ensure_ascii=False),
+        summary=json.dumps({
+            "month_summary": data.get("month_summary"),
+            "weekly_breakdown": data.get("weekly_breakdown"),
+            "ai_summary": data.get("ai_summary"),
+            "total_posts": data.get("total_posts"),
+        }, ensure_ascii=False),
+        status="ready"
+    )
+    db.add(plan)
+    db.commit()
+    db.refresh(plan)
+    return plan
