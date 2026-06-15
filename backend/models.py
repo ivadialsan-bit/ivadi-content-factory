@@ -336,3 +336,33 @@ class YouTubeVideo(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     account = relationship("YouTubeAccount", back_populates="videos")
+
+
+class YouTubeChannelProfile(Base):
+    __tablename__ = "youtube_channel_profiles"
+
+    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, ForeignKey("youtube_accounts.id"), nullable=True)
+    name = Column(String(200), nullable=False)
+    niche = Column(String(200), nullable=True)
+    channel_type = Column(String(100), nullable=True)
+    language = Column(String(50), nullable=True)
+    branding_json = Column(Text, nullable=True)
+    avatar_url = Column(String(500), nullable=True)
+    banner_url = Column(String(500), nullable=True)
+    status = Column(String(50), default="active")
+    autopilot_enabled = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class YouTubeContentPlan(Base):
+    __tablename__ = "youtube_content_plans"
+
+    id = Column(Integer, primary_key=True)
+    profile_id = Column(Integer, ForeignKey("youtube_channel_profiles.id"), nullable=False)
+    account_id = Column(Integer, nullable=True)
+    week_number = Column(Integer, nullable=True)
+    plan_json = Column(Text, nullable=True)
+    status = Column(String(50), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
