@@ -303,3 +303,36 @@ class ClientContentPlan(Base):
     status = Column(String(50), default="draft")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class YouTubeAccount(Base):
+    __tablename__ = "youtube_accounts"
+
+    id = Column(Integer, primary_key=True)
+    channel_id = Column(String(100), unique=True, nullable=False)
+    channel_name = Column(String(200), nullable=True)
+    tokens_json = Column(Text, nullable=False)
+    status = Column(String(50), default="connected")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+    videos = relationship("YouTubeVideo", back_populates="account", cascade="all, delete-orphan")
+
+
+class YouTubeVideo(Base):
+    __tablename__ = "youtube_videos"
+
+    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, ForeignKey("youtube_accounts.id"), nullable=False)
+    youtube_video_id = Column(String(100), nullable=True)
+    title = Column(String(200), nullable=True)
+    description = Column(Text, nullable=True)
+    tags = Column(Text, nullable=True)
+    category_id = Column(String(20), default="22")
+    privacy = Column(String(20), default="public")
+    video_url = Column(String(300), nullable=True)
+    thumbnail_url = Column(String(300), nullable=True)
+    status = Column(String(50), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    account = relationship("YouTubeAccount", back_populates="videos")

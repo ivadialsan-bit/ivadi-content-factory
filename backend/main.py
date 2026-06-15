@@ -9,6 +9,7 @@ from analyzer_routes import router as analyzer_router
 from client_routes import router as client_router
 from settings_routes import router as settings_router
 from opportunity_routes import router as opportunity_router
+from youtube_routes import router as youtube_router
 from dotenv import load_dotenv
 import os
 
@@ -36,6 +37,7 @@ app.include_router(analyzer_router)
 app.include_router(client_router)
 app.include_router(settings_router)
 app.include_router(opportunity_router)
+app.include_router(youtube_router)
 
 @app.get("/api/health")
 def health_check():

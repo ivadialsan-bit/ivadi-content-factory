@@ -478,7 +478,165 @@ select option { background: var(--bg-card); }
       </div>
     </div>
     <div class="page" data-page="instagram"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(225,48,108,0.15)">📸</div><div><div class="platform-name">Instagram</div><div class="platform-sub">lena_ritzz и другие</div></div></div><div class="coming-soon"><div class="coming-soon-icon">📸</div><div class="coming-soon-title">Instagram в разработке</div><div class="coming-soon-sub">Публикация через Graph API. Настройте ключ в Интеграциях.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
-    <div class="page" data-page="youtube"><div class="platform-header"><div class="platform-icon-lg" style="background:rgba(255,0,0,0.1)">▶️</div><div><div class="platform-name">YouTube</div><div class="platform-sub">Аккаунты и видео</div></div></div><div class="coming-soon"><div class="coming-soon-icon">▶️</div><div class="coming-soon-title">YouTube в разработке</div><div class="coming-soon-sub">YouTube Data API v3 — загрузка видео и аналитика.</div><button class="btn btn-ghost" style="margin-top:16px" onclick="goToPage('integrations')">Настроить →</button></div></div>
+    <div class="page" data-page="youtube">
+  <div class="platform-header">
+    <div class="platform-icon-lg" style="background:rgba(255,0,0,0.1)">▶️</div>
+    <div>
+      <div class="platform-name">YouTube Shorts Factory</div>
+      <div class="platform-sub">Мультиканальная система — анализ, стратегия, публикация</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="ytConnectAccount()">+ Подключить канал</button>
+      <button class="btn btn-ghost" onclick="loadYouTubePage()">↻ Обновить</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+    <div class="stat-card"><div class="stat-value" id="yt-stat-channels">—</div><div class="stat-label">Каналов подключено</div></div>
+    <div class="stat-card"><div class="stat-value" id="yt-stat-videos">—</div><div class="stat-label">Видео опубликовано</div></div>
+    <div class="stat-card"><div class="stat-value" id="yt-stat-drafts">—</div><div class="stat-label">В очереди</div></div>
+    <div class="stat-card"><div class="stat-value" id="yt-stat-niches">—</div><div class="stat-label">Ниш</div></div>
+  </div>
+  <div class="tab-bar" style="margin-bottom:20px">
+    <button class="tab-btn active" onclick="ytTab('accounts')" id="yt-tab-accounts">Каналы</button>
+    <button class="tab-btn" onclick="ytTab('upload')" id="yt-tab-upload">Загрузить видео</button>
+    <button class="tab-btn" onclick="ytTab('seo')" id="yt-tab-seo">SEO-пакет</button>
+    <button class="tab-btn" onclick="ytTab('videos')" id="yt-tab-videos">История публикаций</button>
+    <button class="tab-btn" onclick="ytTab('strategy')" id="yt-tab-strategy">Стратегия каналов</button>
+  </div>
+  <div id="yt-section-accounts">
+    <div id="yt-accounts-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+      <div class="coming-soon" style="grid-column:1/-1">
+        <div class="coming-soon-icon">▶️</div>
+        <div class="coming-soon-title">Нет подключённых каналов</div>
+        <div class="coming-soon-sub">Нажмите «Подключить канал» чтобы авторизовать YouTube аккаунт через OAuth2</div>
+      </div>
+    </div>
+  </div>
+  <div id="yt-section-upload" style="display:none">
+    <div class="card" style="max-width:700px">
+      <div class="card-header"><div class="card-title">📤 Загрузить видео на YouTube</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+        <div><label class="form-label">Канал</label><select id="yt-upload-account" class="form-input"><option value="">— выберите канал —</option></select></div>
+        <div><label class="form-label">Видеофайл (MP4, MOV)</label><input type="file" id="yt-upload-file" accept="video/*" class="form-input"></div>
+        <div><label class="form-label">Заголовок</label><input type="text" id="yt-upload-title" class="form-input" placeholder="Заголовок видео"></div>
+        <div><label class="form-label">Описание</label><textarea id="yt-upload-desc" class="form-input" rows="4" placeholder="Описание видео"></textarea></div>
+        <div><label class="form-label">Теги (через запятую)</label><input type="text" id="yt-upload-tags" class="form-input" placeholder="тег1, тег2, тег3"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label class="form-label">Категория</label>
+            <select id="yt-upload-category" class="form-input">
+              <option value="22">People & Blogs</option><option value="24">Entertainment</option>
+              <option value="27">Education</option><option value="28">Science & Technology</option>
+              <option value="19">Travel & Events</option><option value="17">Sports</option>
+            </select>
+          </div>
+          <div><label class="form-label">Доступность</label>
+            <select id="yt-upload-privacy" class="form-input">
+              <option value="public">Публичное</option><option value="unlisted">По ссылке</option><option value="private">Приватное</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="ytUploadVideo()" id="yt-upload-btn">📤 Опубликовать</button>
+          <button class="btn btn-ghost" onclick="ytTab('seo')">✨ Сгенерировать SEO сначала</button>
+        </div>
+        <div id="yt-upload-status" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+  <div id="yt-section-seo" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">✨ Claude SEO-генератор</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+          <div><label class="form-label">Тема видео</label><input type="text" id="yt-seo-topic" class="form-input" placeholder="Например: как выучить английский за 30 дней"></div>
+          <div><label class="form-label">Ниша</label><input type="text" id="yt-seo-niche" class="form-input" placeholder="Образование, путешествия, финансы..."></div>
+          <div><label class="form-label">Краткое описание содержания</label><textarea id="yt-seo-hint" class="form-input" rows="3" placeholder="О чём видео, что показываем, какой результат..."></textarea></div>
+          <button class="btn btn-primary" onclick="ytGenerateSEO()" id="yt-seo-btn">✨ Сгенерировать SEO-пакет</button>
+        </div>
+      </div>
+      <div class="card" id="yt-seo-result-card" style="display:none">
+        <div class="card-header"><div class="card-title">📦 SEO-пакет</div><button class="btn btn-ghost btn-sm" onclick="ytApplySEOToUpload()">→ Применить к загрузке</button></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+          <div><div class="form-label" style="margin-bottom:6px">📌 Варианты заголовков</div><div id="yt-seo-titles" style="display:flex;flex-direction:column;gap:8px"></div></div>
+          <div><div class="form-label" style="margin-bottom:6px">📝 Описание</div><div id="yt-seo-description" style="font-size:13px;line-height:1.5;white-space:pre-wrap;background:var(--bg-secondary);padding:10px;border-radius:6px"></div></div>
+          <div><div class="form-label" style="margin-bottom:6px">🏷️ Теги</div><div id="yt-seo-tags" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+          <div><div class="form-label" style="margin-bottom:6px">🖼️ Промпты для превью</div><div id="yt-seo-thumbnails" style="display:flex;flex-direction:column;gap:8px"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="yt-section-videos" style="display:none">
+    <div id="yt-videos-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      <div class="coming-soon" style="grid-column:1/-1"><div class="coming-soon-icon">📹</div><div class="coming-soon-title">Нет опубликованных видео</div><div class="coming-soon-sub">После загрузки видео они появятся здесь</div></div>
+    </div>
+  </div>
+  <div id="yt-section-strategy" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🎯 Типы каналов для Shorts</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div class="intelligence-item" style="cursor:pointer" onclick="ytShowChannelType('faceless')"><div style="font-weight:600">😶 Faceless канал</div><div style="font-size:12px;color:var(--text-muted)">Без лица — скринкасты, анимации, стоковое видео, текст на экране</div></div>
+          <div class="intelligence-item" style="cursor:pointer" onclick="ytShowChannelType('face')"><div style="font-weight:600">🎭 С лицом / персонажем</div><div style="font-size:12px;color:var(--text-muted)">Эксперт, блогер, AI-аватар, актёр</div></div>
+          <div class="intelligence-item" style="cursor:pointer" onclick="ytShowChannelType('compilation')"><div style="font-weight:600">🎬 Компиляции / реакции</div><div style="font-size:12px;color:var(--text-muted)">Подборки, топы, реакции, дубляж</div></div>
+          <div class="intelligence-item" style="cursor:pointer" onclick="ytShowChannelType('educational')"><div style="font-weight:600">📚 Образовательный</div><div style="font-size:12px;color:var(--text-muted)">Факты, лайфхаки, обучение, how-to</div></div>
+          <div class="intelligence-item" style="cursor:pointer" onclick="ytShowChannelType('motivation')"><div style="font-weight:600">💪 Мотивация / mindset</div><div style="font-size:12px;color:var(--text-muted)">Цитаты, истории успеха, психология</div></div>
+          <div class="intelligence-item" style="cursor:pointer" onclick="ytShowChannelType('niche')"><div style="font-weight:600">🔍 Узкая ниша</div><div style="font-size:12px;color:var(--text-muted)">Finance, crypto, fitness, language learning...</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📅 Оптимальный план публикаций</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div class="intelligence-item"><div style="font-weight:600;color:var(--accent)">🌍 Зарубежный YouTube (EN)</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">3–5 Shorts в день • 15–60 сек • Лучшее время: 9:00, 15:00, 20:00 EST</div></div>
+          <div class="intelligence-item"><div style="font-weight:600;color:#ff6b35">🇷🇺 Русскоязычный YouTube</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">2–3 Shorts в день • Лучшее время: 10:00, 19:00, 22:00 МСК</div></div>
+          <div class="intelligence-item"><div style="font-weight:600">📊 Первые 90 дней</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Месяц 1: тест форматов → Месяц 2: масштаб победителей → Месяц 3: системная публикация</div></div>
+          <div class="intelligence-item"><div style="font-weight:600">⚡ Правило виральности</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Хук в первые 1–2 сек • Петля удержания • CTA в конце • Субтитры обязательны</div></div>
+          <div class="intelligence-item"><div style="font-weight:600">🔄 Мультиканальность</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">1 видео → YouTube Shorts + TikTok + Instagram Reels + VK Клипы + Telegram</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="yt-channel-type-detail" style="display:none;margin-bottom:20px"></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">✅ Чеклист запуска нового Shorts канала</div></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          <div>
+            <div style="font-weight:600;margin-bottom:10px;color:var(--accent)">📋 Подготовка</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Выбрана ниша и тип канала</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Проанализированы топ-10 конкурентов</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Определён контент-микс</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Создан канал и оформление</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Описание канала с ключами</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Подключён к платформе</label>
+            </div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:10px;color:#ff6b35">🚀 Первые 30 дней</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> 30+ видео опубликовано</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Тест 5+ разных форматов</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> CTR превью больше 5%</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Удержание больше 60%</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Найдены 2–3 рабочих формата</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> SEO на каждое видео</label>
+            </div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:10px;color:#4caf50">📈 Масштабирование</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Победители масштабированы</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Контент-план на месяц вперёд</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Репосты на другие платформы</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> A/B тест превью</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Второй канал запущен</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Монетизация подключена</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
     <div class="page" data-page="max">
       <div class="platform-header">
         <div class="platform-icon-lg" style="background:rgba(0,160,220,0.15)">💬</div>
@@ -1870,6 +2028,7 @@ function goToPage(name) {
   if (name === 'max') loadMaxData();
   if (name === 'settings') loadUserProfile();
   if (name === 'opportunities') loadOpportunities();
+  if (name === 'youtube') loadYouTubePage();
 }
 
 document.querySelectorAll('.nav-item[data-page]').forEach(item => {
@@ -3219,6 +3378,319 @@ function renderClientChannels(data) {
     </div>
   `;
 }
+
+
+// ===== YOUTUBE FACTORY =====
+let ytSEOResult = null;
+
+function loadYouTubePage() {
+  loadYTAccounts();
+  loadYTVideos();
+}
+
+function ytTab(name) {
+  ['accounts','upload','seo','videos','strategy'].forEach(t => {
+    document.getElementById('yt-section-' + t).style.display = t === name ? '' : 'none';
+    const btn = document.getElementById('yt-tab-' + t);
+    if(btn) btn.classList.toggle('active', t === name);
+  });
+  if(name === 'upload') loadYTAccountsSelect();
+}
+
+function ytConnectAccount() {
+  fetch('/api/youtube/oauth/start')
+    .then(r => r.json())
+    .then(d => { window.open(d.auth_url, '_blank'); });
+}
+
+function loadYTAccounts() {
+  fetch('/api/youtube/accounts')
+    .then(r => r.json())
+    .then(accounts => {
+      const el = document.getElementById('yt-accounts-list');
+      const stat = document.getElementById('yt-stat-channels');
+      if(stat) stat.textContent = accounts.length;
+      if(!accounts.length) {
+        el.innerHTML = '<div class="coming-soon" style="grid-column:1/-1"><div class="coming-soon-icon">▶️</div><div class="coming-soon-title">Нет подключённых каналов</div><div class="coming-soon-sub">Нажмите «Подключить канал» чтобы авторизовать YouTube аккаунт через OAuth2</div></div>';
+        return;
+      }
+      el.innerHTML = accounts.map(a => `
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:22px">▶️</div>
+              <div>
+                <div style="font-weight:600">${a.channel_name}</div>
+                <div style="font-size:12px;color:var(--text-muted)">${a.channel_id}</div>
+              </div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+              <span class="badge badge-success">✓ Подключён</span>
+              <a href="https://www.youtube.com/channel/${a.channel_id}" target="_blank" class="btn btn-ghost btn-sm">Открыть →</a>
+              <button class="btn btn-ghost btn-sm" onclick="ytDeleteAccount(${a.id})" style="color:var(--danger)">✕</button>
+            </div>
+          </div>
+          <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px">—</div><div class="stat-label">Подписчиков</div></div>
+            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px">—</div><div class="stat-label">Видео</div></div>
+            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px">—</div><div class="stat-label">Просмотров</div></div>
+          </div>
+          <div class="card-body" style="padding-top:0;display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="ytTab('upload');loadYTAccountsSelect(${a.id})">📤 Загрузить видео</button>
+            <button class="btn btn-ghost btn-sm" onclick="ytTab('seo')">✨ SEO-пакет</button>
+            <button class="btn btn-ghost btn-sm" onclick="ytTab('strategy')">📋 Стратегия</button>
+          </div>
+        </div>
+      `).join('');
+    });
+}
+
+function loadYTAccountsSelect(selectId) {
+  fetch('/api/youtube/accounts')
+    .then(r => r.json())
+    .then(accounts => {
+      const sel = document.getElementById('yt-upload-account');
+      if(!sel) return;
+      sel.innerHTML = '<option value="">— выберите канал —</option>' +
+        accounts.map(a => `<option value="${a.id}" ${selectId==a.id?'selected':''}>${a.channel_name}</option>`).join('');
+    });
+}
+
+function loadYTVideos() {
+  fetch('/api/youtube/videos')
+    .then(r => r.json())
+    .then(videos => {
+      const el = document.getElementById('yt-videos-list');
+      const stat = document.getElementById('yt-stat-videos');
+      if(stat) stat.textContent = videos.length;
+      if(!videos.length) {
+        el.innerHTML = '<div class="coming-soon" style="grid-column:1/-1"><div class="coming-soon-icon">📹</div><div class="coming-soon-title">Нет опубликованных видео</div><div class="coming-soon-sub">После загрузки видео они появятся здесь</div></div>';
+        return;
+      }
+      el.innerHTML = videos.map(v => `
+        <div class="card">
+          <div class="card-header">
+            <div style="font-weight:600;flex:1">${v.title}</div>
+            <a href="${v.video_url}" target="_blank" class="btn btn-ghost btn-sm">▶ Смотреть</a>
+          </div>
+          <div class="card-body" style="font-size:13px;color:var(--text-muted)">
+            <div>ID: ${v.youtube_video_id}</div>
+            <div>Опубликовано: ${v.created_at.slice(0,10)}</div>
+          </div>
+        </div>
+      `).join('');
+    });
+}
+
+function ytDeleteAccount(id) {
+  if(!confirm('Удалить аккаунт?')) return;
+  fetch('/api/youtube/accounts/' + id, {method:'DELETE'})
+    .then(() => loadYTAccounts());
+}
+
+function ytGenerateSEO() {
+  const topic = document.getElementById('yt-seo-topic').value.trim();
+  const niche = document.getElementById('yt-seo-niche').value.trim();
+  const hint = document.getElementById('yt-seo-hint').value.trim();
+  if(!topic) { showNotification('Введите тему видео', 'error'); return; }
+  const btn = document.getElementById('yt-seo-btn');
+  btn.textContent = '⏳ Генерирую...';
+  btn.disabled = true;
+  fetch('/api/youtube/generate-seo', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({topic, niche, description_hint: hint})
+  })
+  .then(r => r.json())
+  .then(data => {
+    ytSEOResult = data;
+    btn.textContent = '✨ Сгенерировать SEO-пакет';
+    btn.disabled = false;
+    const card = document.getElementById('yt-seo-result-card');
+    card.style.display = '';
+    // Titles
+    document.getElementById('yt-seo-titles').innerHTML = (data.titles||[]).map((t,i) => `
+      <div class="intelligence-item" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="ytSelectTitle('${t.replace(/'/g,"\'")}')">
+        <div style="font-size:13px">${t}</div>
+        <button class="btn btn-ghost btn-sm">Выбрать</button>
+      </div>
+    `).join('');
+    // Description
+    document.getElementById('yt-seo-description').textContent = data.description || '';
+    // Tags
+    document.getElementById('yt-seo-tags').innerHTML = (data.tags||[]).map(t =>
+      `<span class="badge badge-muted" style="cursor:pointer">${t}</span>`
+    ).join('');
+    // Thumbnails
+    document.getElementById('yt-seo-thumbnails').innerHTML = (data.thumbnail_prompts||[]).map((p,i) => `
+      <div class="intelligence-item">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Вариант ${i+1}</div>
+        <div style="font-size:13px">${p}</div>
+      </div>
+    `).join('');
+  })
+  .catch(e => {
+    btn.textContent = '✨ Сгенерировать SEO-пакет';
+    btn.disabled = false;
+    showNotification('Ошибка генерации: ' + e.message, 'error');
+  });
+}
+
+function ytSelectTitle(title) {
+  if(ytSEOResult) ytSEOResult._selectedTitle = title;
+  showNotification('Заголовок выбран', 'success');
+}
+
+function ytApplySEOToUpload() {
+  if(!ytSEOResult) return;
+  const title = ytSEOResult._selectedTitle || (ytSEOResult.titles||[])[0] || '';
+  const desc = ytSEOResult.description || '';
+  const tags = (ytSEOResult.tags||[]).join(', ');
+  ytTab('upload');
+  setTimeout(() => {
+    const t = document.getElementById('yt-upload-title');
+    const d = document.getElementById('yt-upload-desc');
+    const tg = document.getElementById('yt-upload-tags');
+    if(t) t.value = title;
+    if(d) d.value = desc;
+    if(tg) tg.value = tags;
+  }, 100);
+}
+
+function ytUploadVideo() {
+  const accountId = document.getElementById('yt-upload-account').value;
+  const file = document.getElementById('yt-upload-file').files[0];
+  const title = document.getElementById('yt-upload-title').value.trim();
+  const desc = document.getElementById('yt-upload-desc').value.trim();
+  const tags = document.getElementById('yt-upload-tags').value.trim();
+  const category = document.getElementById('yt-upload-category').value;
+  const privacy = document.getElementById('yt-upload-privacy').value;
+  if(!accountId) { showNotification('Выберите канал', 'error'); return; }
+  if(!file) { showNotification('Выберите видеофайл', 'error'); return; }
+  if(!title) { showNotification('Введите заголовок', 'error'); return; }
+  const btn = document.getElementById('yt-upload-btn');
+  const status = document.getElementById('yt-upload-status');
+  btn.textContent = '⏳ Загружаю...';
+  btn.disabled = true;
+  status.style.display = '';
+  status.innerHTML = '<div class="intelligence-item">⏳ Загрузка видео на YouTube... Это может занять несколько минут.</div>';
+  const fd = new FormData();
+  fd.append('account_id', accountId);
+  fd.append('title', title);
+  fd.append('description', desc);
+  fd.append('tags', tags);
+  fd.append('category_id', category);
+  fd.append('privacy', privacy);
+  fd.append('video_file', file);
+  fetch('/api/youtube/upload', {method:'POST', body: fd})
+    .then(r => r.json())
+    .then(data => {
+      btn.textContent = '📤 Опубликовать';
+      btn.disabled = false;
+      if(data.ok) {
+        status.innerHTML = `<div class="intelligence-item" style="border-color:#4caf50">✅ Видео опубликовано! <a href="${data.video_url}" target="_blank" style="color:var(--accent)">Открыть на YouTube →</a></div>`;
+        loadYTVideos();
+        const sv = document.getElementById('yt-stat-videos');
+        if(sv) sv.textContent = parseInt(sv.textContent||0) + 1;
+      } else {
+        status.innerHTML = `<div class="intelligence-item" style="border-color:var(--danger)">❌ Ошибка: ${data.detail||'Неизвестная ошибка'}</div>`;
+      }
+    })
+    .catch(e => {
+      btn.textContent = '📤 Опубликовать';
+      btn.disabled = false;
+      status.innerHTML = `<div class="intelligence-item" style="border-color:var(--danger)">❌ Ошибка: ${e.message}</div>`;
+    });
+}
+
+const ytChannelTypes = {
+  faceless: {
+    title: '😶 Faceless канал',
+    desc: 'Канал без лица — самый масштабируемый формат. Не нужен актёр или блогер.',
+    formats: ['Скринкасты с закадровым голосом','Текст на экране + стоковое видео','Анимация / motion graphics','AI-генерированные изображения','Подборки фото/видео с озвучкой'],
+    niches: ['Finance & Money','History & Facts','Tech News','Life Hacks','Motivational Quotes','Language Learning'],
+    tools: ['ElevenLabs — озвучка','Canva / CapCut — монтаж','Pexels / Pixabay — стоковое видео','Midjourney / Leonardo — изображения']
+  },
+  face: {
+    title: '🎭 Канал с лицом',
+    desc: 'Личный бренд или AI-аватар. Высокое доверие аудитории, быстрый рост.',
+    formats: ['Эксперт говорит в камеру','AI-аватар с озвучкой','Актёр / инфлюенсер','Персонаж / маскот'],
+    niches: ['Personal Finance','Fitness & Health','Business & Entrepreneurship','Relationships','Self Development'],
+    tools: ['HeyGen — AI-аватар','CapCut — монтаж','Teleprompter-приложения','Ring light + смартфон']
+  },
+  compilation: {
+    title: '🎬 Компиляции',
+    desc: 'Подборки и топы — быстрый старт, много готового материала.',
+    formats: ['Топ-10 / Топ-5','Лучшие моменты','Реакции','Сравнения','До и после'],
+    niches: ['Sports Moments','Funny Animals','Fails & Wins','Best Scenes','Travel Compilations'],
+    tools: ['CapCut / DaVinci Resolve','YouTube Audio Library','Storyblocks']
+  },
+  educational: {
+    title: '📚 Образовательный',
+    desc: 'Самая долгосрочная ниша — люди всегда хотят учиться.',
+    formats: ['Факт за 60 секунд','Как это работает?','5 вещей которые ты не знал','Объяснение сложного просто','Лайфхак дня'],
+    niches: ['Science Facts','History','Language Learning','Psychology','Coding / Tech','Health & Biology'],
+    tools: ['Notion — скрипты','ElevenLabs — озвучка','Canva — визуал','Claude — генерация контента']
+  },
+  motivation: {
+    title: '💪 Мотивация',
+    desc: 'Вечнозелёная ниша с огромной аудиторией.',
+    formats: ['Цитата + визуал','История успеха','Принципы богатых','Мышление победителей','Ошибки которые тебя тормозят'],
+    niches: ['Success Mindset','Morning Routine','Financial Freedom','Discipline','Stoicism'],
+    tools: ['ElevenLabs','Cinematic стоковое видео','Мощная музыка без авторских прав','Claude — тексты']
+  },
+  niche: {
+    title: '🔍 Узкая ниша',
+    desc: 'Узкая ниша = меньше конкуренции, выше конверсия, лояльнее аудитория.',
+    formats: ['Обзор продукта','Сравнение','Туториал','Новости ниши','Секреты и лайфхаки ниши'],
+    niches: ['Crypto & DeFi','Dropshipping','Productivity Apps','Keto / Carnivore Diet','Chess / Poker','Minimalism'],
+    tools: ['Claude — SEO и скрипты','Specific community research','Reddit + YouTube trends']
+  }
+};
+
+function ytShowChannelType(type) {
+  const data = ytChannelTypes[type];
+  if(!data) return;
+  const el = document.getElementById('yt-channel-type-detail');
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">${data.title}</div><button class="btn btn-ghost btn-sm" onclick="document.getElementById('yt-channel-type-detail').style.display='none'">✕</button></div>
+      <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <div>
+          <div class="form-label" style="margin-bottom:8px">🎬 Форматы контента</div>
+          ${data.formats.map(f => `<div class="intelligence-item" style="margin-bottom:6px;font-size:13px">${f}</div>`).join('')}
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:8px">🎯 Рабочие ниши</div>
+          ${data.niches.map(n => `<div class="intelligence-item" style="margin-bottom:6px;font-size:13px">${n}</div>`).join('')}
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:8px">🛠️ Инструменты</div>
+          ${data.tools.map(t => `<div class="intelligence-item" style="margin-bottom:6px;font-size:13px">${t}</div>`).join('')}
+        </div>
+      </div>
+      <div class="card-body" style="padding-top:0">
+        <div style="font-size:13px;color:var(--text-muted)">${data.desc}</div>
+      </div>
+    </div>
+  `;
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// Загрузить при переходе на страницу youtube
+const _origGoToPage = typeof goToPage === 'function' ? goToPage : null;
+document.addEventListener('DOMContentLoaded', () => {
+  if(window.location.search.includes('page=youtube')) {
+    loadYouTubePage();
+  }
+  // Проверка подключения после OAuth
+  if(window.location.search.includes('connected=1')) {
+    showNotification('YouTube канал подключён!', 'success');
+    loadYouTubePage();
+  }
+});
+// ===== END YOUTUBE FACTORY =====
 
 </script>
 </body>
