@@ -506,6 +506,7 @@ select option { background: var(--bg-card); }
     <button class="tab-btn" onclick="ytTab('videos')" id="yt-tab-videos">История публикаций</button>
     <button class="tab-btn" onclick="ytTab('strategy')" id="yt-tab-strategy">Стратегия каналов</button>
     <button class="tab-btn" onclick="ytTab('niches')" id="yt-tab-niches">🔍 Анализ ниш</button>
+    <button class="tab-btn" onclick="ytTab('branding')" id="yt-tab-branding">🎨 Оформление канала</button>
   </div>
   <div id="yt-section-accounts">
     <div id="yt-accounts-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
@@ -572,6 +573,178 @@ select option { background: var(--bg-card); }
   <div id="yt-section-videos" style="display:none">
     <div id="yt-videos-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
       <div class="coming-soon" style="grid-column:1/-1"><div class="coming-soon-icon">📹</div><div class="coming-soon-title">Нет опубликованных видео</div><div class="coming-soon-sub">После загрузки видео они появятся здесь</div></div>
+    </div>
+  </div>
+  <div id="yt-section-branding" style="display:none">
+    <!-- Step 1: Input -->
+    <div id="yt-branding-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🎯 Параметры канала</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label class="form-label">Ниша</label>
+              <input type="text" id="yt-brand-niche" class="form-input" placeholder="AI Tools, Dark Psychology, Stoicism...">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='AI Tools & Automation'">🤖 AI Tools</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Dark Psychology & Human Behavior'">🧠 Dark Psychology</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Luxury Lifestyle & Money Facts'">💰 Luxury Lifestyle</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Stoicism & Mindset'">⚡ Stoicism</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Finance & Investing'">📈 Finance</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Health & Fitness Facts'">💪 Health & Fitness</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='History & Untold Stories'">🏛️ History</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='True Crime & Mystery'">🔍 True Crime</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Science Facts & Space'">🔭 Science</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Language Learning & Linguistics'">🗣️ Language</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Travel & Culture'">✈️ Travel</span>
+                <span class="badge badge-muted" style="cursor:pointer" onclick="document.getElementById('yt-brand-niche').value='Productivity & Life Hacks'">⚙️ Productivity</span>
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Тип канала</label>
+              <select id="yt-brand-type" class="form-input">
+                <option value="faceless">😶 Faceless (без лица)</option>
+                <option value="face">🎭 С лицом / персонажем</option>
+                <option value="compilation">🎬 Компиляции</option>
+                <option value="educational">📚 Образовательный</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Язык контента</label>
+              <select id="yt-brand-lang" class="form-input">
+                <option value="English">🌍 English (зарубежный)</option>
+                <option value="Russian">🇷🇺 Русский</option>
+                <option value="Both">🌐 Оба языка</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Дополнительный стиль (необязательно)</label>
+              <input type="text" id="yt-brand-style" class="form-input" placeholder="минимализм, тёмные тона, киберпанк...">
+            </div>
+            <button class="btn btn-primary" onclick="ytGenerateBranding()" id="yt-brand-btn">✨ Сгенерировать брендинг</button>
+          </div>
+        </div>
+        <div class="card" id="yt-brand-status-card">
+          <div class="card-header"><div class="card-title">📊 Статус генерации</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+            <div class="intelligence-item" id="yt-brand-step-1" style="opacity:0.4">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span id="yt-brand-icon-1">⏳</span>
+                <div><div style="font-weight:600">Claude генерирует брендинг</div><div style="font-size:12px;color:var(--text-muted)">Название, описание, стратегия</div></div>
+              </div>
+            </div>
+            <div class="intelligence-item" id="yt-brand-step-2" style="opacity:0.4">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span id="yt-brand-icon-2">⏳</span>
+                <div><div style="font-weight:600">Leonardo генерирует аватар</div><div style="font-size:12px;color:var(--text-muted)">512x512 логотип канала</div></div>
+              </div>
+            </div>
+            <div class="intelligence-item" id="yt-brand-step-3" style="opacity:0.4">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span id="yt-brand-icon-3">⏳</span>
+                <div><div style="font-weight:600">Leonardo генерирует баннер</div><div style="font-size:12px;color:var(--text-muted)">2560x1440 YouTube art</div></div>
+              </div>
+            </div>
+            <div class="intelligence-item" id="yt-brand-step-4" style="opacity:0.4">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span id="yt-brand-icon-4">⏳</span>
+                <div><div style="font-weight:600">Готово к применению</div><div style="font-size:12px;color:var(--text-muted)">Скачай и загрузи на канал</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="yt-brand-result" style="display:none">
+      <!-- AI Verdict -->
+      <div id="yt-brand-verdict" style="margin-bottom:20px"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <!-- Names -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📌 Варианты названий</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px" id="yt-brand-names"></div>
+        </div>
+        <!-- Colors -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🎨 Цветовая палитра</div></div>
+          <div class="card-body">
+            <div id="yt-brand-colors" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description & Keywords -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📝 Описание канала</div></div>
+          <div class="card-body">
+            <div id="yt-brand-desc" style="font-size:13px;line-height:1.6;white-space:pre-wrap"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="navigator.clipboard.writeText(document.getElementById('yt-brand-desc').textContent)">📋 Копировать</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏷️ Ключевые слова</div></div>
+          <div class="card-body">
+            <div id="yt-brand-keywords" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🖼️ Аватар канала</div></div>
+          <div class="card-body" style="text-align:center">
+            <div id="yt-brand-avatar-wrap">
+              <div style="width:150px;height:150px;border-radius:50%;background:var(--bg-secondary);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:40px" id="yt-brand-avatar-placeholder">⏳</div>
+            </div>
+            <a id="yt-brand-avatar-dl" style="display:none;margin-top:10px" class="btn btn-ghost btn-sm" target="_blank">⬇️ Скачать аватар</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🖼️ Баннер канала</div></div>
+          <div class="card-body" style="text-align:center">
+            <div id="yt-brand-banner-wrap">
+              <div style="width:100%;height:120px;background:var(--bg-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px" id="yt-brand-banner-placeholder">⏳</div>
+            </div>
+            <a id="yt-brand-banner-dl" style="display:none;margin-top:10px" class="btn btn-ghost btn-sm" target="_blank">⬇️ Скачать баннер</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🎯 Контентные столбы</div></div>
+          <div class="card-body" id="yt-brand-pillars" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📅 Стратегия публикаций</div></div>
+          <div class="card-body"><div id="yt-brand-posting" style="font-size:13px;line-height:1.6"></div></div>
+        </div>
+      </div>
+
+      <!-- First 10 videos -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">🚀 Первые 10 видео</div></div>
+        <div class="card-body">
+          <div id="yt-brand-videos" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- Monetization -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">💰 План монетизации</div></div>
+        <div class="card-body"><div id="yt-brand-monetization" style="font-size:13px;line-height:1.6"></div></div>
+      </div>
+
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="ytTab('branding');document.getElementById('yt-brand-result').style.display='none';document.getElementById('yt-branding-form').style.display=''">🔄 Сгенерировать заново</button>
+        <button class="btn btn-ghost" onclick="ytTab('seo')">✨ Перейти к SEO</button>
+      </div>
     </div>
   </div>
   <div id="yt-section-niches" style="display:none">
@@ -3426,7 +3599,7 @@ function loadYouTubePage() {
 }
 
 function ytTab(name) {
-  ['accounts','upload','seo','videos','strategy','niches'].forEach(t => {
+  ['accounts','upload','seo','videos','strategy','niches','branding'].forEach(t => {
     const s = document.getElementById('yt-section-' + t);
     const b = document.getElementById('yt-tab-' + t);
     if(s) s.style.display = t === name ? '' : 'none';
@@ -3453,10 +3626,10 @@ function loadYTAccounts() {
         return;
       }
       el.innerHTML = accounts.map(a => `
-        <div class="card">
+        <div class="card" id="yt-account-card-${a.id}">
           <div class="card-header">
             <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:22px">▶️</div>
+              <div id="yt-thumb-${a.id}" style="width:44px;height:44px;border-radius:50%;background:rgba(255,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden">▶️</div>
               <div>
                 <div style="font-weight:600">${a.channel_name}</div>
                 <div style="font-size:12px;color:var(--text-muted)">${a.channel_id}</div>
@@ -3469,9 +3642,9 @@ function loadYTAccounts() {
             </div>
           </div>
           <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px">—</div><div class="stat-label">Подписчиков</div></div>
-            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px">—</div><div class="stat-label">Видео</div></div>
-            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px">—</div><div class="stat-label">Просмотров</div></div>
+            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px" id="yt-subs-${a.id}">⏳</div><div class="stat-label">Подписчиков</div></div>
+            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px" id="yt-vids-${a.id}">⏳</div><div class="stat-label">Видео</div></div>
+            <div class="stat-card" style="padding:10px"><div class="stat-value" style="font-size:18px" id="yt-views-${a.id}">⏳</div><div class="stat-label">Просмотров</div></div>
           </div>
           <div class="card-body" style="padding-top:0;display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm" onclick="ytTab('upload');loadYTAccountsSelect(${a.id})">📤 Загрузить видео</button>
@@ -3480,6 +3653,8 @@ function loadYTAccounts() {
           </div>
         </div>
       `).join('');
+      // Load stats for each account
+      accounts.forEach(a => ytLoadAccountStats(a.id));
     });
 }
 
@@ -3835,7 +4010,7 @@ function ytStartNiche(niche) {
 // Patch ytTab to support niches
 const _ytTabOrig = ytTab;
 ytTab = function(name) {
-  ['accounts','upload','seo','videos','strategy','niches'].forEach(t => {
+  ['accounts','upload','seo','videos','strategy','niches','branding'].forEach(t => {
     const s = document.getElementById('yt-section-' + t);
     const b = document.getElementById('yt-tab-' + t);
     if(s) s.style.display = t === name ? '' : 'none';
@@ -3844,6 +4019,201 @@ ytTab = function(name) {
   if(name === 'upload') loadYTAccountsSelect();
 };
 // ===== END YOUTUBE NICHE ANALYZER =====
+
+function ytLoadAccountStats(id) {
+  fetch('/api/youtube/accounts/' + id + '/stats')
+    .then(r => r.json())
+    .then(s => {
+      if(s.error) return;
+      const fmt = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+      const subs = document.getElementById('yt-subs-'+id);
+      const vids = document.getElementById('yt-vids-'+id);
+      const views = document.getElementById('yt-views-'+id);
+      const thumb = document.getElementById('yt-thumb-'+id);
+      if(subs) subs.textContent = fmt(s.subscribers);
+      if(vids) vids.textContent = fmt(s.videos);
+      if(views) views.textContent = fmt(s.views);
+      if(thumb && s.thumbnail) thumb.innerHTML = '<img src="'+s.thumbnail+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover">';
+    })
+    .catch(() => {});
+}
+
+// ===== YOUTUBE BRANDING =====
+let ytBrandingData = null;
+
+function ytGenerateBranding() {
+  const niche = document.getElementById('yt-brand-niche').value.trim();
+  const type = document.getElementById('yt-brand-type').value;
+  const lang = document.getElementById('yt-brand-lang').value;
+  const style = document.getElementById('yt-brand-style').value.trim();
+
+  if(!niche) { showNotification('Введите нишу', 'error'); return; }
+
+  const btn = document.getElementById('yt-brand-btn');
+  btn.textContent = '⏳ Генерирую...';
+  btn.disabled = true;
+
+  // Reset steps
+  [1,2,3,4].forEach(i => {
+    document.getElementById('yt-brand-step-'+i).style.opacity = '0.4';
+    document.getElementById('yt-brand-icon-'+i).textContent = '⏳';
+  });
+
+  // Step 1: Claude branding
+  document.getElementById('yt-brand-step-1').style.opacity = '1';
+  document.getElementById('yt-brand-icon-1').textContent = '🔄';
+
+  fetch('/api/youtube/generate-branding', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({niche, channel_type: type, language: lang, style})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.error) {
+      btn.textContent = '✨ Сгенерировать брендинг';
+      btn.disabled = false;
+      showNotification('Ошибка: ' + data.error, 'error');
+      return;
+    }
+    ytBrandingData = data;
+    document.getElementById('yt-brand-icon-1').textContent = '✅';
+
+    // Show result section
+    document.getElementById('yt-brand-result').style.display = '';
+    ytRenderBranding(data);
+
+    // Step 2: Avatar
+    document.getElementById('yt-brand-step-2').style.opacity = '1';
+    document.getElementById('yt-brand-icon-2').textContent = '🔄';
+
+    fetch('/api/youtube/generate-image', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: data.avatar_prompt, width: 512, height: 512})
+    })
+    .then(r => r.json())
+    .then(img => {
+      document.getElementById('yt-brand-icon-2').textContent = '✅';
+      if(img.url) {
+        document.getElementById('yt-brand-avatar-placeholder').innerHTML =
+          `<img src="${img.url}" style="width:150px;height:150px;border-radius:50%;object-fit:cover">`;
+        const dl = document.getElementById('yt-brand-avatar-dl');
+        dl.href = img.url;
+        dl.style.display = 'inline-block';
+      }
+
+      // Step 3: Banner
+      document.getElementById('yt-brand-step-3').style.opacity = '1';
+      document.getElementById('yt-brand-icon-3').textContent = '🔄';
+
+      fetch('/api/youtube/generate-image', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({prompt: data.banner_prompt, width: 1472, height: 832})
+      })
+      .then(r => r.json())
+      .then(banner => {
+        document.getElementById('yt-brand-icon-3').textContent = '✅';
+        if(banner.url) {
+          document.getElementById('yt-brand-banner-placeholder').innerHTML =
+            `<img src="${banner.url}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover">`;
+          const dl = document.getElementById('yt-brand-banner-dl');
+          dl.href = banner.url;
+          dl.style.display = 'inline-block';
+        }
+        document.getElementById('yt-brand-step-4').style.opacity = '1';
+        document.getElementById('yt-brand-icon-4').textContent = '✅';
+        btn.textContent = '✨ Сгенерировать брендинг';
+        btn.disabled = false;
+        showNotification('Брендинг готов!', 'success');
+      })
+      .catch(() => {
+        document.getElementById('yt-brand-icon-3').textContent = '❌';
+        btn.textContent = '✨ Сгенерировать брендинг';
+        btn.disabled = false;
+      });
+    })
+    .catch(() => {
+      document.getElementById('yt-brand-icon-2').textContent = '❌';
+      btn.textContent = '✨ Сгенерировать брендинг';
+      btn.disabled = false;
+    });
+  })
+  .catch(e => {
+    btn.textContent = '✨ Сгенерировать брендинг';
+    btn.disabled = false;
+    showNotification('Ошибка: ' + e.message, 'error');
+  });
+}
+
+function ytRenderBranding(data) {
+  // Verdict
+  document.getElementById('yt-brand-verdict').innerHTML = `
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card-body">
+        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px">🧠 AI-вердикт</div>
+        <div style="font-size:14px;line-height:1.6">${data.ai_verdict||''}</div>
+      </div>
+    </div>`;
+
+  // Names
+  document.getElementById('yt-brand-names').innerHTML = (data.channel_names||[]).map((n,i) => `
+    <div class="intelligence-item" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <div style="font-weight:600">${n}</div>
+      <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${n.replace(/'/g,"\'")}');showNotification('Скопировано','success')">📋</button>
+    </div>`).join('');
+
+  // Colors
+  const colors = data.color_palette || {};
+  const colorLabels = {primary:'Основной',secondary:'Вторичный',accent:'Акцент',background:'Фон'};
+  document.getElementById('yt-brand-colors').innerHTML = Object.entries(colors).map(([k,v]) => `
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;border-radius:8px;background:${v};border:1px solid var(--border);flex-shrink:0"></div>
+      <div>
+        <div style="font-weight:600;font-size:13px">${colorLabels[k]||k}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${v}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="navigator.clipboard.writeText('${v}');showNotification('Скопировано','success')">📋</button>
+    </div>`).join('');
+
+  // Description
+  document.getElementById('yt-brand-desc').textContent = data.channel_description || '';
+
+  // Keywords
+  document.getElementById('yt-brand-keywords').innerHTML = (data.keywords||[]).map(k =>
+    `<span class="badge badge-muted" style="cursor:pointer" onclick="navigator.clipboard.writeText('${k}')">${k}</span>`
+  ).join('');
+
+  // Pillars
+  document.getElementById('yt-brand-pillars').innerHTML = (data.content_pillars||[]).map(p =>
+    `<div class="intelligence-item" style="font-size:13px">${p}</div>`
+  ).join('');
+
+  // Posting
+  document.getElementById('yt-brand-posting').textContent = data.posting_strategy || '';
+
+  // First 10 videos
+  document.getElementById('yt-brand-videos').innerHTML = (data.first_10_videos||[]).map((v,i) =>
+    `<div class="intelligence-item" style="font-size:13px"><span style="color:var(--accent);font-weight:600">#${i+1}</span> ${v}</div>`
+  ).join('');
+
+  // Monetization
+  document.getElementById('yt-brand-monetization').textContent = data.monetization_plan || '';
+}
+// ===== END YOUTUBE BRANDING =====
+
+
+// ===== NOTIFICATIONS =====
+function showNotification(msg, type) {
+  const el = document.createElement('div');
+  const colors = {success:'#4caf50', error:'#ef4444', info:'#6366f1'};
+  el.style.cssText = `position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;background:${colors[type]||colors.info};color:#fff;font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:300px;`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+// ===== END NOTIFICATIONS =====
 
 // ===== END YOUTUBE FACTORY =====
 

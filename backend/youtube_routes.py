@@ -257,3 +257,160 @@ def analyze_niches(data: dict = {}):
         except:
             pass
         return {"error": "parse error", "raw": text[:500]}
+
+@router.get("/accounts/{account_id}/stats")
+def get_account_stats(account_id: int, db: Session = Depends(get_db)):
+    import subprocess
+    acc = db.query(YouTubeAccount).filter_by(id=account_id).first()
+    if not acc:
+        raise HTTPException(status_code=404, detail="Not found")
+    tokens = json.loads(acc.tokens_json)
+    access_token = tokens.get("access_token")
+
+    def yt_request(token):
+        cmd = [
+            "curl", "-s", "--max-time", "10",
+            "https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true",
+            "-H", f"Authorization: Bearer {token}"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        return json.loads(result.stdout)
+
+    try:
+        data = yt_request(access_token)
+
+        if data.get("error", {}).get("code") == 401 and tokens.get("refresh_token"):
+            ref_cmd = [
+                "curl", "-s", "--max-time", "10",
+                "-X", "POST", "https://oauth2.googleapis.com/token",
+                "-d", f"client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&refresh_token={tokens['refresh_token']}&grant_type=refresh_token"
+            ]
+            ref_result = subprocess.run(ref_cmd, capture_output=True, text=True, timeout=15)
+            new_tokens = json.loads(ref_result.stdout)
+            if "access_token" in new_tokens:
+                tokens["access_token"] = new_tokens["access_token"]
+                acc.tokens_json = json.dumps(tokens)
+                db.commit()
+                access_token = new_tokens["access_token"]
+                data = yt_request(access_token)
+
+        if not data.get("items"):
+            return {"error": "No channel data", "raw": str(data)[:200]}
+
+        item = data["items"][0]
+        stats = item.get("statistics", {})
+        snippet = item.get("snippet", {})
+
+        return {
+            "subscribers": int(stats.get("subscriberCount", 0)),
+            "views": int(stats.get("viewCount", 0)),
+            "videos": int(stats.get("videoCount", 0)),
+            "title": snippet.get("title", ""),
+            "description": snippet.get("description", ""),
+            "thumbnail": snippet.get("thumbnails", {}).get("default", {}).get("url", ""),
+            "created_at": snippet.get("publishedAt", "")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/generate-branding")
+def generate_branding(data: dict):
+    niche = data.get("niche", "")
+    channel_type = data.get("channel_type", "faceless")
+    language = data.get("language", "English")
+    style = data.get("style", "")
+
+    client = anthropic.Anthropic(api_key=CLAUDE_API_KEY, base_url=CLAUDE_PROXY_URL)
+
+    prompt = f"""Ты эксперт по брендингу YouTube каналов. Создай полный брендинг-пакет для нового канала.
+
+Ниша: {niche}
+Тип канала: {channel_type}
+Язык контента: {language}
+Дополнительный стиль: {style}
+
+Верни ТОЛЬКО валидный JSON без markdown:
+{{
+  "channel_names": ["название 1", "название 2", "название 3"],
+  "channel_description": "описание канала 150-300 символов с ключевыми словами для SEO",
+  "keywords": ["ключевое слово 1", "ключевое слово 2", "ключевое слово 3", "ключевое слово 4", "ключевое слово 5"],
+  "tone_of_voice": "описание стиля подачи контента",
+  "color_palette": {{
+    "primary": "#HEX цвет",
+    "secondary": "#HEX цвет",
+    "accent": "#HEX цвет",
+    "background": "#HEX цвет"
+  }},
+  "visual_style": "описание визуального стиля канала",
+  "avatar_prompt": "детальный промпт для генерации аватара канала на английском языке для Leonardo AI, 512x512, профессиональный логотип",
+  "banner_prompt": "детальный промпт для генерации баннера канала на английском языке для Leonardo AI, 2560x1440, YouTube channel art",
+  "content_pillars": ["столб 1", "столб 2", "столб 3"],
+  "posting_strategy": "стратегия публикаций: частота, время, форматы",
+  "first_10_videos": ["идея видео 1", "идея видео 2", "идея видео 3", "идея видео 4", "идея видео 5", "идея видео 6", "идея видео 7", "идея видео 8", "идея видео 9", "идея видео 10"],
+  "monetization_plan": "план монетизации канала",
+  "ai_verdict": "общая рекомендация и прогноз роста"
+}}"""
+
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=2000,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    text = msg.content[0].text.strip()
+    try:
+        return json.loads(text)
+    except:
+        import re
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        return json.loads(match.group()) if match else {"error": "parse error", "raw": text[:300]}
+
+@router.post("/generate-image")
+def generate_image(data: dict):
+    prompt = data.get("prompt", "")
+    width = data.get("width", 512)
+    height = data.get("height", 512)
+
+    LEONARDO_API_KEY = os.getenv("LEONARDO_API_KEY")
+
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": f"Bearer {LEONARDO_API_KEY}"
+    }
+
+    gen_payload = {
+        "prompt": prompt,
+        "width": width,
+        "height": height,
+        "num_images": 1,
+        "modelId": "b24e16ff-06e3-43eb-8d33-4416c2d75876"
+    }
+
+    import subprocess, time
+
+    cmd = ["curl", "-s", "--max-time", "30",
+           "-X", "POST", "https://cloud.leonardo.ai/api/rest/v1/generations",
+           "-H", f"authorization: Bearer {LEONARDO_API_KEY}",
+           "-H", "content-type: application/json",
+           "-d", json.dumps(gen_payload)]
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=35)
+    gen_data = json.loads(result.stdout)
+    gen_id = gen_data.get("sdGenerationJob", {}).get("generationId")
+
+    if not gen_id:
+        return {"error": "No generation ID", "raw": result.stdout[:200]}
+
+    # Poll for result
+    for _ in range(20):
+        time.sleep(3)
+        poll_cmd = ["curl", "-s", "--max-time", "10",
+                    f"https://cloud.leonardo.ai/api/rest/v1/generations/{gen_id}",
+                    "-H", f"authorization: Bearer {LEONARDO_API_KEY}"]
+        poll_result = subprocess.run(poll_cmd, capture_output=True, text=True, timeout=15)
+        poll_data = json.loads(poll_result.stdout)
+        images = poll_data.get("generations_by_pk", {}).get("generated_images", [])
+        if images:
+            return {"url": images[0]["url"], "generation_id": gen_id}
+
+    return {"error": "Generation timeout"}
