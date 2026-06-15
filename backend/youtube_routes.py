@@ -117,8 +117,22 @@ def generate_seo(data: dict):
         return json.loads(text)
     except:
         import re
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        return json.loads(match.group()) if match else {"error": "parse error", "raw": text}
+        # Try to extract valid JSON even if truncated
+        try:
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+        except:
+            pass
+        # Return partial result with what we have
+        try:
+            niches = re.findall(r'\{[^{}]*"name"[^{}]*\}', text, re.DOTALL)
+            parsed = [json.loads(n) for n in niches if n]
+            if parsed:
+                return {"niches": parsed, "ai_verdict": "Анализ получен частично.", "updated_at": "2026"}
+        except:
+            pass
+        return {"error": "parse error", "raw": text[:500]}
 
 @router.post("/upload")
 async def upload_video(
@@ -187,3 +201,59 @@ def get_videos(db: Session = Depends(get_db)):
     return [{"id": v.id, "account_id": v.account_id, "youtube_video_id": v.youtube_video_id,
              "title": v.title, "video_url": v.video_url, "status": v.status,
              "created_at": str(v.created_at)} for v in videos]
+
+@router.post("/analyze-niches")
+def analyze_niches(data: dict = {}):
+    client = anthropic.Anthropic(api_key=CLAUDE_API_KEY, base_url=CLAUDE_PROXY_URL)
+    focus = data.get("focus", "faceless English YouTube Shorts")
+    prompt = f"""Ты эксперт по YouTube Shorts монетизации и росту каналов. Проанализируй топовые ниши для зарубежного YouTube Shorts ({focus}).
+
+Верни ТОЛЬКО валидный JSON без markdown:
+{{
+  "updated_at": "2026",
+  "niches": [
+    {{
+      "name": "название ниши на английском",
+      "emoji": "эмодзи",
+      "description": "1-2 предложения что это",
+      "entry_difficulty": 3,
+      "growth_potential": 9,
+      "competition": "low",
+      "monetization": "high",
+      "avg_views_per_short": "10K-500K",
+      "time_to_1k_subs": "2-4 недели",
+      "content_ideas": ["идея 1", "идея 2", "идея 3"],
+      "top_channels_example": ["канал 1", "канал 2"],
+      "tools_needed": ["инструмент 1", "инструмент 2"],
+      "why_now": "почему именно сейчас эта ниша перспективна",
+      "best_for": "faceless",
+      "monetization_methods": ["метод 1", "метод 2"]
+    }}
+  ],
+  "ai_verdict": "общий вывод и рекомендация с чего начать"
+}}
+
+Включи 4 ниши. Приоритет: простота входа + высокий потенциал. Фокус на faceless каналах которые легко масштабировать."""
+
+    msg = client.messages.create(model="claude-sonnet-4-6", max_tokens=2000, messages=[{"role": "user", "content": prompt}])
+    text = msg.content[0].text.strip()
+    try:
+        return json.loads(text)
+    except:
+        import re
+        # Try to extract valid JSON even if truncated
+        try:
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+        except:
+            pass
+        # Return partial result with what we have
+        try:
+            niches = re.findall(r'\{[^{}]*"name"[^{}]*\}', text, re.DOTALL)
+            parsed = [json.loads(n) for n in niches if n]
+            if parsed:
+                return {"niches": parsed, "ai_verdict": "Анализ получен частично.", "updated_at": "2026"}
+        except:
+            pass
+        return {"error": "parse error", "raw": text[:500]}
