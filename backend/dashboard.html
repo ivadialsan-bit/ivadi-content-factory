@@ -2513,73 +2513,50 @@ function updateScreenshotBadge(input) {
 async function analyzeContent() {
   const url = document.getElementById('analyzer-url').value.trim();
   const niche = document.getElementById('analyzer-niche').value;
-
-  if (!url) {
-    _toast('Вставьте ссылку', false);
-    return;
-  }
-
-  try {
-    new URL(url);
-  } catch (e) {
+  if (!url) { _toast('Вставьте ссылку', false); return; }
+  try { new URL(url); } catch(e) {
     _toast('Введите корректную ссылку. Пример: https://www.youtube.com/shorts/...', false);
     return;
   }
-
   document.getElementById('analyzer-result').style.display = 'none';
   document.getElementById('analyzer-loading').style.display = 'block';
-
   const screenshots = document.getElementById('analyzer-screenshots');
   const context = (document.getElementById('analyzer-context') || {}).value || '';
   const hasScreenshots = screenshots && screenshots.files.length > 0;
   const isInstagram = url.includes('instagram.com');
-
-  let res;
-  if (hasScreenshots || isInstagram) {
-    document.getElementById('analyzer-status').textContent = isInstagram ? 'Анализирую Instagram через Claude...' : 'Анализирую скриншоты через Claude...';
-    const fd = new FormData();
-    fd.append('url', url);
-    fd.append('niche', niche);
-    fd.append('context', context);
-    if (hasScreenshots) {
-      for (const f of screenshots.files) fd.append('files', f);
+  try {
+    let res;
+    if (hasScreenshots || isInstagram) {
+      document.getElementById('analyzer-status').textContent = isInstagram ? 'Анализирую Instagram через Claude...' : 'Анализирую скриншоты через Claude...';
+      const fd = new FormData();
+      fd.append('url', url);
+      fd.append('niche', niche);
+      fd.append('context', context);
+      if (hasScreenshots) { for (const f of screenshots.files) fd.append('files', f); }
+      res = await fetch(API + '/api/analyzer/analyze-with-screenshots', {method:'POST', body: fd}).then(r => r.json());
+    } else {
+      document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
+      res = await fetch(API + '/api/analyzer/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({url, niche})
+      }).then(r => r.json());
     }
-    res = await fetch(API + '/api/analyzer/analyze-with-screenshots', {method:'POST', body: fd}).then(r => r.json());
-  } else {
-    document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
-    res = await fetch(API + '/api/analyzer/analyze', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({url, niche})
-    }).then(r => r.json());
-  }
-
     document.getElementById('analyzer-loading').style.display = 'none';
-
-    if (!res.success) {
-      _toast('Ошибка анализа: ' + (res.error || 'неизвестная ошибка'), false);
-      return;
-    }
-
+    if (!res.success) { _toast('Ошибка анализа: ' + (res.error || 'неизвестная ошибка'), false); return; }
     const a = res.analysis || {};
-
     document.getElementById('analyzer-result').style.display = 'block';
     document.getElementById('ar-viral').textContent = (a.viral_score || '—') + '/10';
     document.getElementById('ar-hook').textContent = a.hook_type || '—';
-    document.getElementById('ar-duration').textContent = a.content_format || '—';
+    document.getElementById('ar-duration').textContent = a.content_format || (a.content_analysis && a.content_analysis.format) || '—';
     document.getElementById('ar-niche').textContent = a.niche_label || a.niche || '—';
-
-    document.getElementById('ar-structure').innerHTML = (a.structure || []).map(x => '• ' + x).join('<br>');
+    const structure = a.structure || (a.content_analysis && a.content_analysis.structure) || [];
+    document.getElementById('ar-structure').innerHTML = structure.map(x => '• ' + x).join('<br>');
     document.getElementById('ar-triggers').innerHTML = (a.triggers || []).map(x => '• ' + x).join('<br>');
     document.getElementById('ar-why').innerHTML = (a.why_works || []).map(x => '• ' + x).join('<br>');
-
     let text = '';
-    if (a.source_basis) {
-      text += 'Источник анализа: ' + a.source_basis + '\n';
-      text += 'Точность: ' + (a.source_confidence || 'unknown') + '\n\n';
-    }
+    if (a.source_basis) text += 'Источник: ' + a.source_basis + '\n\n';
     text += a.summary || '';
-
     const acc = a.account_analysis;
     if (acc) {
       text += '\n\n— АККАУНТ —\n';
@@ -2601,13 +2578,12 @@ async function analyzeContent() {
     if (a.adaptation && a.adaptation.length) text += '\n\n— КАК ИСПОЛЬЗОВАТЬ —\n' + a.adaptation.map(x => '• ' + x).join('\n');
     if (a.video_scenario && a.video_scenario.length) text += '\n\nСценарий видео:\n' + a.video_scenario.map(x => '• ' + x).join('\n');
     document.getElementById('ar-transcript').textContent = text;
-
-  } catch (e) {
+    loadAnalyzerHistory();
+  } catch(e) {
     document.getElementById('analyzer-loading').style.display = 'none';
     _toast('Ошибка запроса: ' + e.message, false);
   }
 }
-
 async function loadAnalyzerHistory() {
   try {
     const data = await fetch(API + '/api/analyzer/history').then(r => r.json());
