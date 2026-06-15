@@ -559,7 +559,7 @@ def generate_video_clip(req: KlingVideoRequest):
                 "aspect_ratio": req.aspect_ratio,
                 "duration": req.duration
             },
-            timeout=30
+            timeout=90
         )
         if not r.ok:
             return {"success": False, "error": r.text, "status_code": r.status_code}
@@ -665,7 +665,7 @@ def assemble_video(prod_id: int):
         "-shortest", "-movflags", "+faststart", "-pix_fmt", "yuv420p",
         out_path
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
     if result.returncode != 0:
         return {"success": False, "error": "FFmpeg failed", "stderr": result.stderr[-2000:]}
     final_url = f"/static/video/{out_fname}"

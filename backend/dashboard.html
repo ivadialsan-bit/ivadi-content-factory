@@ -1024,7 +1024,7 @@ select option { background: var(--bg-card); }
         <div class="avatar-service"><div class="avatar-icon">🎭</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div class="avatar-name">Synthesia</div><span class="status-badge status-inactive">не настроен</span></div><div class="avatar-desc">Корпоративные аватары, 120+ языков</div><button class="btn btn-ghost btn-sm" onclick="goToPage('integrations')">Настроить →</button></div>
         <div class="avatar-service" style="border-style:dashed"><div class="avatar-icon" style="opacity:0.5">👤</div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div class="avatar-name">Свой аватар</div><span class="status-badge status-soon">скоро</span></div><div class="avatar-desc">Обучить модель на своём лице</div><button class="btn btn-ghost btn-sm" disabled>В разработке</button></div>
       </div>
-      <div class="card"><div class="section-title">Создать видео</div><textarea id="avatar-text" placeholder="Текст для озвучки..." style="height:100px;margin-bottom:10px"></textarea><div style="display:flex;gap:10px;flex-wrap:wrap"><select style="flex:1"><option>Выбрать аватара...</option></select><button class="btn btn-primary" onclick="alert('Подключите HeyGen')">🎬 Создать</button><button class="btn btn-ghost" onclick="generateAvatarScript()">✨ AI напишет</button></div></div>
+      <div class="card"><div class="section-title">Создать видео</div><textarea id="avatar-text" placeholder="Текст для озвучки..." style="height:100px;margin-bottom:10px"></textarea><div style="display:flex;gap:10px;flex-wrap:wrap"><select style="flex:1"><option>Выбрать аватара...</option></select><button class="btn btn-primary" onclick="_toast('Подключите HeyGen в Интеграциях', false)">🎬 Создать</button><button class="btn btn-ghost" onclick="generateAvatarScript()">✨ AI напишет</button></div></div>
     </div>
     <div class="page" data-page="integrations">
       <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🔌 Интеграции</div><div style="font-size:12px;color:var(--text-muted)">API ключи внешних сервисов</div></div>
@@ -1038,7 +1038,7 @@ select option { background: var(--bg-card); }
         <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🎬 RunwayML</div><div class="integration-desc">Генерация видео из текста</div></div><span class="status-badge status-inactive">не настроен</span></div><input type="password" placeholder="Runway API Key..." style="margin-bottom:8px"><button class="btn btn-primary btn-sm">Подключить</button></div>
         <div class="integration-card"><div class="integration-header"><div><div class="integration-name">🔵 ВКонтакте</div><div class="integration-desc">Публикация в сообщества</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
         <div class="integration-card"><div class="integration-header"><div><div class="integration-name">💬 MAX Bot</div><div class="integration-desc">Уведомления и IvadiTravel</div></div><span class="status-badge status-active">активен</span></div><input type="password" value="••••••••••••" style="margin-bottom:8px"><button class="btn btn-ghost btn-sm">Проверить</button></div>
-        <div class="integration-card" style="border-style:dashed;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:120px" onclick="alert('Скоро')"><div style="text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">+</div><div style="font-size:13px">Добавить интеграцию</div></div></div>
+        <div class="integration-card" style="border-style:dashed;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:120px" onclick="_toast('Скоро', false)"><div style="text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">+</div><div style="font-size:13px">Добавить интеграцию</div></div></div>
       </div>
     </div>
     <div class="page" data-page="schedule"><div style="font-size:20px;font-weight:700;margin-bottom:24px">⏰ Расписание</div><div class="coming-soon"><div class="coming-soon-icon">⏰</div><div class="coming-soon-title">Визуальный планировщик</div><div class="coming-soon-sub">Работает через cron на сервере. Визуальный интерфейс — в следующей версии.</div></div></div>
@@ -1259,6 +1259,14 @@ select option { background: var(--bg-card); }
   </div>
 </div>
 <script>
+
+function _toast(msg, ok) {
+  const nb = document.createElement('div');
+  nb.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.4);background:' + (ok !== false ? '#1a3a2a' : '#3a1a1a') + ';color:' + (ok !== false ? '#4ade80' : '#f87171') + ';border:1px solid ' + (ok !== false ? '#166534' : '#7f1d1d');
+  nb.textContent = msg;
+  document.body.appendChild(nb);
+  setTimeout(() => nb.remove(), 3500);
+}
 const API = '';
 let analyzerHistory = JSON.parse(localStorage.getItem('smm_analyzer') || '[]');
 let competitors = JSON.parse(localStorage.getItem('smm_competitors') || '[]');
@@ -1312,7 +1320,7 @@ async function saveUserProfile() {
     const msg = document.getElementById('sp-saved-msg');
     msg.style.display = '';
     setTimeout(() => msg.style.display = 'none', 2500);
-  } catch(e) { alert('Ошибка сохранения'); }
+  } catch(e) { _toast('Ошибка сохранения', false); }
 }
 
 
@@ -2452,7 +2460,7 @@ function renderMaxLog(log) {
 async function publishPost(id) {
   if (!confirm('Опубликовать в MAX-канал?')) return;
   const res = await fetch(API+'/api/ivadi/queue/'+id+'/publish',{method:'POST'}).then(r=>r.json());
-  alert(res.message||(res.success?'✅ Опубликован!':'❌ Ошибка'));
+  _toast(res.message||(res.success?'✅ Опубликован!':'❌ Ошибка'), res.success);
   loadMaxData();
 }
 
@@ -2464,7 +2472,12 @@ async function rejectPost(id) {
 function showFullPost(id) {
   fetch(API+'/api/ivadi/queue').then(r=>r.json()).then(d=>{
     const p = d.posts.find(x=>x.id===id);
-    if (p) alert(p.text);
+    if (p) {
+    const nb = document.createElement('div');
+    nb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+    nb.innerHTML = '<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto"><div style="font-weight:700;margin-bottom:12px">Пост</div><div style="white-space:pre-wrap;font-size:13px;line-height:1.6">' + p.text + '</div><button class="btn btn-ghost" style="margin-top:16px;width:100%" onclick="this.closest('div[style*=inset]').remove()">Закрыть</button></div>';
+    document.body.appendChild(nb);
+  }
   });
 }
 
@@ -2477,7 +2490,7 @@ async function generateMaxQueue() {
     btn.textContent = '⚡ Сгенерировать очередь';
     btn.disabled = false;
     if (res.success) loadMaxData();
-    else alert('Ошибка: '+(res.error||'неизвестно'));
+    else _toast('Ошибка: '+(res.error||'неизвестно'), false);
   } catch(e) { btn.textContent='⚡ Сгенерировать очередь'; btn.disabled=false; }
 }
 
@@ -2486,14 +2499,14 @@ async function analyzeContent() {
   const niche = document.getElementById('analyzer-niche').value;
 
   if (!url) {
-    alert('Вставьте ссылку');
+    _toast('Вставьте ссылку', false);
     return;
   }
 
   try {
     new URL(url);
   } catch (e) {
-    alert('Введите корректную ссылку. Пример: https://www.youtube.com/shorts/...');
+    _toast('Введите корректную ссылку. Пример: https://www.youtube.com/shorts/...', false);
     return;
   }
 
@@ -2511,7 +2524,7 @@ async function analyzeContent() {
     document.getElementById('analyzer-loading').style.display = 'none';
 
     if (!res.success) {
-      alert('Ошибка анализа: ' + (res.error || 'неизвестная ошибка'));
+      _toast('Ошибка анализа: ' + (res.error || 'неизвестная ошибка'), false);
       return;
     }
 
@@ -2546,7 +2559,7 @@ async function analyzeContent() {
 
   } catch (e) {
     document.getElementById('analyzer-loading').style.display = 'none';
-    alert('Ошибка запроса: ' + e.message);
+    _toast('Ошибка запроса: ' + e.message, false);
   }
 }
 
@@ -2590,7 +2603,7 @@ async function showAnalysisItem(id) {
   try {
     const res = await fetch(API + '/api/analyzer/item/' + id).then(r => r.json());
     if (!res.success) {
-      alert('Анализ не найден');
+      _toast('Анализ не найден', false);
       return;
     }
 
@@ -2656,7 +2669,7 @@ async function showAnalysisItem(id) {
 
     el.scrollIntoView({behavior:'smooth', block:'start'});
   } catch(e) {
-    alert('Ошибка загрузки анализа: ' + e.message);
+    _toast('Ошибка загрузки анализа: ' + e.message, false);
   }
 }
 
@@ -2819,7 +2832,7 @@ async function saveGeneratedScenarioAsset() {
 }
 
 
-function saveToNiche() { alert('✅ Сохранено в базу ниш'); }
+function saveToNiche() { _toast('✅ Сохранено в базу ниш', true); }
 
 
 async function loadContentAssets() {
@@ -3016,7 +3029,7 @@ async function addImageToQueue(imageId, btn) {
 
 async function generateHooks() {
   const topic = document.getElementById('hook-topic').value;
-  if (!topic) { alert('Введите тему'); return; }
+  if (!topic) { _toast('Введите тему', false); return; }
   const el = document.getElementById('hooks-result');
   el.style.display='block';
   el.innerHTML='<div style="color:var(--text-muted);font-size:12px">Генерирую...</div>';
@@ -3045,7 +3058,7 @@ function addCompetitor() {
   const url=document.getElementById('comp-url').value;
   const name=document.getElementById('comp-name').value||url;
   const platform=document.getElementById('comp-platform').value;
-  if (!url) { alert('Введите ссылку'); return; }
+  if (!url) { _toast('Введите ссылку', false); return; }
   competitors.push({url,name,platform,added:new Date().toLocaleString('ru')});
   localStorage.setItem('smm_competitors',JSON.stringify(competitors));
   renderCompetitors();
@@ -3156,9 +3169,9 @@ async function loadNicheRecent() {
   }
 }
 
-function addNiche() { alert('Добавление своей ниши — в следующей версии'); }
-function transcribe() { const url=document.getElementById('tr-url').value; if (!url){alert('Введите ссылку');return;} document.getElementById('tr-result').style.display='block'; document.getElementById('tr-text').value='Транскрипция: '+url+'\n\nНастройте Whisper API в Интеграциях для полной транскрипции.'; }
-function postFromTranscript() { alert('В следующей версии'); }
+function addNiche() { _toast('Добавление своей ниши — в следующей версии', false); }
+function transcribe() { const url=document.getElementById('tr-url').value; if (!url){_toast('Введите ссылку', false);return;} document.getElementById('tr-result').style.display='block'; document.getElementById('tr-text').value='Транскрипция: '+url+'\n\nНастройте Whisper API в Интеграциях для полной транскрипции.'; }
+function postFromTranscript() { _toast('В следующей версии', false); }
 function generateAvatarScript() { document.getElementById('avatar-text').value='Привет! Сегодня расскажу как путешествовать умнее. За последний год я помог сотням людей найти идеальный тур. Вот главные секреты.'; }
 
 loadDashboard();
@@ -3180,9 +3193,9 @@ async function checkLeonardoKey() {
         const u = data.user_details?.[0];
         if (u) {
             const tokens = (u.subscriptionTokens||0) + (u.apiPaidTokens||0);
-            alert('✅ Leonardo подключён\nТокены: ' + tokens + ' (дневных: ' + (u.subscriptionTokens||0) + ', платных: ' + (u.apiPaidTokens||0) + ')');
-        } else { alert('❌ Ошибка: ' + JSON.stringify(data)); }
-    } catch(e) { alert('❌ Ошибка: ' + e.message); }
+            _toast('✅ Leonardo: ' + tokens + ' токенов', true);
+        } else { _toast('❌ Ошибка: ' + JSON.stringify(data), false); }
+    } catch(e) { _toast('❌ Ошибка: ' + e.message, false); }
 }
 
 function renderClientStrategy(data) {
@@ -5024,7 +5037,7 @@ async function sfGenerateKlingClip(scenarioId, prompt) {
   if (d.success) {
     sfPollKling(d.task_id, scenarioId);
   } else {
-    alert('Kling error: ' + d.error);
+    _toast('Kling: ' + d.error, false);
   }
 }
 
