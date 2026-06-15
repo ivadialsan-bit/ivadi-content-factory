@@ -196,7 +196,7 @@ def analyze_reference(req: AnalyzeRefRequest):
         return {"success": False, "error": "CLAUDE_API_KEY not set"}
     extracted_info = ""
     try:
-        from youtube_extractor import extract_youtube_data
+        import sys; sys.path.insert(0, "/root/factory/backend"); from youtube_extractor import extract_youtube_data
         data = extract_youtube_data(req.url)
         extracted_info = json.dumps(data, ensure_ascii=False)[:8000]
     except Exception:
