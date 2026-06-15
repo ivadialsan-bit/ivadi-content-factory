@@ -171,6 +171,109 @@ select option { background: var(--bg-card); }
   background:rgba(255,255,255,.025);
   padding:18px;
 }
+
+/* ===== CLIENT CARD REDESIGN ===== */
+.client-drawer{position:fixed;top:0;right:0;width:780px;max-width:100vw;height:100vh;background:var(--bg-card);border-left:1px solid var(--border);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.client-drawer.open{transform:translateX(0)}
+.client-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-shrink:0}
+.client-drawer-body{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:16px}
+.client-tabs{display:flex;gap:6px;padding:12px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card);z-index:2;overflow-x:auto;flex-shrink:0}
+.client-tab{border:1px solid var(--border);background:transparent;color:var(--text-muted);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;transition:all .15s}
+.client-tab:hover{background:var(--bg-hover);color:var(--text)}
+.client-tab.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(124,106,247,.45)}
+
+/* Overview cards */
+.ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px}
+.ov-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.ov-card .num{font-size:26px;font-weight:800;color:var(--text)}
+.ov-card .label{font-size:11px;color:var(--text-muted);margin-top:3px;font-weight:500}
+
+/* Section blocks */
+.cs{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:20px}
+.cs-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cs-title-icon{width:24px;height:24px;border-radius:6px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:12px}
+.cs-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cs-row:last-child{border-bottom:0;padding-bottom:0}
+.cs-label{color:var(--text-muted);min-width:120px}
+.cs-val{color:var(--text);font-weight:600;text-align:right}
+
+/* Status badge */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.status-active{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+.status-paused{background:rgba(234,179,8,.12);color:#eab308;border:1px solid rgba(234,179,8,.25)}
+.status-archived{background:rgba(107,114,128,.12);color:#6b7280;border:1px solid rgba(107,114,128,.25)}
+
+/* Profile fields */
+.pf-field{margin-bottom:12px}
+.pf-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.pf-textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;resize:vertical;transition:border-color .15s;font-family:inherit}
+.pf-textarea:focus{outline:none;border-color:var(--accent)}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pf-fill-bar{height:4px;border-radius:2px;background:var(--border);margin-bottom:14px;overflow:hidden}
+.pf-fill-inner{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#a78bfa);transition:width .4s}
+.pf-fill-label{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+
+/* Brief human-readable */
+.brief-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.brief-qa{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.brief-qa:last-child{border-bottom:0}
+.brief-q{color:var(--text-muted);margin-bottom:3px;font-size:12px}
+.brief-a{color:var(--text);font-weight:600}
+.brief-a.empty{color:var(--text-muted);font-style:italic;font-weight:400}
+
+/* Goals & KPI */
+.goal-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px;font-size:13px}
+.goal-item:last-child{border-bottom:0}
+.goal-title{font-weight:600;color:var(--text)}
+.goal-meta{color:var(--text-muted);font-size:12px}
+.kpi-badge{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(124,106,247,.3);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700}
+
+/* Strategy */
+.strat-hero{background:linear-gradient(135deg,rgba(124,106,247,.12),rgba(167,139,250,.06));border:1px solid rgba(124,106,247,.25);border-radius:14px;padding:20px;margin-bottom:4px}
+.strat-summary{font-size:14px;line-height:1.7;color:var(--text-secondary)}
+.strat-section{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:0}
+.strat-section-title{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.pillar-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
+.pillar-item:last-child{border-bottom:0}
+.pillar-num{width:22px;height:22px;border-radius:6px;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.platform-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.platform-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.platform-role{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--accent-dim);color:var(--accent);font-weight:600}
+.platform-detail{font-size:12px;color:var(--text-muted);line-height:1.5}
+.funnel-step{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.funnel-step:last-child{border-bottom:0}
+.funnel-step-num{width:28px;height:28px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.funnel-step-name{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.funnel-step-text{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.mix-bar{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.mix-bar:last-child{border-bottom:0}
+.mix-label{width:140px;color:var(--text);flex-shrink:0}
+.mix-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.mix-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),#a78bfa)}
+.mix-val{width:36px;text-align:right;color:var(--accent);font-weight:700;font-size:12px}
+.action-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;font-size:13px}
+.action-item:last-child{border-bottom:0}
+.action-num{width:22px;height:22px;border-radius:6px;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.risk-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);align-items:flex-start}
+.risk-item:last-child{border-bottom:0}
+.strat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.strat-kpi-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.strat-kpi-item:last-child{border-bottom:0}
+.strat-empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px}
+.strat-generate-btn{margin-top:16px}
+
+/* Edit form */
+.edit-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;transition:border-color .15s}
+.edit-input:focus{outline:none;border-color:var(--accent)}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.edit-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.danger-zone{border-color:rgba(239,68,68,.3)!important}
+.danger-zone .cs-title{color:#ef4444}
+
+/* Channel add form */
+.ch-add-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ch-add-form select,.ch-add-form input{flex:1;min-width:120px}
+
 </style>
 
 <style id="clients-crm-ui">
@@ -289,6 +392,7 @@ select option { background: var(--bg-card); }
     <div class="nav-section">Система</div>
     <div class="nav-item" data-page="schedule"><span class="icon">⏰</span> Расписание</div>
     <div class="nav-item" data-page="patterns"><span class="icon">🎯</span> Паттерны</div>
+    <div class="nav-item" data-page="opportunities"><span class="icon">🎯</span> Вакансии</div>
     <div class="nav-item" data-page="settings"><span class="icon">⚙️</span> Настройки</div>
   </nav>
   <div class="sidebar-footer">
@@ -553,11 +657,105 @@ select option { background: var(--bg-card); }
     </div>
     <div class="page" data-page="schedule"><div style="font-size:20px;font-weight:700;margin-bottom:24px">⏰ Расписание</div><div class="coming-soon"><div class="coming-soon-icon">⏰</div><div class="coming-soon-title">Визуальный планировщик</div><div class="coming-soon-sub">Работает через cron на сервере. Визуальный интерфейс — в следующей версии.</div></div></div>
     <div class="page" data-page="patterns"><div style="font-size:20px;font-weight:700;margin-bottom:24px">🎯 Паттерны</div><div class="coming-soon"><div class="coming-soon-icon">🎯</div><div class="coming-soon-title">База паттернов</div><div class="coming-soon-sub">Структуры историй и сюжетные паттерны — в следующей версии.</div></div></div>
+    <div class="page" data-page="opportunities">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <div style="font-size:20px;font-weight:700">🎯 Вакансии и проекты</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="loadOpportunities()">🔄 Обновить</button>
+          <button class="btn btn-primary btn-sm" onclick="runHunter()">▶ Запустить сканер</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div class="card" style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--accent)" id="opp-total">—</div>
+          <div style="font-size:12px;color:var(--text-muted)">Всего найдено</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:#22c55e" id="opp-new">—</div>
+          <div style="font-size:12px;color:var(--text-muted)">Новых</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:#f59e0b" id="opp-high">—</div>
+          <div style="font-size:12px;color:var(--text-muted)">Высокий скор (70+)</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--text-muted)" id="opp-viewed">—</div>
+          <div style="font-size:12px;color:var(--text-muted)">Просмотрено</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-sm" id="opp-filter-all" onclick="filterOpportunities('all')" style="background:var(--accent);color:#fff">Все</button>
+        <button class="btn btn-ghost btn-sm" id="opp-filter-new" onclick="filterOpportunities('new')">Новые</button>
+        <button class="btn btn-ghost btn-sm" id="opp-filter-vacancy" onclick="filterOpportunities('вакансия')">Вакансии</button>
+        <button class="btn btn-ghost btn-sm" id="opp-filter-project" onclick="filterOpportunities('проект')">Проекты</button>
+        <button class="btn btn-ghost btn-sm" id="opp-filter-saved" onclick="filterOpportunities('saved')">Сохранённые</button>
+      </div>
+
+      <div id="opp-list" style="display:flex;flex-direction:column;gap:12px">
+        <div style="text-align:center;color:var(--text-muted);padding:40px">Загрузка...</div>
+      </div>
+
+      <div style="margin-top:24px" id="opp-channels-section">
+        <div style="font-size:16px;font-weight:700;margin-bottom:12px">📡 Каналы для мониторинга</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="opp-channel-input" placeholder="@username канала" style="flex:1;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text-primary);font-size:13px">
+          <button class="btn btn-primary btn-sm" onclick="addOppChannel()">+ Добавить</button>
+        </div>
+        <div id="opp-channels-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+
     <div class="page" data-page="settings">
       <div style="font-size:20px;font-weight:700;margin-bottom:24px">⚙️ Настройки</div>
-      <div class="grid-2">
-        <div class="card"><div class="section-title">Общие</div><div style="display:flex;flex-direction:column;gap:14px"><div><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Название</div><input type="text" value="SMM Command Center"></div><div><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Часовой пояс</div><select><option>UTC+3 (Москва)</option></select></div><button class="btn btn-primary btn-sm" style="width:fit-content">Сохранить</button></div></div>
-        <div class="card"><div class="section-title">Сервер</div><div style="display:flex;flex-direction:column;gap:10px;font-size:12px"><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">IP</span><span>147.45.97.143</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">OS</span><span>Ubuntu 22.04</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Python</span><span>3.10.12</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Сервис</span><span class="status-badge status-active">ivadi-content активен</span></div></div></div>
+
+      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="settings-tab-profile" onclick="settingsTab('profile')">👤 Профиль навыков</button>
+        <button class="btn" id="settings-tab-server" onclick="settingsTab('server')" style="background:var(--bg-card);color:var(--text-primary)">🖥️ Сервер</button>
+      </div>
+
+      <div id="settings-panel-profile">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div class="card">
+            <div class="section-title">О себе</div>
+            <textarea id="sp-about" placeholder="Кто ты, чем занимаешься, какую ценность даёшь клиентам" style="width:100%;min-height:90px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-primary);font-size:13px;resize:vertical"></textarea>
+          </div>
+          <div class="card">
+            <div class="section-title">Ставка / чек</div>
+            <textarea id="sp-rates" placeholder="Ведение: от 50 000 ₽/мес&#10;Запуск: от 80 000 ₽&#10;Разовый контент: от 15 000 ₽" style="width:100%;min-height:90px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-primary);font-size:13px;resize:vertical"></textarea>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div class="card">
+            <div class="section-title">Навыки</div>
+            <textarea id="sp-skills" placeholder="SMM-стратегия&#10;Контент-маркетинг&#10;Reels / Shorts&#10;Таргетированная реклама&#10;AI-генерация контента" style="width:100%;min-height:110px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-primary);font-size:13px;resize:vertical"></textarea>
+          </div>
+          <div class="card">
+            <div class="section-title">Ниши</div>
+            <textarea id="sp-niches" placeholder="Туризм и путешествия&#10;Инфобизнес&#10;Недвижимость&#10;Beauty&#10;Онлайн-образование" style="width:100%;min-height:110px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-primary);font-size:13px;resize:vertical"></textarea>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title">Кейсы</div>
+          <textarea id="sp-cases" placeholder="Туристический блог: с 0 до 45 000 подписчиков за 6 месяцев&#10;Инфопродукт: охваты +320% за квартал&#10;Локальный ресторан: продажи через контент +180%" style="width:100%;min-height:100px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-primary);font-size:13px;resize:vertical"></textarea>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <button class="btn btn-primary" onclick="saveUserProfile()">💾 Сохранить профиль</button>
+          <span id="sp-saved-msg" style="font-size:12px;color:var(--success);display:none">✓ Сохранено</span>
+        </div>
+      </div>
+
+      <div id="settings-panel-server" style="display:none">
+        <div class="card" style="max-width:420px">
+          <div class="section-title">Сервер</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">IP</span><span>147.45.97.143</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">OS</span><span>Ubuntu 22.04</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Python</span><span>3.10.12</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">Сервис</span><span class="status-badge status-active">ivadi-content активен</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -572,11 +770,172 @@ const pageTitles = {
   max:'MAX — IvadiTravel',telegram:'Telegram',analyzer:'Анализ контента',
   hooks:'Хуки и сценарии',posts:'Библиотека постов',images:'Библиотека изображений',competitors:'Конкуренты',niches:'База ниш',
   transcribe:'Транскрибация',avatars:'Аватары',integrations:'Интеграции',
-  clients:'Клиенты',clients:'Клиенты',schedule:'Расписание',patterns:'Паттерны',settings:'Настройки'
+  clients:'Клиенты',clients:'Клиенты',schedule:'Расписание',patterns:'Паттерны',settings:'Настройки',opportunities:'Вакансии и проекты'
 };
 
 
 
+
+
+function settingsTab(tab) {
+  ['profile','server'].forEach(t => {
+    document.getElementById('settings-panel-' + t).style.display = t === tab ? '' : 'none';
+    const btn = document.getElementById('settings-tab-' + t);
+    if (btn) {
+      btn.className = t === tab ? 'btn btn-primary' : 'btn';
+      if (t !== tab) btn.style.cssText = 'background:var(--bg-card);color:var(--text-primary)';
+      else btn.style.cssText = '';
+    }
+  });
+}
+
+async function loadUserProfile() {
+  try {
+    const r = await fetch('/api/settings/profile');
+    const p = await r.json();
+    document.getElementById('sp-about').value = p.about || '';
+    document.getElementById('sp-rates').value = p.rates || '';
+    document.getElementById('sp-skills').value = p.skills || '';
+    document.getElementById('sp-niches').value = p.niches || '';
+    document.getElementById('sp-cases').value = p.cases || '';
+  } catch(e) {}
+}
+
+async function saveUserProfile() {
+  const data = {
+    about: document.getElementById('sp-about').value,
+    rates: document.getElementById('sp-rates').value,
+    skills: document.getElementById('sp-skills').value,
+    niches: document.getElementById('sp-niches').value,
+    cases: document.getElementById('sp-cases').value
+  };
+  try {
+    await fetch('/api/settings/profile', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+    const msg = document.getElementById('sp-saved-msg');
+    msg.style.display = '';
+    setTimeout(() => msg.style.display = 'none', 2500);
+  } catch(e) { alert('Ошибка сохранения'); }
+}
+
+
+let oppData = [];
+let oppFilter = 'all';
+
+async function loadOpportunities() {
+  try {
+    const r = await fetch('/api/opportunities');
+    oppData = await r.json();
+    renderOpportunities();
+    updateOppStats();
+
+    const cr = await fetch('/api/opportunities/channels');
+    const channels = await cr.json();
+    renderOppChannels(channels);
+  } catch(e) { console.error(e); }
+}
+
+function updateOppStats() {
+  document.getElementById('opp-total').innerText = oppData.length;
+  document.getElementById('opp-new').innerText = oppData.filter(o => o.status === 'new').length;
+  document.getElementById('opp-high').innerText = oppData.filter(o => o.score >= 70).length;
+  document.getElementById('opp-viewed').innerText = oppData.filter(o => o.status === 'viewed').length;
+}
+
+function filterOpportunities(f) {
+  oppFilter = f;
+  ['all','new','вакансия','проект','saved'].forEach(k => {
+    const btn = document.getElementById('opp-filter-' + (k === 'вакансия' ? 'vacancy' : k === 'проект' ? 'project' : k));
+    if (btn) { btn.style.background = k === f ? 'var(--accent)' : ''; btn.style.color = k === f ? '#fff' : ''; btn.className = k === f ? 'btn btn-sm' : 'btn btn-ghost btn-sm'; }
+  });
+  renderOpportunities();
+}
+
+function renderOpportunities() {
+  const box = document.getElementById('opp-list');
+  let items = oppData;
+  if (oppFilter === 'new') items = items.filter(o => o.status === 'new');
+  else if (oppFilter === 'saved') items = items.filter(o => o.status === 'saved');
+  else if (oppFilter !== 'all') items = items.filter(o => o.category === oppFilter);
+
+  if (!items.length) {
+    box.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">Вакансий пока нет. Запусти сканер.</div>';
+    return;
+  }
+
+  box.innerHTML = items.map(o => {
+    const scoreColor = o.score >= 70 ? '#22c55e' : o.score >= 50 ? '#f59e0b' : 'var(--text-muted)';
+    const catColor = o.category === 'вакансия' ? '#6366f1' : o.category === 'проект' ? '#f59e0b' : 'var(--text-muted)';
+    return `<div class="card" style="border-left:3px solid ${scoreColor}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="background:${scoreColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:700">${o.score}</span>
+          <span style="background:${catColor}22;color:${catColor};padding:2px 8px;border-radius:12px;font-size:11px">${o.category || '—'}</span>
+          <span style="font-size:11px;color:var(--text-muted)">@${o.channel}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="setOppStatus(${o.id},'saved')" title="Сохранить">🔖</button>
+          <button class="btn btn-ghost btn-sm" onclick="setOppStatus(${o.id},'rejected')" title="Отклонить">✕</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-primary);margin-bottom:8px;line-height:1.5">${o.text.substring(0,300)}${o.text.length > 300 ? '...' : ''}</div>
+      ${o.score_reason ? `<div style="font-size:11px;color:var(--text-muted);font-style:italic">💡 ${o.score_reason}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function setOppStatus(id, status) {
+  await fetch('/api/opportunities/' + id + '/status', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({status})
+  });
+  await loadOpportunities();
+}
+
+async function runHunter() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerText = '⏳ Сканирую...';
+  try {
+    await fetch('https://tg-hunter.onrender.com/run');
+    setTimeout(async () => {
+      await loadOpportunities();
+      btn.disabled = false;
+      btn.innerText = '▶ Запустить сканер';
+    }, 30000);
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerText = '▶ Запустить сканер';
+  }
+}
+
+function renderOppChannels(channels) {
+  const box = document.getElementById('opp-channels-list');
+  if (!channels.length) { box.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Каналов нет</div>'; return; }
+  box.innerHTML = channels.map(c => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-secondary);border-radius:8px;font-size:13px">
+      <span>@${c.username} <span style="color:var(--text-muted)">${c.title || ''}</span></span>
+      <button class="btn btn-ghost btn-sm" onclick="deleteOppChannel(${c.id})">✕</button>
+    </div>`).join('');
+}
+
+async function addOppChannel() {
+  const inp = document.getElementById('opp-channel-input');
+  const username = inp.value.trim().replace('@','');
+  if (!username) return;
+  await fetch('/api/opportunities/channels', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({username, title: username})
+  });
+  inp.value = '';
+  await loadOpportunities();
+}
+
+async function deleteOppChannel(id) {
+  await fetch('/api/opportunities/channels/' + id, {method: 'DELETE'});
+  await loadOpportunities();
+}
 
 let currentClientId = null;
 
@@ -1507,6 +1866,8 @@ function goToPage(name) {
   document.getElementById('topbar-title').textContent = pageTitles[name] || name;
   if (name === 'dashboard') loadDashboard();
   if (name === 'max') loadMaxData();
+  if (name === 'settings') loadUserProfile();
+  if (name === 'opportunities') loadOpportunities();
 }
 
 document.querySelectorAll('.nav-item[data-page]').forEach(item => {
@@ -2419,6 +2780,442 @@ async function generateClientStrategy() {
   await loadClientData(currentClientId);
   renderClientWorkspace('strategy');
   showNotification('Стратегия сформирована', 'success');
+}
+
+
+
+// ===== REDESIGNED CLIENT CARD =====
+
+function statusBadge(status) {
+  const map = {active:['status-active','Активный'], paused:['status-paused','Пауза'], archived:['status-archived','Архив']};
+  const [cls, label] = map[status||'active'] || ['status-active','Активный'];
+  return `<span class="status-badge ${cls}">${label}</span>`;
+}
+
+function renderClientOverview(data) {
+  const c = data.client;
+  const intel = data.intelligence;
+  const strat = data.strategy;
+  const brief = data.brief_files && data.brief_files.length ? data.brief_files[0] : null;
+
+  const readiness = [
+    brief ? 1 : 0,
+    (data.channels||[]).length ? 1 : 0,
+    (data.goals||[]).length ? 1 : 0,
+    (data.kpis||[]).length ? 1 : 0,
+    intel && intel.status === 'ready' ? 1 : 0,
+    strat && strat.status === 'ready' ? 1 : 0,
+  ];
+  const pct = Math.round(readiness.filter(Boolean).length / readiness.length * 100);
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="ov-grid">
+      <div class="ov-card"><div class="num">${(data.projects||[]).length}</div><div class="label">Проекты</div></div>
+      <div class="ov-card"><div class="num">${(data.channels||[]).length}</div><div class="label">Аккаунты</div></div>
+      <div class="ov-card"><div class="num">${(data.goals||[]).length}</div><div class="label">Цели</div></div>
+      <div class="ov-card"><div class="num">${(data.kpis||[]).length}</div><div class="label">KPI</div></div>
+    </div>
+
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">📋</span>Карточка клиента</div>
+      <div class="cs-row"><span class="cs-label">Название</span><span class="cs-val">${escapeHtml(c.name)}</span></div>
+      <div class="cs-row"><span class="cs-label">Бренд</span><span class="cs-val">${escapeHtml(c.brand||'—')}</span></div>
+      <div class="cs-row"><span class="cs-label">Ниша</span><span class="cs-val">${escapeHtml(c.niche||'—')}</span></div>
+      <div class="cs-row"><span class="cs-label">Статус</span><span class="cs-val">${statusBadge(c.status)}</span></div>
+      <div class="cs-row"><span class="cs-label">Создан</span><span class="cs-val">${formatClientDate(c.created_at)}</span></div>
+    </div>
+
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">🎯</span>Готовность клиента</div>
+      <div class="pf-fill-label">${pct}% заполнено</div>
+      <div class="pf-fill-bar"><div class="pf-fill-inner" style="width:${pct}%"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px">
+        ${[
+          ['📄', 'Бриф', brief],
+          ['📱', 'Аккаунты', (data.channels||[]).length],
+          ['🎯', 'Цели', (data.goals||[]).length],
+          ['📊', 'KPI', (data.kpis||[]).length],
+          ['🧠', 'Карта', intel && intel.status === 'ready'],
+          ['📈', 'Стратегия', strat && strat.status === 'ready'],
+        ].map(([icon, label, val]) => `
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px;font-size:12px">
+            <span style="font-size:16px">${icon}</span>
+            <div>
+              <div style="color:var(--text-muted);font-size:11px">${label}</div>
+              <div style="font-weight:700;color:${val ? '#22c55e' : 'var(--text-muted)'}">${val ? '✓' : '—'}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">⚡</span>Быстрые действия</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('brief')">📄 Бриф</button>
+        <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('profile')">👤 Профиль</button>
+        <button class="btn btn-ghost btn-sm" onclick="renderClientWorkspace('intelligence')">🧠 Карта клиента</button>
+        <button class="btn btn-primary btn-sm" onclick="renderClientWorkspace('strategy')">📈 Стратегия</button>
+      </div>
+    </div>
+
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">✏️</span>Редактирование</div>
+      <div class="edit-grid-3">
+        <input class="edit-input" id="edit-client-name" value="${escapeAttr(c.name||'')}" placeholder="Название">
+        <input class="edit-input" id="edit-client-brand" value="${escapeAttr(c.brand||'')}" placeholder="Бренд">
+        <input class="edit-input" id="edit-client-niche" value="${escapeAttr(c.niche||'')}" placeholder="Ниша">
+      </div>
+      <div class="edit-grid" style="margin-bottom:10px">
+        <select class="edit-input" id="edit-client-status">
+          <option value="active" ${c.status==='active'?'selected':''}>Активный</option>
+          <option value="paused" ${c.status==='paused'?'selected':''}>Пауза</option>
+          <option value="archived" ${c.status==='archived'?'selected':''}>Архив</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="saveClientEdits()">Сохранить</button>
+      </div>
+      <textarea class="pf-textarea" id="edit-client-notes" style="min-height:80px" placeholder="Заметки">${escapeHtml(c.notes||'')}</textarea>
+    </div>
+
+    <div class="cs danger-zone">
+      <div class="cs-title">⚠️ Опасная зона</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Удаление уберёт клиента, проекты, каналы, цели и KPI.</div>
+      <button class="btn btn-ghost btn-sm" style="border-color:rgba(239,68,68,.4);color:#ef4444" onclick="deleteClient()">Удалить клиента</button>
+      <div id="client-danger-message" style="margin-top:8px;font-size:12px;color:var(--text-muted)"></div>
+    </div>
+  `;
+}
+
+function renderClientGoals(data) {
+  const goals = data.goals || [];
+  const kpis = data.kpis || [];
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">🎯</span>Цели</div>
+      ${goals.length ? goals.map(g => `
+        <div class="goal-item">
+          <div>
+            <div class="goal-title">${escapeHtml(g.title||'—')}</div>
+            ${g.period ? `<div class="goal-meta">${escapeHtml(g.target_value||'')} · ${escapeHtml(g.period)}</div>` : ''}
+          </div>
+          <span class="kpi-badge">${escapeHtml(g.target_value||'—')}</span>
+        </div>
+      `).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Цели ещё не добавлены</div>'}
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <input class="edit-input" id="goal-title" placeholder="Цель" style="flex:1;min-width:160px">
+        <input class="edit-input" id="goal-target" placeholder="План / период" style="flex:1;min-width:120px">
+        <button class="btn btn-primary btn-sm" onclick="addClientGoal()">Добавить</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderClientKpis(data) {
+  const kpis = data.kpis || [];
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">📊</span>KPI</div>
+      ${kpis.length ? kpis.map(k => `
+        <div class="goal-item">
+          <div class="goal-title">${escapeHtml(k.metric||'—')}</div>
+          <span class="kpi-badge">${escapeHtml(k.value||'—')}</span>
+        </div>
+      `).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">KPI ещё не добавлены</div>'}
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <input class="edit-input" id="kpi-metric" placeholder="Метрика" style="flex:1;min-width:160px">
+        <input class="edit-input" id="kpi-value" placeholder="Значение" style="flex:1;min-width:120px">
+        <button class="btn btn-primary btn-sm" onclick="addClientKPI()">Добавить</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderClientBrief(data) {
+  const latest = data.brief_files && data.brief_files.length ? data.brief_files[0] : null;
+  let briefHtml = '';
+
+  if (latest && latest.parsed_json) {
+    try {
+      const rows = JSON.parse(latest.parsed_json);
+      const sections = {};
+      rows.forEach(r => {
+        const sec = r['Раздел'] || 'Общее';
+        if (!sections[sec]) sections[sec] = [];
+        sections[sec].push(r);
+      });
+      briefHtml = Object.entries(sections).map(([sec, items]) => `
+        <div class="brief-section-title">${escapeHtml(sec)}</div>
+        ${items.map(r => {
+          const q = r['Вопрос'] || r['Ключ системы'] || '';
+          const a = r['Ответ клиента'] || '';
+          const isEmpty = !a || ['не знаю','нет','нету','пока нет','—','-'].includes(String(a).trim().toLowerCase());
+          return `<div class="brief-qa">
+            <div class="brief-q">${escapeHtml(q)}</div>
+            <div class="brief-a ${isEmpty ? 'empty' : ''}">${isEmpty ? 'Не заполнено' : escapeHtml(String(a))}</div>
+          </div>`;
+        }).join('')}
+      `).join('');
+    } catch(e) {
+      briefHtml = `<pre style="font-size:12px;white-space:pre-wrap">${escapeHtml(latest.parsed_json)}</pre>`;
+    }
+  }
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">📄</span>Загрузить бриф</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Загрузи заполненный .xlsx-файл клиента. Система распарсит ответы автоматически.</div>
+      <input id="brief-file-input" type="file" accept=".xlsx" class="edit-input" style="margin-bottom:10px">
+      <button class="btn btn-primary btn-sm" onclick="uploadClientBrief()">Загрузить бриф</button>
+      <div id="brief-upload-status" style="margin-top:8px;font-size:12px;color:var(--text-muted)"></div>
+    </div>
+
+    ${latest ? `
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">✅</span>Последний бриф</div>
+      <div class="cs-row"><span class="cs-label">Файл</span><span class="cs-val">${escapeHtml(latest.filename||'—')}</span></div>
+      <div class="cs-row"><span class="cs-label">Статус</span><span class="cs-val"><span class="status-badge status-active">${escapeHtml(latest.status||'—')}</span></span></div>
+      <div class="cs-row"><span class="cs-label">Загружен</span><span class="cs-val">${formatClientDate(latest.created_at)}</span></div>
+      ${briefHtml ? `<div style="margin-top:14px">${briefHtml}</div>` : ''}
+    </div>
+    ` : '<div class="cs"><div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">Бриф ещё не загружен</div></div>'}
+  `;
+}
+
+function renderClientProfile(data) {
+  const p = data.profile || {};
+  const fields = [
+    {id:'positioning', label:'Позиционирование', key:'positioning', rows:3},
+    {id:'product', label:'Продукт / услуга', key:'product', rows:2},
+    {id:'target-audience', label:'Целевая аудитория', key:'target_audience', rows:2},
+    {id:'tone', label:'Tone of Voice', key:'tone_of_voice', rows:2},
+    {id:'pillars', label:'Контентные столбы', key:'content_pillars', rows:2},
+    {id:'usp', label:'УТП', key:'usp', rows:2},
+    {id:'offers', label:'Офферы', key:'offers', rows:2},
+    {id:'pains', label:'Боли аудитории', key:'pains', rows:2},
+    {id:'desires', label:'Желания аудитории', key:'desires', rows:2},
+    {id:'objections', label:'Возражения', key:'objections', rows:2},
+    {id:'funnel', label:'Воронка трафика', key:'traffic_funnel', rows:2},
+    {id:'platforms', label:'Целевые платформы', key:'target_platforms', rows:1},
+    {id:'competitors', label:'Конкуренты', key:'competitors', rows:1},
+  ];
+
+  const filled = fields.filter(f => p[f.key] && p[f.key].trim()).length;
+  const pct = Math.round(filled / fields.length * 100);
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">👤</span>Профиль клиента</div>
+      <div class="pf-fill-label">${filled} из ${fields.length} полей заполнено (${pct}%)</div>
+      <div class="pf-fill-bar"><div class="pf-fill-inner" style="width:${pct}%"></div></div>
+
+      ${fields.map(f => `
+        <div class="pf-field">
+          <div class="pf-label">${f.label}</div>
+          <textarea class="pf-textarea" id="profile-${f.id}" rows="${f.rows}" placeholder="${f.label}">${escapeHtml(p[f.key]||'')}</textarea>
+        </div>
+      `).join('')}
+
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <select class="edit-input" id="profile-status" style="flex:1">
+          <option value="draft" ${p.profile_status==='draft'?'selected':''}>Черновик</option>
+          <option value="ready" ${p.profile_status==='ready'?'selected':''}>Готов</option>
+          <option value="needs_update" ${p.profile_status==='needs_update'?'selected':''}>Нужно обновить</option>
+        </select>
+        <button class="btn btn-primary" onclick="saveClientProfile()">Сохранить профиль</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderClientStrategy(data) {
+  const s = data.strategy;
+  const body = document.getElementById('client-drawer-body');
+
+  if (!s || s.status !== 'ready') {
+    body.innerHTML = `
+      <div class="strat-empty">
+        <div style="font-size:40px;margin-bottom:12px">📈</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">Стратегия не сформирована</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Убедись что заполнены: Бриф, Профиль и Карта клиента</div>
+        <button id="generate-strategy-btn" class="btn btn-primary" onclick="generateClientStrategy()">Создать стратегию</button>
+      </div>`;
+    return;
+  }
+
+  function parseF(v) {
+    if (!v) return null;
+    try { return JSON.parse(v); } catch { return v; }
+  }
+
+  function extractPct(str) {
+    if (!str) return 0;
+    const m = String(str).match(/(\d+)%/);
+    return m ? parseInt(m[1]) : 0;
+  }
+
+  const pillars = parseF(s.content_pillars);
+  const platform = parseF(s.platform_strategy);
+  const funnel = parseF(s.funnel);
+  const mix = parseF(s.content_mix);
+  const freq = parseF(s.posting_frequency);
+  const hypotheses = parseF(s.growth_hypotheses);
+  const plan = parseF(s.action_plan_30);
+  const risks = parseF(s.risks);
+  const kpi = parseF(s.kpi_targets);
+  const summary = s.ai_summary;
+  const positioning = parseF(s.positioning);
+
+  const platformIcons = {instagram:'📸',vk:'💬',telegram:'✈️',max:'🔵',youtube:'▶️',tiktok:'🎵'};
+
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:18px;font-weight:800">Контент-стратегия</div>
+      <button id="generate-strategy-btn" class="btn btn-ghost btn-sm" onclick="generateClientStrategy()">Обновить</button>
+    </div>
+
+    ${summary ? `<div class="strat-hero">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:8px">AI-резюме стратегии</div>
+      <div class="strat-summary">${escapeHtml(summary)}</div>
+    </div>` : ''}
+
+    ${positioning ? `<div class="strat-section">
+      <div class="strat-section-title">Позиционирование</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.6">${escapeHtml(typeof positioning === 'string' ? positioning : JSON.stringify(positioning))}</div>
+    </div>` : ''}
+
+    ${pillars && Array.isArray(pillars) && pillars.length ? `<div class="strat-section">
+      <div class="strat-section-title">Контентные столбы</div>
+      ${pillars.map((p,i) => `<div class="pillar-item"><span class="pillar-num">${i+1}</span>${escapeHtml(String(p))}</div>`).join('')}
+    </div>` : ''}
+
+    ${platform && typeof platform === 'object' ? `<div class="strat-section">
+      <div class="strat-section-title">Стратегия по платформам</div>
+      <div class="strat-grid">
+        ${Object.entries(platform).map(([name, val]) => {
+          const icon = platformIcons[name.toLowerCase()] || '📱';
+          const text = typeof val === 'object' ? (val.focus || val.role || JSON.stringify(val)) : String(val);
+          const freq2 = typeof val === 'object' ? val.frequency : null;
+          const role = typeof val === 'object' ? val.role : null;
+          return `<div class="platform-card">
+            <div class="platform-name">${icon} ${escapeHtml(name.toUpperCase())} ${role ? `<span class="platform-role">${escapeHtml(String(role).replace('_',' '))}</span>` : ''}</div>
+            <div class="platform-detail">${escapeHtml(String(text))}</div>
+            ${freq2 ? `<div style="margin-top:6px;font-size:11px;color:var(--accent);font-weight:600">📅 ${escapeHtml(String(freq2))}</div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    ${funnel && typeof funnel === 'object' ? `<div class="strat-section">
+      <div class="strat-section-title">Воронка</div>
+      ${Object.entries(funnel).map(([k,v],i) => `<div class="funnel-step">
+        <div class="funnel-step-num">${i+1}</div>
+        <div><div class="funnel-step-name">${escapeHtml(niceKey(k))}</div><div class="funnel-step-text">${escapeHtml(String(v))}</div></div>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${mix && typeof mix === 'object' ? `<div class="strat-section">
+      <div class="strat-section-title">Контент-микс</div>
+      ${Object.entries(mix).map(([k,v]) => {
+        const pct2 = extractPct(v);
+        return `<div class="mix-bar">
+          <div class="mix-label">${escapeHtml(niceKey(k))}</div>
+          <div class="mix-track"><div class="mix-fill" style="width:${pct2}%"></div></div>
+          <div class="mix-val">${pct2 ? pct2+'%' : escapeHtml(String(v))}</div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    ${Array.isArray(hypotheses) && hypotheses.length ? `<div class="strat-section">
+      <div class="strat-section-title">Гипотезы роста</div>
+      ${hypotheses.map((h,i) => `<div class="action-item"><div class="action-num">${i+1}</div><div style="color:var(--text-secondary);font-size:13px;line-height:1.5">${escapeHtml(String(h))}</div></div>`).join('')}
+    </div>` : ''}
+
+    ${Array.isArray(plan) && plan.length ? `<div class="strat-section">
+      <div class="strat-section-title">План действий на 30 дней</div>
+      ${plan.map((p,i) => `<div class="action-item"><div class="action-num">${i+1}</div><div style="color:var(--text);font-size:13px;line-height:1.5">${escapeHtml(String(p))}</div></div>`).join('')}
+    </div>` : ''}
+
+    ${kpi && typeof kpi === 'object' ? `<div class="strat-section">
+      <div class="strat-section-title">KPI-ориентиры</div>
+      ${Object.entries(kpi).map(([k,v]) => `<div class="strat-kpi-item"><span style="color:var(--text-muted)">${escapeHtml(k)}</span><span class="kpi-badge">${escapeHtml(String(v))}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${Array.isArray(risks) && risks.length ? `<div class="strat-section">
+      <div class="strat-section-title">Риски</div>
+      ${risks.map(r => `<div class="risk-item"><span style="color:#ef4444;flex-shrink:0">⚠</span>${escapeHtml(String(r))}</div>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+function renderClientProjects(data) {
+  const projects = data.projects || [];
+  document.getElementById('client-drawer-body').innerHTML = `
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">📁</span>Проекты</div>
+      ${projects.length ? projects.map(p => `
+        <div class="goal-item">
+          <div>
+            <div class="goal-title">${escapeHtml(p.name||'—')}</div>
+            ${p.description ? `<div class="goal-meta">${escapeHtml(p.description)}</div>` : ''}
+          </div>
+          <span class="status-badge status-active">${escapeHtml(p.status||'active')}</span>
+        </div>
+      `).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Проекты ещё не добавлены</div>'}
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <input class="edit-input" id="project-name" placeholder="Название проекта" style="flex:1;min-width:160px">
+        <input class="edit-input" id="project-description" placeholder="Описание" style="flex:1;min-width:120px">
+        <button class="btn btn-primary btn-sm" onclick="addClientProject()">Добавить</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderClientChannels(data) {
+  const channels = data.channels || [];
+  const snapshots = data.account_snapshots || [];
+  const platformIcons2 = {instagram:'📸',vk:'💬',telegram:'✈️',max:'🔵',youtube:'▶️',tiktok:'🎵'};
+
+  document.getElementById('client-drawer-body').innerHTML = `
+    ${channels.length ? channels.map(a => {
+      const snap = snapshots.find(s => s.channel_id === a.id);
+      const icon = platformIcons2[a.platform?.toLowerCase()] || '📱';
+      return `<div class="cs">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div class="cs-title" style="margin-bottom:4px">${icon} ${escapeHtml(a.platform||'—')}</div>
+            <div style="font-size:12px;color:var(--accent)">${escapeHtml(a.url||'Ссылка не указана')}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Последняя синхронизация: ${formatClientDate(a.last_sync_at)}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="syncClientAccount(${a.id})">Синхронизировать</button>
+        </div>
+        ${snap ? `
+          <div class="ov-grid" style="grid-template-columns:repeat(4,1fr)">
+            <div class="ov-card"><div class="num">${snap.followers||0}</div><div class="label">Подписчики</div></div>
+            <div class="ov-card"><div class="num">${snap.posts_count||0}</div><div class="label">Публикации</div></div>
+            <div class="ov-card"><div class="num">${snap.views||0}</div><div class="label">Просмотры</div></div>
+            <div class="ov-card"><div class="num">${snap.engagement_rate||0}%</div><div class="label">ER</div></div>
+          </div>
+          <div class="ov-grid" style="grid-template-columns:repeat(3,1fr);margin-top:8px">
+            <div class="ov-card"><div class="num">${snap.reach||0}</div><div class="label">Охват</div></div>
+            <div class="ov-card"><div class="num">${snap.likes||0}</div><div class="label">Лайки</div></div>
+            <div class="ov-card"><div class="num">${snap.comments||0}</div><div class="label">Комменты</div></div>
+          </div>
+          ${snap.summary ? `<div style="margin-top:12px;padding:10px;background:var(--accent-dim);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.5"><b style="color:var(--accent)">AI-вывод:</b> ${escapeHtml(snap.summary)}</div>` : ''}
+        ` : `<div style="font-size:13px;color:var(--text-muted);padding:12px 0">Статистики нет. Добавь тестовый срез или подключи API.</div>`}
+      </div>`;
+    }).join('') : '<div class="cs"><div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">Аккаунты ещё не подключены</div></div>'}
+
+    <div class="cs">
+      <div class="cs-title"><span class="cs-title-icon">➕</span>Добавить аккаунт</div>
+      <div class="ch-add-form">
+        <select class="edit-input" id="channel-platform" style="max-width:140px">
+          <option>MAX</option><option>VK</option><option>Telegram</option><option>YouTube</option><option>Instagram</option>
+        </select>
+        <input class="edit-input" id="channel-url" placeholder="Ссылка на аккаунт">
+        <button class="btn btn-primary btn-sm" onclick="addClientChannel()">Добавить</button>
+      </div>
+    </div>
+  `;
 }
 
 </script>

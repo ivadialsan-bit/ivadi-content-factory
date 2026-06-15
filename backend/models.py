@@ -250,3 +250,41 @@ class ClientStrategy(Base):
     status = Column(String(50), default="draft")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class UserProfile(Base):
+    __tablename__ = "user_profile"
+
+    id = Column(Integer, primary_key=True)
+    skills = Column(Text, nullable=True)
+    niches = Column(Text, nullable=True)
+    rates = Column(Text, nullable=True)
+    cases = Column(Text, nullable=True)
+    about = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Opportunity(Base):
+    __tablename__ = "opportunities"
+
+    id = Column(Integer, primary_key=True)
+    tg_message_id = Column(Integer, nullable=False)
+    channel = Column(String(200), nullable=False)
+    text = Column(Text, nullable=False)
+    score = Column(Integer, default=0)
+    score_reason = Column(Text, nullable=True)
+    category = Column(String(100), nullable=True)
+    status = Column(String(50), default="new")
+    posted_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class TgChannel(Base):
+    __tablename__ = "tg_channels"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(200), nullable=False, unique=True)
+    title = Column(String(300), nullable=True)
+    is_active = Column(Boolean, default=True)
+    last_checked_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
