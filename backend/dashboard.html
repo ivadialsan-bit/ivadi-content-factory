@@ -381,6 +381,7 @@ select option { background: var(--bg-card); }
     <div class="nav-section">Клиенты</div>
     <div class="nav-item" data-page="clients"><span class="icon">👥</span> Клиенты</div>
     <div class="nav-section">AI Инструменты</div>
+    <div class="nav-item" data-page="shorts-factory"><span class="icon">🎬</span> Shorts Factory</div>
     <div class="nav-item" data-page="analyzer"><span class="icon">🔍</span> Анализ контента</div>
     <div class="nav-item" data-page="assets"><span class="icon">🧩</span> Библиотека сценариев</div>
     <div class="nav-item" data-page="posts"><span class="icon">📝</span> Библиотека постов</div>
@@ -1092,6 +1093,118 @@ select option { background: var(--bg-card); }
       </div>
     </div>
 
+    <div class="page" data-page="shorts-factory" id="page-shorts-factory">
+<div style="font-size:20px;font-weight:700;margin-bottom:24px">🎬 Shorts Factory</div>
+<div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start">
+
+<!-- ЛЕВАЯ ПАНЕЛЬ: каналы -->
+<div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">Каналы</div>
+    <div id="sf-channels-list" style="margin-bottom:12px"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="sfShowCreateChannel()">+ Новый канал</button>
+  </div>
+  <div class="card" id="sf-channel-settings" style="display:none">
+    <div class="section-title">Настройки канала</div>
+    <div id="sf-channel-info"></div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="sfOpenVoicePicker()">🎙 Выбрать голос</button>
+      <label class="btn btn-ghost btn-sm" style="width:100%;cursor:pointer">
+        🖼 Загрузить стиль
+        <input type="file" accept="image/*" style="display:none" onchange="sfUploadStyleImage(this)">
+      </label>
+    </div>
+    <div id="sf-style-preview" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ПРАВАЯ ПАНЕЛЬ: конвейер -->
+<div style="display:flex;flex-direction:column;gap:16px">
+
+  <!-- Шаг 1: Референс -->
+  <div class="card">
+    <div class="section-title">① Анализ референс-видео</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input type="text" id="sf-ref-url" placeholder="YouTube Shorts URL" style="flex:1">
+      <button class="btn btn-primary" onclick="sfAnalyzeReference()">Анализировать</button>
+    </div>
+    <div id="sf-ref-result"></div>
+    <div id="sf-references-list" style="margin-top:12px"></div>
+  </div>
+
+  <!-- Шаг 2: Сценарий -->
+  <div class="card">
+    <div class="section-title">② Генерация сценария</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input type="text" id="sf-topic" placeholder="Тема видео (необязательно)" style="flex:1">
+      <button class="btn btn-primary" onclick="sfGenerateScenario()">Создать сценарий</button>
+    </div>
+    <div id="sf-scenario-result"></div>
+    <div id="sf-scenarios-list" style="margin-top:12px"></div>
+  </div>
+
+  <!-- Шаг 3: Озвучка -->
+  <div class="card">
+    <div class="section-title">③ Озвучка ElevenLabs</div>
+    <div id="sf-audio-block">
+      <div style="color:var(--text-muted);font-size:13px;margin-bottom:8px">Выберите сценарий выше</div>
+    </div>
+  </div>
+
+  <!-- Шаг 4: Видеоряд Kling -->
+  <div class="card">
+    <div class="section-title">④ Видеоряд Kling AI</div>
+    <div id="sf-video-block">
+      <div style="color:var(--text-muted);font-size:13px;margin-bottom:8px">Доступно после генерации сценария</div>
+    </div>
+  </div>
+
+  <!-- Шаг 5: Сборка -->
+  <div class="card">
+    <div class="section-title">⑤ Сборка финального видео</div>
+    <div id="sf-assemble-block">
+      <div style="color:var(--text-muted);font-size:13px">Доступно после озвучки</div>
+    </div>
+  </div>
+
+  <!-- Готовые видео -->
+  <div class="card">
+    <div class="section-title">Готовые видео</div>
+    <div id="sf-productions-list"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- Модалка создания канала -->
+<div id="sf-modal-channel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center">
+  <div class="card" style="width:380px;padding:24px">
+    <div style="font-weight:700;font-size:16px;margin-bottom:16px">Новый канал</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input type="text" id="sf-ch-name" placeholder="Название канала">
+      <input type="text" id="sf-ch-niche" placeholder="Ниша (travel, beauty, business...)">
+      <select id="sf-ch-lang">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+      </select>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-primary" style="flex:1" onclick="sfCreateChannel()">Создать</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="sfCloseModal('sf-modal-channel')">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка выбора голоса -->
+<div id="sf-modal-voice" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center">
+  <div class="card" style="width:500px;max-height:80vh;overflow-y:auto;padding:24px">
+    <div style="font-weight:700;font-size:16px;margin-bottom:16px">🎙 Выбор голоса ElevenLabs</div>
+    <div id="sf-voices-list"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="sfCloseModal('sf-modal-voice')">Закрыть</button>
+  </div>
+</div>
+
+</div>
     <div class="page" data-page="settings">
       <div style="font-size:20px;font-weight:700;margin-bottom:24px">⚙️ Настройки</div>
 
@@ -4115,9 +4228,19 @@ function ytGenerateBranding() {
       if(img.url) {
         document.getElementById('yt-brand-avatar-placeholder').innerHTML =
           `<img src="${img.url}" style="width:150px;height:150px;border-radius:50%;object-fit:cover">`;
-        const dl = document.getElementById('yt-brand-avatar-dl');
-        dl.href = img.url;
-        dl.style.display = 'inline-block';
+        // Save avatar to server
+        fetch('/api/youtube/save-avatar', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({url: img.url, name: selectedName||'avatar'})
+        }).then(r => r.json()).then(saved => {
+          const dl = document.getElementById('yt-brand-avatar-dl');
+          dl.href = saved.url;
+          dl.download = saved.filename;
+          dl.target = '_blank';
+          dl.style.display = 'inline-block';
+          ytBrandingData._avatar_url = saved.url;
+        });
       }
 
       // Step 3: Banner with text
@@ -4144,10 +4267,19 @@ function ytGenerateBranding() {
         if(banner.banner_data_url) {
           document.getElementById('yt-brand-banner-placeholder').innerHTML =
             `<img src="${banner.banner_data_url}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover">`;
-          const dl = document.getElementById('yt-brand-banner-dl');
-          dl.href = banner.banner_data_url;
-          dl.download = selectedName.replace(/\s+/g,'-') + '-banner.jpg';
-          dl.style.display = 'inline-block';
+          // Save to server and get direct URL
+          fetch('/api/youtube/save-banner', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({banner_base64: banner.banner_base64, name: selectedName})
+          }).then(r => r.json()).then(saved => {
+            const dl = document.getElementById('yt-brand-banner-dl');
+            dl.href = saved.url;
+            dl.download = saved.filename;
+            dl.target = '_blank';
+            dl.style.display = 'inline-block';
+            ytBrandingData._banner_url = saved.url;
+          });
         }
         document.getElementById('yt-brand-step-4').style.opacity = '1';
         document.getElementById('yt-brand-icon-4').textContent = '✅';
@@ -4333,12 +4465,36 @@ function loadYTProfiles() {
             </div>
             <!-- Plan viewer -->
             <div id="yt-plan-result-${p.id}" style="display:none"></div>
+            <!-- Next action -->
+            <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:12px;margin-top:4px">
+              <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">⚡ СЛЕДУЮЩИЙ ШАГ</div>
+              <div style="font-size:13px">Сгенерируй контент-план → выбери первое видео → создай SEO-пакет → загрузи Short</div>
+            </div>
+            <!-- First videos -->
+            ${(p.first_10_videos||[]).length ? `
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">🚀 Первые видео</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                ${(p.first_10_videos||[]).slice(0,5).map((v,i) => `
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:6px;background:var(--bg-secondary);border-radius:6px">
+                    <span style="color:var(--accent);font-weight:700;min-width:20px">#${i+1}</span>
+                    <span style="flex:1">${v}</span>
+                    <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="ytTab('seo');document.getElementById('yt-seo-topic').value='${v.replace(/'/g,'').replace(/`/g,'')}';document.getElementById('yt-seo-niche').value='${(p.niche||'').replace(/'/g,'')}'" >SEO →</button>
+                  </div>`).join('')}
+              </div>
+            </div>` : ''}
+            <!-- Downloads -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${p.avatar_url ? `<a href="${p.avatar_url}" download="avatar.jpg" target="_blank" class="btn btn-ghost btn-sm">⬇️ Аватар</a>` : ''}
+              ${p.banner_url ? `<a href="${p.banner_url}" download="banner.jpg" target="_blank" class="btn btn-ghost btn-sm">⬇️ Баннер</a>` : ''}
+            </div>
             <!-- Actions -->
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-ghost btn-sm" onclick="ytGeneratePlan(${p.id})">📅 План на 30 дней</button>
+              <button class="btn btn-primary btn-sm" onclick="ytGeneratePlan(${p.id})">📅 План на 30 дней</button>
               <button class="btn btn-ghost btn-sm" onclick="ytTab('seo');document.getElementById('yt-seo-niche').value='${(p.niche||'').replace(/'/g,'')}'">✨ SEO</button>
               <button class="btn btn-ghost btn-sm" onclick="ytTab('upload')">📤 Загрузить видео</button>
-              <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="ytDeleteProfile(${p.id})">✕</button>
+              <button class="btn btn-ghost btn-sm" onclick="ytTab('branding')">🎨 Новый брендинг</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="ytDeleteProfile(${p.id})">✕ Удалить</button>
             </div>
           </div>
         </div>
@@ -4641,4 +4797,355 @@ async function generateContentPlan() {
     body.innerHTML = `<div style="padding:24px;color:#ef4444">Ошибка: ${e.message}</div>`;
   }
 }
+
+// ============ SHORTS FACTORY ============
+let sfActiveChannel = null;
+let sfActiveReference = null;
+let sfActiveScenario = null;
+let sfActiveProduction = null;
+
+function sfInit() {
+  sfLoadChannels();
+}
+
+async function sfLoadChannels() {
+  const r = await fetch('/api/shorts-factory/channels');
+  const d = await r.json();
+  const el = document.getElementById('sf-channels-list');
+  if (!d.items || d.items.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Нет каналов</div>';
+    return;
+  }
+  el.innerHTML = d.items.map(ch => `
+    <div onclick="sfSelectChannel(${ch.id},'${ch.name}')" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:all .15s"
+      onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-weight:600;font-size:13px">${ch.name}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${ch.niche || 'ниша не задана'} · ${ch.language || 'ru'}</div>
+      ${ch.voice_name ? `<div style="font-size:11px;color:var(--green);margin-top:2px">🎙 ${ch.voice_name}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function sfSelectChannel(id, name) {
+  sfActiveChannel = id;
+  document.getElementById('sf-channel-settings').style.display = 'block';
+  document.getElementById('sf-channel-info').innerHTML = `<div style="font-weight:600;color:var(--accent)">${name}</div>`;
+  sfLoadReferences();
+  sfLoadScenarios();
+  sfLoadProductions();
+}
+
+function sfShowCreateChannel() {
+  document.getElementById('sf-modal-channel').style.display = 'flex';
+}
+
+function sfCloseModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+async function sfCreateChannel() {
+  const name = document.getElementById('sf-ch-name').value.trim();
+  const niche = document.getElementById('sf-ch-niche').value.trim();
+  const lang = document.getElementById('sf-ch-lang').value;
+  if (!name) return;
+  const r = await fetch('/api/shorts-factory/channels', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, niche, language: lang})
+  });
+  const d = await r.json();
+  if (d.success) {
+    sfCloseModal('sf-modal-channel');
+    sfLoadChannels();
+    sfSelectChannel(d.id, name);
+  }
+}
+
+async function sfAnalyzeReference() {
+  const url = document.getElementById('sf-ref-url').value.trim();
+  if (!url || !sfActiveChannel) {
+    document.getElementById('sf-ref-result').innerHTML = '<div style="color:var(--red);font-size:12px">Выберите канал и введите URL</div>';
+    return;
+  }
+  document.getElementById('sf-ref-result').innerHTML = '<div style="color:var(--text-muted);font-size:12px">⏳ Анализирую через Claude...</div>';
+  const r = await fetch('/api/shorts-factory/analyze-reference', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({url, channel_id: sfActiveChannel})
+  });
+  const d = await r.json();
+  if (d.success) {
+    sfActiveReference = d.id;
+    const a = d.analysis;
+    document.getElementById('sf-ref-result').innerHTML = `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">
+        <div style="font-weight:600;margin-bottom:8px;color:var(--green)">✓ ${a.title || 'Анализ готов'}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="font-size:11px"><span style="color:var(--text-muted)">Хук:</span> ${a.hook_type || '—'}</div>
+          <div style="font-size:11px"><span style="color:var(--text-muted)">Темп:</span> ${a.pacing || '—'}</div>
+          <div style="font-size:11px"><span style="color:var(--text-muted)">Эмоция:</span> ${a.emotion || '—'}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${a.summary || ''}</div>
+        <div style="font-size:11px;color:var(--accent)">Виральность: ${a.virality_score || '—'}/10</div>
+      </div>`;
+    sfLoadReferences();
+  } else {
+    document.getElementById('sf-ref-result').innerHTML = `<div style="color:var(--red);font-size:12px">Ошибка: ${d.error}</div>`;
+  }
+}
+
+async function sfLoadReferences() {
+  if (!sfActiveChannel) return;
+  const r = await fetch('/api/shorts-factory/references?channel_id=' + sfActiveChannel);
+  const d = await r.json();
+  const el = document.getElementById('sf-references-list');
+  if (!d.items || d.items.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Сохранённые референсы:</div>' +
+    d.items.map(ref => `
+      <div onclick="sfActiveReference=${ref.id};this.parentNode.querySelectorAll('.ref-item').forEach(x=>x.style.borderColor='var(--border)');this.style.borderColor='var(--accent)'"
+        class="ref-item" style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:4px;font-size:12px">
+        <span style="font-weight:600">${ref.raw_analysis && ref.raw_analysis.title ? ref.raw_analysis.title : 'Референс #'+ref.id}</span>
+        <span style="color:var(--text-muted);margin-left:8px">${ref.hook_type || ''} · ${ref.pacing || ''}</span>
+      </div>`).join('');
+}
+
+async function sfGenerateScenario() {
+  if (!sfActiveChannel) {
+    document.getElementById('sf-scenario-result').innerHTML = '<div style="color:var(--red);font-size:12px">Выберите канал</div>';
+    return;
+  }
+  const topic = document.getElementById('sf-topic').value.trim();
+  document.getElementById('sf-scenario-result').innerHTML = '<div style="color:var(--text-muted);font-size:12px">⏳ Генерирую сценарий...</div>';
+  const r = await fetch('/api/shorts-factory/generate-scenario', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({channel_id: sfActiveChannel, reference_id: sfActiveReference, topic})
+  });
+  const d = await r.json();
+  if (d.success) {
+    sfActiveScenario = d.id;
+    const s = d.scenario;
+    document.getElementById('sf-scenario-result').innerHTML = `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">
+        <div style="font-weight:600;margin-bottom:6px;color:var(--green)">✓ ${s.title || 'Сценарий готов'}</div>
+        <div style="font-size:12px;background:var(--accent-dim);border-radius:6px;padding:10px;margin-bottom:8px">
+          <span style="color:var(--accent);font-weight:600">Хук: </span>${s.hook || ''}
+        </div>
+        ${(s.script||[]).map(sc=>`
+          <div style="font-size:11px;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted);min-width:70px;display:inline-block">${sc.time}</span>
+            ${sc.voiceover || sc.action || ''}
+          </div>`).join('')}
+        <div style="margin-top:10px;font-size:12px;color:var(--text-muted)">${s.cta || ''}</div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="sfGenerateAudio(${d.id})">🎙 Озвучить</button>
+        </div>
+      </div>`;
+    sfLoadScenarios();
+    sfUpdateAudioBlock(d.id, s.voiceover);
+    sfUpdateVideoBlock(d.id, s.kling_prompts || []);
+  } else {
+    document.getElementById('sf-scenario-result').innerHTML = `<div style="color:var(--red);font-size:12px">Ошибка: ${d.error}</div>`;
+  }
+}
+
+async function sfLoadScenarios() {
+  if (!sfActiveChannel) return;
+  const r = await fetch('/api/shorts-factory/scenarios?channel_id=' + sfActiveChannel);
+  const d = await r.json();
+  const el = document.getElementById('sf-scenarios-list');
+  if (!d.items || d.items.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Сохранённые сценарии:</div>' +
+    d.items.slice(0,5).map(sc => `
+      <div style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:12px;cursor:pointer"
+        onclick="sfSelectScenario(${sc.id})">
+        <span style="font-weight:600">${sc.title || 'Сценарий #'+sc.id}</span>
+        <span style="color:var(--text-muted);margin-left:8px">${sc.created_at ? sc.created_at.substring(0,10) : ''}</span>
+      </div>`).join('');
+}
+
+async function sfSelectScenario(id) {
+  sfActiveScenario = id;
+  const r = await fetch('/api/shorts-factory/scenarios/' + id);
+  const d = await r.json();
+  if (d.success) {
+    sfUpdateAudioBlock(id, d.scenario.voiceover);
+  }
+}
+
+function sfUpdateAudioBlock(scenarioId, voiceover) {
+  document.getElementById('sf-audio-block').innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;background:var(--bg);padding:10px;border-radius:6px;max-height:80px;overflow:hidden">
+      ${(voiceover||'').substring(0,200)}...
+    </div>
+    <button class="btn btn-primary" onclick="sfGenerateAudio(${scenarioId})">🎙 Сгенерировать озвучку</button>
+    <div id="sf-audio-result" style="margin-top:10px"></div>`;
+}
+
+async function sfGenerateAudio(scenarioId) {
+  document.getElementById('sf-audio-result').innerHTML = '<div style="color:var(--text-muted);font-size:12px">⏳ Генерирую озвучку через ElevenLabs...</div>';
+  const r = await fetch('/api/shorts-factory/scenarios/' + scenarioId + '/generate-audio', {method:'POST'});
+  const d = await r.json();
+  if (d.success) {
+    sfActiveProduction = d.production_id;
+    document.getElementById('sf-audio-result').innerHTML = `
+      <div style="color:var(--green);font-size:12px;margin-bottom:8px">✓ Озвучка готова</div>
+      <audio controls style="width:100%;margin-bottom:8px"><source src="${d.audio_url}" type="audio/mpeg"></audio>
+      <button class="btn btn-primary btn-sm" onclick="sfAssemble(${d.production_id})">⚙️ Собрать видео</button>`;
+    sfUpdateAssembleBlock(d.production_id);
+  } else {
+    document.getElementById('sf-audio-result').innerHTML = `<div style="color:var(--red);font-size:12px">Ошибка: ${d.error}</div>`;
+  }
+}
+
+function sfUpdateVideoBlock(scenarioId, klingPrompts) {
+  const el = document.getElementById('sf-video-block');
+  if (!klingPrompts || klingPrompts.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Нет промптов для Kling</div>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Промпты для видеоряда:</div>' +
+    klingPrompts.map((p,i) => `
+      <div style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:12px">
+        <div style="color:var(--text-muted);font-size:11px;margin-bottom:4px">Сцена ${i+1}</div>
+        <div style="margin-bottom:6px">${p}</div>
+        <button class="btn btn-ghost btn-sm" onclick="sfGenerateKlingClip(${scenarioId}, \`${p.replace(/`/g,"'")}\`)">▶ Генерировать клип</button>
+        <div id="sf-kling-result-${i}" style="margin-top:6px"></div>
+      </div>`).join('');
+}
+
+async function sfGenerateKlingClip(scenarioId, prompt) {
+  const r = await fetch('/api/shorts-factory/generate-video-clip', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({scenario_id: scenarioId, kling_prompt: prompt, aspect_ratio: '9:16', duration: '5'})
+  });
+  const d = await r.json();
+  if (d.success) {
+    sfPollKling(d.task_id, scenarioId);
+  } else {
+    alert('Kling error: ' + d.error);
+  }
+}
+
+async function sfPollKling(taskId, scenarioId) {
+  let attempts = 0;
+  const poll = async () => {
+    attempts++;
+    const r = await fetch('/api/shorts-factory/kling-task/' + taskId + '?scenario_id=' + scenarioId);
+    const d = await r.json();
+    if (d.status === 'ready') {
+      sfUpdateAssembleBlock(null);
+      sfLoadProductions();
+    } else if (d.status === 'processing' && attempts < 30) {
+      setTimeout(poll, 10000);
+    }
+  };
+  setTimeout(poll, 10000);
+}
+
+function sfUpdateAssembleBlock(prodId) {
+  if (!prodId) return;
+  sfActiveProduction = prodId;
+  document.getElementById('sf-assemble-block').innerHTML = `
+    <button class="btn btn-primary" onclick="sfAssemble(${prodId})">⚙️ Собрать финальное видео (FFmpeg)</button>
+    <div id="sf-assemble-result" style="margin-top:10px"></div>`;
+}
+
+async function sfAssemble(prodId) {
+  document.getElementById('sf-assemble-result').innerHTML = '<div style="color:var(--text-muted);font-size:12px">⏳ Сборка через FFmpeg...</div>';
+  const r = await fetch('/api/shorts-factory/productions/' + prodId + '/assemble', {method:'POST'});
+  const d = await r.json();
+  if (d.success) {
+    document.getElementById('sf-assemble-result').innerHTML = `
+      <div style="color:var(--green);font-size:12px;margin-bottom:8px">✓ Видео готово!</div>
+      <video controls style="width:100%;border-radius:8px;max-height:400px">
+        <source src="${d.final_url}" type="video/mp4">
+      </video>`;
+    sfLoadProductions();
+  } else {
+    document.getElementById('sf-assemble-result').innerHTML = `<div style="color:var(--red);font-size:12px">Ошибка: ${d.error}</div>`;
+  }
+}
+
+async function sfLoadProductions() {
+  if (!sfActiveChannel) return;
+  const r = await fetch('/api/shorts-factory/productions?channel_id=' + sfActiveChannel);
+  const d = await r.json();
+  const el = document.getElementById('sf-productions-list');
+  if (!d.items || d.items.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Нет готовых видео</div>';
+    return;
+  }
+  el.innerHTML = d.items.map(p => `
+    <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600">Production #${p.id}</span>
+        <span class="status-badge ${p.status==='complete'?'status-active':p.status==='audio_ready'?'status-soon':'status-inactive'}">${p.status}</span>
+      </div>
+      ${p.audio_url ? `<audio controls style="width:100%;margin-bottom:6px"><source src="${p.audio_url}" type="audio/mpeg"></audio>` : ''}
+      ${p.final_url ? `<video controls style="width:100%;border-radius:6px;max-height:300px"><source src="${p.final_url}" type="video/mp4"></video>` : ''}
+      ${p.status==='audio_ready' ? `<button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="sfAssemble(${p.id})">⚙️ Собрать видео</button>` : ''}
+    </div>`).join('');
+}
+
+async function sfOpenVoicePicker() {
+  document.getElementById('sf-modal-voice').style.display = 'flex';
+  document.getElementById('sf-voices-list').innerHTML = '<div style="color:var(--text-muted);font-size:12px">⏳ Загружаю голоса...</div>';
+  const r = await fetch('/api/shorts-factory/elevenlabs/voices');
+  const d = await r.json();
+  if (d.success) {
+    document.getElementById('sf-voices-list').innerHTML = d.voices.map(v => `
+      <div style="padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer"
+        onclick="sfSetVoice('${v.voice_id}','${v.name}')"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-weight:600;font-size:13px">${v.name}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${v.category||''} ${v.labels && v.labels.language ? '· '+v.labels.language : ''}</div>
+      </div>`).join('');
+  } else {
+    document.getElementById('sf-voices-list').innerHTML = `<div style="color:var(--red);font-size:12px">Ошибка: ${d.error}</div>`;
+  }
+}
+
+async function sfSetVoice(voiceId, voiceName) {
+  if (!sfActiveChannel) return;
+  const r = await fetch('/api/shorts-factory/channels/' + sfActiveChannel + '/set-voice', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({voice_id: voiceId, voice_name: voiceName})
+  });
+  const d = await r.json();
+  if (d.success) {
+    sfCloseModal('sf-modal-voice');
+    sfLoadChannels();
+    document.getElementById('sf-channel-info').innerHTML += `<div style="color:var(--green);font-size:12px;margin-top:4px">🎙 ${voiceName}</div>`;
+  }
+}
+
+async function sfUploadStyleImage(input) {
+  if (!sfActiveChannel || !input.files[0]) return;
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  document.getElementById('sf-style-preview').innerHTML = '<div style="color:var(--text-muted);font-size:12px">⏳ Анализирую стиль через Claude...</div>';
+  const r = await fetch('/api/shorts-factory/channels/' + sfActiveChannel + '/upload-style-image', {
+    method: 'POST', body: formData
+  });
+  const d = await r.json();
+  if (d.success) {
+    const s = d.visual_style;
+    document.getElementById('sf-style-preview').innerHTML = `
+      <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
+        <img src="${d.style_image_url}" style="width:100%;border-radius:6px;margin-bottom:8px;max-height:120px;object-fit:cover">
+        <div style="font-weight:600;font-size:12px;margin-bottom:4px;color:var(--accent)">${s.style_name||''}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${s.summary||''}</div>
+        ${s.color_palette ? `<div style="display:flex;gap:4px;margin-top:8px">
+          ${Object.values(s.color_palette).map(c=>`<div style="width:20px;height:20px;border-radius:4px;background:${c};border:1px solid var(--border)" title="${c}"></div>`).join('')}
+        </div>` : ''}
+      </div>`;
+  } else {
+    document.getElementById('sf-style-preview').innerHTML = `<div style="color:var(--red);font-size:12px">Ошибка: ${d.error}</div>`;
+  }
+}
+// ============ END SHORTS FACTORY ============
+
 </script>
