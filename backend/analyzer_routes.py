@@ -131,17 +131,45 @@ def analyze_content(req: AnalyzeRequest):
             extracted["errors"].append("youtube_extract: " + str(e)[:200])
     elif "instagram.com" in url:
         extracted["platform"] = "instagram"
-        # Определяем тип контента по URL
-        if "/reel/" in url:
-            extracted["metadata"]["content_type"] = "reel"
-        elif "/p/" in url:
-            extracted["metadata"]["content_type"] = "post"
-        elif "/stories/" in url:
-            extracted["metadata"]["content_type"] = "story"
-        else:
-            extracted["metadata"]["content_type"] = "profile"
-        extracted["metadata"]["url"] = url
-        extracted["confidence"] = "medium"
+        local_proxy = os.getenv("LOCAL_PROXY_URL", "")
+        if local_proxy:
+            try:
+                r = requests.post(
+                    local_proxy + "/extract",
+                    json={"url": url},
+                    headers={"ngrok-skip-browser-warning": "true"},
+                    timeout=40
+                )
+                if r.ok:
+                    data = r.json()
+                    if data.get("success"):
+                        extracted["metadata"] = {
+                            "title": data.get("title", ""),
+                            "description": data.get("description", ""),
+                            "duration": data.get("duration", 0),
+                            "uploader": data.get("uploader", ""),
+                            "like_count": data.get("like_count", 0),
+                            "comment_count": data.get("comment_count", 0),
+                            "upload_date": data.get("upload_date", ""),
+                            "thumbnail": data.get("thumbnail", ""),
+                            "comments": data.get("comments", []),
+                            "content_type": "reel" if "/reel/" in url else "post" if "/p/" in url else "profile"
+                        }
+                        extracted["confidence"] = "high"
+                        extracted["has_transcript"] = False
+            except Exception as e:
+                extracted["errors"].append("local_proxy: " + str(e)[:200])
+        if extracted["confidence"] != "high":
+            if "/reel/" in url:
+                extracted["metadata"]["content_type"] = "reel"
+            elif "/p/" in url:
+                extracted["metadata"]["content_type"] = "post"
+            elif "/stories/" in url:
+                extracted["metadata"]["content_type"] = "story"
+            else:
+                extracted["metadata"]["content_type"] = "profile"
+            extracted["metadata"]["url"] = url
+            extracted["confidence"] = "medium"
 
     extracted_for_prompt = json.dumps(extracted, ensure_ascii=False, indent=2)[:12000]
 

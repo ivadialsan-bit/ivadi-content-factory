@@ -889,10 +889,12 @@ select option { background: var(--bg-card); }
           <select id="analyzer-niche" style="width:160px"><option value="">Ниша (авто)</option><option value="travel">✈️ Туризм</option><option value="business">💼 Бизнес</option><option value="education">📚 Образование</option><option value="entertainment">🎭 Развлечения</option><option value="sport">🥊 Спорт</option><option value="tech">💻 Технологии</option><option value="finance">💰 Финансы</option><option value="beauty">💄 Красота</option></select>
           <button class="btn btn-primary" onclick="analyzeContent()">⚡ Анализировать</button>
           <label class="btn btn-ghost" style="cursor:pointer;position:relative" title="Добавить скриншоты Instagram">
-            📎 Скриншоты
+            📎 Файл
             <input type="file" id="analyzer-screenshots" accept="image/*" multiple style="display:none" onchange="updateScreenshotBadge(this)">
           </label>
+          <button class="btn btn-ghost" onclick="activateClipboardPaste()" title="Вставить скриншот из буфера Ctrl+V" id="paste-btn">📋 Вставить</button>
           <span id="screenshot-badge" style="display:none;background:var(--accent);color:#fff;border-radius:20px;padding:2px 8px;font-size:11px">0</span>
+          <div id="paste-preview" style="display:none;margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
         </div>
         <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <span style="font-size:11px;color:var(--text-muted)">Работает с:</span>
@@ -2500,6 +2502,56 @@ async function generateMaxQueue() {
   } catch(e) { btn.textContent='⚡ Сгенерировать очередь'; btn.disabled=false; }
 }
 
+// Clipboard paste support
+let clipboardImages = [];
+
+function activateClipboardPaste() {
+  const btn = document.getElementById('paste-btn');
+  btn.textContent = '📋 Нажми Ctrl+V...';
+  btn.style.background = 'var(--accent)';
+  btn.style.color = '#fff';
+  document.addEventListener('paste', handleClipboardPaste, {once: true});
+  setTimeout(() => {
+    btn.textContent = '📋 Вставить';
+    btn.style.background = '';
+    btn.style.color = '';
+    document.removeEventListener('paste', handleClipboardPaste);
+  }, 5000);
+}
+
+function handleClipboardPaste(e) {
+  const btn = document.getElementById('paste-btn');
+  btn.textContent = '📋 Вставить';
+  btn.style.background = '';
+  btn.style.color = '';
+  const items = e.clipboardData.items;
+  let added = 0;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      clipboardImages.push(file);
+      added++;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const preview = document.getElementById('paste-preview');
+        preview.style.display = 'flex';
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        img.style.cssText = 'height:60px;border-radius:4px;border:1px solid var(--border)';
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+  if (added > 0) {
+    const badge = document.getElementById('screenshot-badge');
+    const total = clipboardImages.length + (document.getElementById('analyzer-screenshots').files.length || 0);
+    badge.textContent = total;
+    badge.style.display = 'inline';
+    _toast('✅ ' + added + ' скриншот добавлен', true);
+  }
+}
+
 function updateScreenshotBadge(input) {
   const badge = document.getElementById('screenshot-badge');
   if (input.files.length > 0) {
@@ -2522,7 +2574,7 @@ async function analyzeContent() {
   document.getElementById('analyzer-loading').style.display = 'block';
   const screenshots = document.getElementById('analyzer-screenshots');
   const context = (document.getElementById('analyzer-context') || {}).value || '';
-  const hasScreenshots = screenshots && screenshots.files.length > 0;
+  const hasScreenshots = (screenshots && screenshots.files.length > 0) || clipboardImages.length > 0;
   const isInstagram = url.includes('instagram.com');
   try {
     let res;
@@ -2533,6 +2585,7 @@ async function analyzeContent() {
       fd.append('niche', niche);
       fd.append('context', context);
       if (hasScreenshots) { for (const f of screenshots.files) fd.append('files', f); }
+      for (const f of clipboardImages) fd.append('files', f);
       res = await fetch(API + '/api/analyzer/analyze-with-screenshots', {method:'POST', body: fd}).then(r => r.json());
     } else {
       document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
