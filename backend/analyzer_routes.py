@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/analyzer", tags=["analyzer"])
 DB_PATH = "/root/factory/backend/factory.db"
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 LEONARDO_API_KEY = os.getenv("LEONARDO_API_KEY")
-CLAUDE_PROXY_URL = "https://anthropic-proxy.ivadialsan.workers.dev"
+CLAUDE_PROXY_URL = os.getenv("CLAUDE_PROXY_URL", "https://anthropic-proxy-render.onrender.com")
 MODEL = "claude-haiku-4-5-20251001"
 
 
@@ -124,7 +124,24 @@ def analyze_content(req: AnalyzeRequest):
     }
 
     if "youtube.com" in url or "youtu.be" in url:
-        extracted = extract_youtube_data(url)
+        try:
+            import sys; sys.path.insert(0, "/root/factory/backend")
+            extracted = extract_youtube_data(url)
+        except Exception as e:
+            extracted["errors"].append("youtube_extract: " + str(e)[:200])
+    elif "instagram.com" in url:
+        extracted["platform"] = "instagram"
+        # Определяем тип контента по URL
+        if "/reel/" in url:
+            extracted["metadata"]["content_type"] = "reel"
+        elif "/p/" in url:
+            extracted["metadata"]["content_type"] = "post"
+        elif "/stories/" in url:
+            extracted["metadata"]["content_type"] = "story"
+        else:
+            extracted["metadata"]["content_type"] = "profile"
+        extracted["metadata"]["url"] = url
+        extracted["confidence"] = "medium"
 
     extracted_for_prompt = json.dumps(extracted, ensure_ascii=False, indent=2)[:12000]
 
@@ -840,3 +857,127 @@ def add_image_asset_to_queue(image_id: int):
     save_ivadi_queue(queue)
 
     return {"success": True, "queue_item": item}
+
+
+from fastapi import UploadFile, File, Form
+import base64
+
+@router.post("/analyze-with-screenshots")
+async def analyze_with_screenshots(
+    url: str = Form(""),
+    niche: str = Form(""),
+    context: str = Form(""),
+    files: list[UploadFile] = File(default=[])
+):
+    if not CLAUDE_API_KEY:
+        return {"success": False, "error": "CLAUDE_API_KEY not set"}
+
+    client = anthropic.Anthropic(
+        api_key=CLAUDE_API_KEY,
+        base_url=CLAUDE_PROXY_URL
+    )
+
+    # Собираем контент для Claude
+    content_parts = []
+
+    # Добавляем скриншоты как изображения
+    for f in files:
+        img_bytes = await f.read()
+        b64 = base64.b64encode(img_bytes).decode()
+        media_type = f.content_type or "image/jpeg"
+        content_parts.append({
+            "type": "image",
+            "source": {"type": "base64", "media_type": media_type, "data": b64}
+        })
+
+    platform = "instagram" if "instagram.com" in url else "unknown"
+    content_type = "reel" if "/reel/" in url else "post" if "/p/" in url else "profile" if url and "instagram.com" in url else "unknown"
+
+    prompt = f"""Ты — профессиональный SMM-аналитик.
+
+Проанализируй Instagram контент по скриншотам и/или ссылке.
+URL: {url or "не указан"}
+Тип: {content_type}
+Ниша: {niche or "автоопределение"}
+Контекст от пользователя: {context or "нет"}
+
+{"Скриншотов загружено: " + str(len(files)) if files else "Скриншоты не загружены — анализируй по URL и контексту."}
+
+Дай профессиональный SMM-разбор. Верни строго JSON без markdown:
+{{
+  "platform": "instagram",
+  "content_type": "{content_type}",
+  "viral_score": 7,
+  "hook_type": "тип хука",
+  "niche": "travel/business/education/entertainment/sport/beauty/other",
+  "niche_label": "Название ниши",
+  "account_analysis": {{
+    "positioning": "как позиционируется аккаунт",
+    "tone_of_voice": "тон общения",
+    "content_pillars": ["столб 1", "столб 2", "столб 3"],
+    "audience": "описание аудитории",
+    "posting_frequency": "частота постинга если видно"
+  }},
+  "content_analysis": {{
+    "format": "reel/post/carousel/story",
+    "hook": "что цепляет в начале",
+    "structure": ["шаг 1", "шаг 2", "шаг 3"],
+    "visual_style": "описание визуала",
+    "caption_style": "стиль подписей",
+    "cta": "призыв к действию"
+  }},
+  "triggers": ["триггер 1", "триггер 2", "триггер 3"],
+  "why_works": ["причина 1", "причина 2", "причина 3"],
+  "weaknesses": ["слабое место 1", "слабое место 2"],
+  "adaptation": [
+    "как использовать эту механику",
+    "что сделать похожего",
+    "что улучшить"
+  ],
+  "summary": "Итоговый разбор в 4-5 предложениях. Что работает, что нет, как использовать.",
+  "source_confidence": "high/medium/low",
+  "source_basis": "на основе чего сделан анализ"
+}}"""
+
+    content_parts.append({"type": "text", "text": prompt})
+
+    try:
+        msg = client.messages.create(
+            model="claude-opus-4-6" if files else MODEL,
+            max_tokens=3000,
+            temperature=0.3,
+            messages=[{"role": "user", "content": content_parts}]
+        )
+
+        data = json.loads(clean_json(extract_text(msg)))
+
+        # Сохраняем в БД
+        init_analyzer_db()
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO content_analyses
+            (url, niche, niche_label, viral_score, hook_type, content_format, structure, triggers, why_works, summary, raw_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            url or "instagram_screenshot",
+            data.get("niche", "other"),
+            data.get("niche_label", "Instagram"),
+            int(data.get("viral_score", 0)),
+            data.get("hook_type", ""),
+            data.get("content_type", "instagram"),
+            json.dumps(data.get("content_analysis", {}).get("structure", []), ensure_ascii=False),
+            json.dumps(data.get("triggers", []), ensure_ascii=False),
+            json.dumps(data.get("why_works", []), ensure_ascii=False),
+            data.get("summary", ""),
+            json.dumps(data, ensure_ascii=False),
+            datetime.now().isoformat(timespec="seconds")
+        ))
+        analysis_id = cur.lastrowid
+        conn.commit()
+        conn.close()
+
+        return {"success": True, "id": analysis_id, "analysis": data}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}

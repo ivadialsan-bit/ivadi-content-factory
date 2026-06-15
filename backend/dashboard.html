@@ -885,13 +885,19 @@ select option { background: var(--bg-card); }
       <div style="margin-bottom:24px"><div style="font-size:20px;font-weight:700;margin-bottom:4px">🔍 Анализ контента</div><div style="font-size:12px;color:var(--text-muted)">Вставьте ссылку — AI разберёт структуру, хуки и психологию</div></div>
       <div class="card" style="margin-bottom:20px">
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input type="text" id="analyzer-url" placeholder="https://youtube.com/... или vk.com/... или instagram.com/..." style="flex:1;min-width:260px">
-          <select id="analyzer-niche" style="width:180px"><option value="">Ниша (авто)</option><option value="travel">✈️ Туризм</option><option value="business">💼 Бизнес</option><option value="education">📚 Образование</option><option value="entertainment">🎭 Развлечения</option><option value="tech">💻 Технологии</option><option value="finance">💰 Финансы</option><option value="beauty">💄 Красота</option></select>
+          <input type="text" id="analyzer-url" placeholder="https://youtube.com/... или instagram.com/..." style="flex:1;min-width:260px">
+          <select id="analyzer-niche" style="width:160px"><option value="">Ниша (авто)</option><option value="travel">✈️ Туризм</option><option value="business">💼 Бизнес</option><option value="education">📚 Образование</option><option value="entertainment">🎭 Развлечения</option><option value="sport">🥊 Спорт</option><option value="tech">💻 Технологии</option><option value="finance">💰 Финансы</option><option value="beauty">💄 Красота</option></select>
           <button class="btn btn-primary" onclick="analyzeContent()">⚡ Анализировать</button>
+          <label class="btn btn-ghost" style="cursor:pointer;position:relative" title="Добавить скриншоты Instagram">
+            📎 Скриншоты
+            <input type="file" id="analyzer-screenshots" accept="image/*" multiple style="display:none" onchange="updateScreenshotBadge(this)">
+          </label>
+          <span id="screenshot-badge" style="display:none;background:var(--accent);color:#fff;border-radius:20px;padding:2px 8px;font-size:11px">0</span>
         </div>
-        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <span style="font-size:11px;color:var(--text-muted)">Работает с:</span>
           <span class="platform-tag tag-yt">YouTube</span><span class="platform-tag tag-vk">ВКонтакте</span><span class="platform-tag tag-ig">Instagram</span>
+          <input type="text" id="analyzer-context" placeholder="Доп. контекст (необязательно): о чём аккаунт, что хочешь узнать" style="flex:1;min-width:200px;font-size:12px;padding:4px 10px;height:28px">
         </div>
       </div>
       <div id="analyzer-loading" style="display:none"><div class="card" style="text-align:center;padding:48px"><div style="font-size:32px;margin-bottom:12px">⏳</div><div style="font-size:14px;font-weight:500;margin-bottom:6px">Анализирую...</div><div style="font-size:12px;color:var(--text-muted)" id="analyzer-status">Получаю данные</div></div></div>
@@ -2475,7 +2481,7 @@ function showFullPost(id) {
     if (p) {
     const nb = document.createElement('div');
     nb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center';
-    nb.innerHTML = '<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto"><div style="font-weight:700;margin-bottom:12px">Пост</div><div style="white-space:pre-wrap;font-size:13px;line-height:1.6">' + p.text + '</div><button class="btn btn-ghost" style="margin-top:16px;width:100%" onclick="this.closest('div[style*=inset]').remove()">Закрыть</button></div>';
+    nb.innerHTML = '<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto"><div style="font-weight:700;margin-bottom:12px">Пост</div><div style="white-space:pre-wrap;font-size:13px;line-height:1.6">' + p.text + '</div><button class="btn btn-ghost" style="margin-top:16px;width:100%" onclick="this.parentElement.parentElement.remove()">Закрыть</button></div>';
     document.body.appendChild(nb);
   }
   });
@@ -2492,6 +2498,16 @@ async function generateMaxQueue() {
     if (res.success) loadMaxData();
     else _toast('Ошибка: '+(res.error||'неизвестно'), false);
   } catch(e) { btn.textContent='⚡ Сгенерировать очередь'; btn.disabled=false; }
+}
+
+function updateScreenshotBadge(input) {
+  const badge = document.getElementById('screenshot-badge');
+  if (input.files.length > 0) {
+    badge.textContent = input.files.length;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 async function analyzeContent() {
@@ -2512,14 +2528,31 @@ async function analyzeContent() {
 
   document.getElementById('analyzer-result').style.display = 'none';
   document.getElementById('analyzer-loading').style.display = 'block';
-  document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
 
-  try {
-    const res = await fetch(API + '/api/analyzer/analyze', {
+  const screenshots = document.getElementById('analyzer-screenshots');
+  const context = (document.getElementById('analyzer-context') || {}).value || '';
+  const hasScreenshots = screenshots && screenshots.files.length > 0;
+  const isInstagram = url.includes('instagram.com');
+
+  let res;
+  if (hasScreenshots || isInstagram) {
+    document.getElementById('analyzer-status').textContent = isInstagram ? 'Анализирую Instagram через Claude...' : 'Анализирую скриншоты через Claude...';
+    const fd = new FormData();
+    fd.append('url', url);
+    fd.append('niche', niche);
+    fd.append('context', context);
+    if (hasScreenshots) {
+      for (const f of screenshots.files) fd.append('files', f);
+    }
+    res = await fetch(API + '/api/analyzer/analyze-with-screenshots', {method:'POST', body: fd}).then(r => r.json());
+  } else {
+    document.getElementById('analyzer-status').textContent = 'Отправляю в AI-анализ';
+    res = await fetch(API + '/api/analyzer/analyze', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({url, niche})
     }).then(r => r.json());
+  }
 
     document.getElementById('analyzer-loading').style.display = 'none';
 
