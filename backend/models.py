@@ -95,6 +95,7 @@ class Client(Base):
     __tablename__ = "clients"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     name = Column(String(100), nullable=False)
     brand = Column(String(100), nullable=True)
     niche = Column(String(100), nullable=True)
@@ -107,6 +108,7 @@ class ClientProject(Base):
     __tablename__ = "client_projects"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
@@ -118,6 +120,7 @@ class ClientChannel(Base):
     __tablename__ = "client_channels"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     project_id = Column(Integer, ForeignKey("client_projects.id"), nullable=True)
     platform = Column(String(50), nullable=False)
@@ -134,6 +137,7 @@ class ClientGoal(Base):
     __tablename__ = "client_goals"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     title = Column(String(150), nullable=False)
     target_value = Column(String(100), nullable=True)
@@ -146,6 +150,7 @@ class ClientKPI(Base):
     __tablename__ = "client_kpis"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     metric = Column(String(100), nullable=False)
     value = Column(String(100), nullable=True)
@@ -175,6 +180,7 @@ class ClientProfile(Base):
     __tablename__ = "client_profiles"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, unique=True)
     positioning = Column(Text, nullable=True)
     product = Column(Text, nullable=True)
@@ -198,6 +204,7 @@ class ClientBriefFile(Base):
     __tablename__ = "client_brief_files"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     filename = Column(String(300), nullable=True)
     file_path = Column(String(500), nullable=True)
@@ -210,6 +217,7 @@ class ClientIntelligence(Base):
     __tablename__ = "client_intelligence"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, unique=True)
     positioning = Column(Text, nullable=True)
     audience_segments = Column(Text, nullable=True)
@@ -235,6 +243,7 @@ class ClientStrategy(Base):
     __tablename__ = "client_strategies"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False, unique=True)
     positioning = Column(Text, nullable=True)
     content_pillars = Column(Text, nullable=True)
@@ -294,6 +303,7 @@ class ClientContentPlan(Base):
     __tablename__ = "client_content_plans"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
     month = Column(String(20), nullable=True)
     year = Column(Integer, nullable=True)
@@ -309,6 +319,7 @@ class YouTubeAccount(Base):
     __tablename__ = "youtube_accounts"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     channel_id = Column(String(100), unique=True, nullable=False)
     channel_name = Column(String(200), nullable=True)
     tokens_json = Column(Text, nullable=False)
@@ -323,6 +334,7 @@ class YouTubeVideo(Base):
     __tablename__ = "youtube_videos"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     account_id = Column(Integer, ForeignKey("youtube_accounts.id"), nullable=False)
     youtube_video_id = Column(String(100), nullable=True)
     title = Column(String(200), nullable=True)
@@ -342,6 +354,7 @@ class YouTubeChannelProfile(Base):
     __tablename__ = "youtube_channel_profiles"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     account_id = Column(Integer, ForeignKey("youtube_accounts.id"), nullable=True)
     name = Column(String(200), nullable=False)
     niche = Column(String(200), nullable=True)
@@ -360,6 +373,7 @@ class YouTubeContentPlan(Base):
     __tablename__ = "youtube_content_plans"
 
     id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     profile_id = Column(Integer, ForeignKey("youtube_channel_profiles.id"), nullable=False)
     account_id = Column(Integer, nullable=True)
     week_number = Column(Integer, nullable=True)
@@ -392,6 +406,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
 
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
 
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(Text, nullable=False)

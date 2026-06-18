@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
-from models import YouTubeAccount, YouTubeVideo
+from auth_routes import get_current_user, require_roles
+from models import YouTubeAccount, YouTubeVideo, User
 import anthropic
 import os, json, tempfile, shutil, requests
 from datetime import datetime
@@ -13,6 +14,14 @@ from urllib.parse import urlencode
 load_dotenv()
 
 router = APIRouter(prefix="/api/youtube", tags=["youtube"])
+
+
+def get_tenant_account(account_id: int, current_user: User, db: Session):
+    return db.query(YouTubeAccount).filter(
+        YouTubeAccount.id == account_id,
+        YouTubeAccount.tenant_id == current_user.tenant_id
+    ).first()
+
 
 CLIENT_ID = os.getenv("YOUTUBE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("YOUTUBE_CLIENT_SECRET")
@@ -79,13 +88,13 @@ def oauth_callback(code: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/accounts")
-def get_accounts(db: Session = Depends(get_db)):
-    accounts = db.query(YouTubeAccount).all()
+def get_accounts(current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    accounts = db.query(YouTubeAccount).filter(YouTubeAccount.tenant_id == current_user.tenant_id).all()
     return [{"id": a.id, "channel_id": a.channel_id, "channel_name": a.channel_name, "status": a.status, "created_at": str(a.created_at)} for a in accounts]
 
 @router.delete("/accounts/{account_id}")
-def delete_account(account_id: int, db: Session = Depends(get_db)):
-    acc = db.query(YouTubeAccount).filter_by(id=account_id).first()
+def delete_account(account_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN")), db: Session = Depends(get_db)):
+    acc = get_tenant_account(account_id, current_user, db)
     if not acc:
         raise HTTPException(status_code=404, detail="Not found")
     db.delete(acc)
@@ -93,7 +102,7 @@ def delete_account(account_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 @router.post("/generate-seo")
-def generate_seo(data: dict):
+def generate_seo(data: dict, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER"))):
     topic = data.get("topic", "")
     niche = data.get("niche", "")
     description_hint = data.get("description_hint", "")
@@ -144,9 +153,10 @@ async def upload_video(
     category_id: str = Form("22"),
     privacy: str = Form("public"),
     video_file: UploadFile = File(...),
+    current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")),
     db: Session = Depends(get_db)
 ):
-    acc = db.query(YouTubeAccount).filter_by(id=account_id).first()
+    acc = get_tenant_account(account_id, current_user, db)
     if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
     tokens = json.loads(acc.tokens_json)
@@ -183,6 +193,7 @@ async def upload_video(
         video_id = response["id"]
         video_url = f"https://www.youtube.com/watch?v={video_id}"
         vid = YouTubeVideo(
+            tenant_id=current_user.tenant_id,
             account_id=account_id, youtube_video_id=video_id,
             title=title, description=description, tags=tags,
             category_id=category_id, privacy=privacy,
@@ -197,14 +208,14 @@ async def upload_video(
         os.unlink(tmp_path)
 
 @router.get("/videos")
-def get_videos(db: Session = Depends(get_db)):
-    videos = db.query(YouTubeVideo).order_by(YouTubeVideo.created_at.desc()).all()
+def get_videos(current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    videos = db.query(YouTubeVideo).filter(YouTubeVideo.tenant_id == current_user.tenant_id).order_by(YouTubeVideo.created_at.desc()).all()
     return [{"id": v.id, "account_id": v.account_id, "youtube_video_id": v.youtube_video_id,
              "title": v.title, "video_url": v.video_url, "status": v.status,
              "created_at": str(v.created_at)} for v in videos]
 
 @router.post("/analyze-niches")
-def analyze_niches(data: dict = {}):
+def analyze_niches(data: dict = {}, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER"))):
     client = anthropic.Anthropic(api_key=CLAUDE_API_KEY, base_url=CLAUDE_PROXY_URL)
     focus = data.get("focus", "faceless English YouTube Shorts")
     prompt = f"""Ты эксперт по YouTube Shorts монетизации и росту каналов. Проанализируй топовые ниши для зарубежного YouTube Shorts ({focus}).
@@ -260,9 +271,9 @@ def analyze_niches(data: dict = {}):
         return {"error": "parse error", "raw": text[:500]}
 
 @router.get("/accounts/{account_id}/stats")
-def get_account_stats(account_id: int, db: Session = Depends(get_db)):
+def get_account_stats(account_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
     import subprocess
-    acc = db.query(YouTubeAccount).filter_by(id=account_id).first()
+    acc = get_tenant_account(account_id, current_user, db)
     if not acc:
         raise HTTPException(status_code=404, detail="Not found")
     tokens = json.loads(acc.tokens_json)
@@ -315,7 +326,7 @@ def get_account_stats(account_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate-branding")
-def generate_branding(data: dict):
+def generate_branding(data: dict, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER"))):
     niche = data.get("niche", "")
     channel_type = data.get("channel_type", "faceless")
     language = data.get("language", "English")
@@ -389,7 +400,7 @@ def generate_branding(data: dict):
         return {"error": "parse error", "raw": text[:300]}
 
 @router.post("/generate-image")
-def generate_image(data: dict):
+def generate_image(data: dict, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER"))):
     prompt = data.get("prompt", "")
     width = data.get("width", 512)
     height = data.get("height", 512)
@@ -441,10 +452,17 @@ def generate_image(data: dict):
 
 
 @router.post("/profiles")
-def save_profile(data: dict, db: Session = Depends(get_db)):
+def save_profile(data: dict, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
     from models import YouTubeChannelProfile
+    account_id = data.get("account_id")
+    if account_id:
+        acc = get_tenant_account(int(account_id), current_user, db)
+        if not acc:
+            raise HTTPException(status_code=404, detail="Account not found")
+
     profile = YouTubeChannelProfile(
-        account_id=data.get("account_id"),
+        tenant_id=current_user.tenant_id,
+        account_id=account_id,
         name=data.get("name", "Новый канал"),
         niche=data.get("niche"),
         channel_type=data.get("channel_type"),
@@ -460,9 +478,9 @@ def save_profile(data: dict, db: Session = Depends(get_db)):
     return {"id": profile.id, "name": profile.name}
 
 @router.get("/profiles")
-def get_profiles(db: Session = Depends(get_db)):
+def get_profiles(current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
     from models import YouTubeChannelProfile
-    profiles = db.query(YouTubeChannelProfile).order_by(YouTubeChannelProfile.created_at.desc()).all()
+    profiles = db.query(YouTubeChannelProfile).filter(YouTubeChannelProfile.tenant_id == current_user.tenant_id).order_by(YouTubeChannelProfile.created_at.desc()).all()
     result = []
     for p in profiles:
         branding = json.loads(p.branding_json) if p.branding_json else {}
@@ -492,9 +510,12 @@ def get_profiles(db: Session = Depends(get_db)):
     return result
 
 @router.get("/profiles/{profile_id}")
-def get_profile(profile_id: int, db: Session = Depends(get_db)):
+def get_profile(profile_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
     from models import YouTubeChannelProfile
-    p = db.query(YouTubeChannelProfile).filter_by(id=profile_id).first()
+    p = db.query(YouTubeChannelProfile).filter(
+        YouTubeChannelProfile.id == profile_id,
+        YouTubeChannelProfile.tenant_id == current_user.tenant_id
+    ).first()
     if not p:
         raise HTTPException(status_code=404, detail="Not found")
     branding = json.loads(p.branding_json) if p.branding_json else {}
@@ -503,9 +524,12 @@ def get_profile(profile_id: int, db: Session = Depends(get_db)):
             "autopilot_enabled": p.autopilot_enabled}
 
 @router.post("/profiles/{profile_id}/generate-plan")
-def generate_content_plan(profile_id: int, db: Session = Depends(get_db)):
+def generate_content_plan(profile_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
     from models import YouTubeChannelProfile, YouTubeContentPlan
-    p = db.query(YouTubeChannelProfile).filter_by(id=profile_id).first()
+    p = db.query(YouTubeChannelProfile).filter(
+        YouTubeChannelProfile.id == profile_id,
+        YouTubeChannelProfile.tenant_id == current_user.tenant_id
+    ).first()
     if not p:
         raise HTTPException(status_code=404, detail="Not found")
     branding = json.loads(p.branding_json) if p.branding_json else {}
@@ -570,6 +594,7 @@ Tone of voice: {branding.get('tone_of_voice', '')}
         plan_data = json.loads(match.group()) if match else {"error": "parse error"}
 
     plan = YouTubeContentPlan(
+        tenant_id=current_user.tenant_id,
         profile_id=profile_id,
         account_id=p.account_id,
         week_number=1,
@@ -581,15 +606,27 @@ Tone of voice: {branding.get('tone_of_voice', '')}
     return plan_data
 
 @router.get("/profiles/{profile_id}/plans")
-def get_plans(profile_id: int, db: Session = Depends(get_db)):
-    from models import YouTubeContentPlan
-    plans = db.query(YouTubeContentPlan).filter_by(profile_id=profile_id).order_by(YouTubeContentPlan.created_at.desc()).all()
+def get_plans(profile_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    from models import YouTubeContentPlan, YouTubeChannelProfile
+    profile = db.query(YouTubeChannelProfile).filter(
+        YouTubeChannelProfile.id == profile_id,
+        YouTubeChannelProfile.tenant_id == current_user.tenant_id
+    ).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Not found")
+    plans = db.query(YouTubeContentPlan).filter(
+        YouTubeContentPlan.profile_id == profile_id,
+        YouTubeContentPlan.tenant_id == current_user.tenant_id
+    ).order_by(YouTubeContentPlan.created_at.desc()).all()
     return [{"id": p.id, "plan": json.loads(p.plan_json) if p.plan_json else {}, "created_at": str(p.created_at)} for p in plans]
 
 @router.patch("/profiles/{profile_id}/autopilot")
-def toggle_autopilot(profile_id: int, data: dict, db: Session = Depends(get_db)):
+def toggle_autopilot(profile_id: int, data: dict, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
     from models import YouTubeChannelProfile
-    p = db.query(YouTubeChannelProfile).filter_by(id=profile_id).first()
+    p = db.query(YouTubeChannelProfile).filter(
+        YouTubeChannelProfile.id == profile_id,
+        YouTubeChannelProfile.tenant_id == current_user.tenant_id
+    ).first()
     if not p:
         raise HTTPException(status_code=404, detail="Not found")
     p.autopilot_enabled = data.get("enabled", False)
@@ -599,7 +636,7 @@ def toggle_autopilot(profile_id: int, data: dict, db: Session = Depends(get_db))
 
 
 @router.post("/generate-banner-with-text")
-def generate_banner_with_text(data: dict):
+def generate_banner_with_text(data: dict, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER"))):
     import subprocess, time, tempfile, base64
     from PIL import Image, ImageDraw, ImageFont
     import urllib.request

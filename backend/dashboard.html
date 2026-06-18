@@ -1,6 +1,37 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+
+<script>
+(async function () {
+  const token = localStorage.getItem("ivadi_token");
+
+  if (!token) {
+    window.location.href = "/login.html";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/auth/me", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    if (!res.ok) {
+      localStorage.removeItem("ivadi_token");
+      localStorage.removeItem("ivadi_user");
+      window.location.href = "/login.html";
+      return;
+    }
+
+    window.IVADI_CURRENT_USER = await res.json();
+  } catch (e) {
+    localStorage.removeItem("ivadi_token");
+    localStorage.removeItem("ivadi_user");
+    window.location.href = "/login.html";
+  }
+})();
+</script>
+
 <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">

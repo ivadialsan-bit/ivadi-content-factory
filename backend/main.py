@@ -10,6 +10,7 @@ from client_routes import router as client_router
 from settings_routes import router as settings_router
 from opportunity_routes import router as opportunity_router
 from youtube_routes import router as youtube_router
+from client_portal_routes import router as client_portal_router
 from shorts_factory_routes import router as shorts_factory_router
 from grok_video_routes import router as grok_video_router
 from auth_routes import router as auth_router
@@ -44,6 +45,7 @@ app.include_router(youtube_router)
 app.include_router(shorts_factory_router)
 app.include_router(grok_video_router)
 app.include_router(auth_router)
+app.include_router(client_portal_router)
 
 @app.get("/api/health")
 def health_check():
@@ -57,3 +59,4 @@ app.mount("/", StaticFiles(directory="/root/factory/backend", html=True), name="
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

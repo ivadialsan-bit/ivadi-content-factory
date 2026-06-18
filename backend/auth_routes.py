@@ -70,6 +70,16 @@ def get_current_user(
     return user
 
 
+
+
+def require_roles(*roles):
+    def checker(current_user: User = Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(status_code=403, detail="Недостаточно прав")
+        return current_user
+    return checker
+
+
 @router.get("/me")
 def me(current_user: User = Depends(get_current_user)):
     return {

@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Client, ClientProject, ClientChannel, ClientGoal, ClientKPI, ClientAccountSnapshot, ClientProfile, ClientBriefFile, ClientIntelligence, ClientStrategy, ClientContentPlan
+from auth_routes import get_current_user, require_roles
+from models import Client, ClientProject, ClientChannel, ClientGoal, ClientKPI, ClientAccountSnapshot, ClientProfile, ClientBriefFile, ClientIntelligence, ClientStrategy, ClientContentPlan, User
 from schemas import (
     ClientCreate,
     ClientUpdate,
@@ -19,14 +20,38 @@ from schemas import (
 router = APIRouter(prefix="/api/clients", tags=["clients"])
 
 
+def get_tenant_client(client_id: int, current_user: User, db: Session):
+    return db.query(Client).filter(
+        Client.id == client_id,
+        Client.tenant_id == current_user.tenant_id
+    ).first()
+
+
+
+
 @router.get("")
-def get_clients(db: Session = Depends(get_db)):
-    return db.query(Client).order_by(Client.created_at.desc()).all()
+def get_clients(
+    current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")),
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(Client)
+        .filter(Client.tenant_id == current_user.tenant_id)
+        .order_by(Client.created_at.desc())
+        .all()
+    )
 
 
 @router.post("")
-def create_client(client: ClientCreate, db: Session = Depends(get_db)):
-    db_client = Client(**client.dict())
+def create_client(
+    client: ClientCreate,
+    current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")),
+    db: Session = Depends(get_db)
+):
+    db_client = Client(
+        **client.dict(),
+        tenant_id=current_user.tenant_id
+    )
     db.add(db_client)
     db.commit()
     db.refresh(db_client)
@@ -34,16 +59,25 @@ def create_client(client: ClientCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{client_id}")
-def get_client(client_id: int, db: Session = Depends(get_db)):
-    client = db.query(Client).filter(Client.id == client_id).first()
+def get_client(
+    client_id: int,
+    current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")),
+    db: Session = Depends(get_db)
+):
+    client = get_tenant_client(client_id, current_user, db)
     if not client:
         raise HTTPException(status_code=404, detail="Клиент не найден")
     return client
 
 
 @router.patch("/{client_id}")
-def update_client(client_id: int, update: ClientUpdate, db: Session = Depends(get_db)):
-    client = db.query(Client).filter(Client.id == client_id).first()
+def update_client(
+    client_id: int,
+    update: ClientUpdate,
+    current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")),
+    db: Session = Depends(get_db)
+):
+    client = get_tenant_client(client_id, current_user, db)
     if not client:
         raise HTTPException(status_code=404, detail="Клиент не найден")
 
@@ -56,44 +90,58 @@ def update_client(client_id: int, update: ClientUpdate, db: Session = Depends(ge
 
 
 @router.delete("/{client_id}")
-def delete_client(client_id: int, db: Session = Depends(get_db)):
-    client = db.query(Client).filter(Client.id == client_id).first()
+def delete_client(
+    client_id: int,
+    current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")),
+    db: Session = Depends(get_db)
+):
+    client = get_tenant_client(client_id, current_user, db)
     if not client:
         raise HTTPException(status_code=404, detail="Клиент не найден")
 
-    db.query(ClientProject).filter(ClientProject.client_id == client_id).delete()
-    db.query(ClientChannel).filter(ClientChannel.client_id == client_id).delete()
-    db.query(ClientGoal).filter(ClientGoal.client_id == client_id).delete()
-    db.query(ClientKPI).filter(ClientKPI.client_id == client_id).delete()
+    db.query(ClientProject).filter(ClientProject.client_id == client_id, ClientProject.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientChannel).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientGoal).filter(ClientGoal.client_id == client_id, ClientGoal.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientKPI).filter(ClientKPI.client_id == client_id, ClientKPI.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id, ClientBriefFile.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id, ClientIntelligence.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id, ClientStrategy.tenant_id == current_user.tenant_id).delete()
+    db.query(ClientContentPlan).filter(ClientContentPlan.client_id == client_id, ClientContentPlan.tenant_id == current_user.tenant_id).delete()
+
     db.delete(client)
     db.commit()
     return {"message": "Deleted"}
 
 
 @router.get("/{client_id}/overview")
-def get_client_overview(client_id: int, db: Session = Depends(get_db)):
-    client = db.query(Client).filter(Client.id == client_id).first()
+def get_client_overview(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
     if not client:
         raise HTTPException(status_code=404, detail="Клиент не найден")
 
     return {
         "client": client,
-        "projects": db.query(ClientProject).filter(ClientProject.client_id == client_id).all(),
-        "channels": db.query(ClientChannel).filter(ClientChannel.client_id == client_id).all(),
-        "goals": db.query(ClientGoal).filter(ClientGoal.client_id == client_id).all(),
-        "kpis": db.query(ClientKPI).filter(ClientKPI.client_id == client_id).all(),
-        "account_snapshots": db.query(ClientAccountSnapshot).join(ClientChannel, ClientAccountSnapshot.channel_id == ClientChannel.id).filter(ClientChannel.client_id == client_id).order_by(ClientAccountSnapshot.created_at.desc()).all(),
-        "profile": db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first(),
-        "brief_files": db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id).order_by(ClientBriefFile.created_at.desc()).all(),
-        "intelligence": db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id).first(),
-        "strategy": db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id).first(),
-        "content_plan": db.query(ClientContentPlan).filter(ClientContentPlan.client_id == client_id).order_by(ClientContentPlan.created_at.desc()).first(),
+        "projects": db.query(ClientProject).filter(ClientProject.client_id == client_id, ClientProject.tenant_id == current_user.tenant_id).all(),
+        "channels": db.query(ClientChannel).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).all(),
+        "goals": db.query(ClientGoal).filter(ClientGoal.client_id == client_id, ClientGoal.tenant_id == current_user.tenant_id).all(),
+        "kpis": db.query(ClientKPI).filter(ClientKPI.client_id == client_id, ClientKPI.tenant_id == current_user.tenant_id).all(),
+        "account_snapshots": db.query(ClientAccountSnapshot).join(ClientChannel, ClientAccountSnapshot.channel_id == ClientChannel.id).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).order_by(ClientAccountSnapshot.created_at.desc()).all(),
+        "profile": db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first(),
+        "brief_files": db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id, ClientBriefFile.tenant_id == current_user.tenant_id).order_by(ClientBriefFile.created_at.desc()).all(),
+        "intelligence": db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id, ClientIntelligence.tenant_id == current_user.tenant_id).first(),
+        "strategy": db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id, ClientStrategy.tenant_id == current_user.tenant_id).first(),
+        "content_plan": db.query(ClientContentPlan).filter(ClientContentPlan.client_id == client_id, ClientContentPlan.tenant_id == current_user.tenant_id).order_by(ClientContentPlan.created_at.desc()).first(),
     }
 
 
 @router.post("/projects")
-def create_client_project(project: ClientProjectCreate, db: Session = Depends(get_db)):
-    item = ClientProject(**project.dict())
+def create_client_project(project: ClientProjectCreate, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(project.client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    item = ClientProject(**project.dict(), tenant_id=current_user.tenant_id)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -101,8 +149,12 @@ def create_client_project(project: ClientProjectCreate, db: Session = Depends(ge
 
 
 @router.post("/channels")
-def create_client_channel(channel: ClientChannelCreate, db: Session = Depends(get_db)):
-    item = ClientChannel(**channel.dict())
+def create_client_channel(channel: ClientChannelCreate, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(channel.client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    item = ClientChannel(**channel.dict(), tenant_id=current_user.tenant_id)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -110,8 +162,12 @@ def create_client_channel(channel: ClientChannelCreate, db: Session = Depends(ge
 
 
 @router.post("/goals")
-def create_client_goal(goal: ClientGoalCreate, db: Session = Depends(get_db)):
-    item = ClientGoal(**goal.dict())
+def create_client_goal(goal: ClientGoalCreate, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(goal.client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    item = ClientGoal(**goal.dict(), tenant_id=current_user.tenant_id)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -119,8 +175,12 @@ def create_client_goal(goal: ClientGoalCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/kpis")
-def create_client_kpi(kpi: ClientKPICreate, db: Session = Depends(get_db)):
-    item = ClientKPI(**kpi.dict())
+def create_client_kpi(kpi: ClientKPICreate, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(kpi.client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    item = ClientKPI(**kpi.dict(), tenant_id=current_user.tenant_id)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -128,8 +188,8 @@ def create_client_kpi(kpi: ClientKPICreate, db: Session = Depends(get_db)):
 
 
 @router.post("/channels/{channel_id}/sync")
-def sync_client_channel(channel_id: int, db: Session = Depends(get_db)):
-    channel = db.query(ClientChannel).filter(ClientChannel.id == channel_id).first()
+def sync_client_channel(channel_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    channel = db.query(ClientChannel).join(Client, ClientChannel.client_id == Client.id).filter(ClientChannel.id == channel_id, Client.tenant_id == current_user.tenant_id).first()
     if not channel:
         raise HTTPException(status_code=404, detail="Аккаунт клиента не найден")
 
@@ -148,8 +208,15 @@ def sync_client_channel(channel_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/account-snapshots")
-def create_account_snapshot(snapshot: ClientAccountSnapshotCreate, db: Session = Depends(get_db)):
-    item = ClientAccountSnapshot(**snapshot.dict())
+def create_account_snapshot(snapshot: ClientAccountSnapshotCreate, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    channel = db.query(ClientChannel).join(Client, ClientChannel.client_id == Client.id).filter(
+        ClientChannel.id == snapshot.channel_id,
+        Client.tenant_id == current_user.tenant_id
+    ).first()
+    if not channel:
+        raise HTTPException(status_code=404, detail="Канал клиента не найден")
+
+    item = ClientAccountSnapshot(**snapshot.dict(), tenant_id=current_user.tenant_id)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -157,26 +224,35 @@ def create_account_snapshot(snapshot: ClientAccountSnapshotCreate, db: Session =
 
 
 @router.get("/channels/{channel_id}/snapshots")
-def get_channel_snapshots(channel_id: int, db: Session = Depends(get_db)):
-    return db.query(ClientAccountSnapshot).filter(
-        ClientAccountSnapshot.channel_id == channel_id
+def get_channel_snapshots(channel_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    return db.query(ClientAccountSnapshot).join(ClientChannel, ClientAccountSnapshot.channel_id == ClientChannel.id).join(Client, ClientChannel.client_id == Client.id).filter(
+        ClientAccountSnapshot.channel_id == channel_id,
+        Client.tenant_id == current_user.tenant_id
     ).order_by(ClientAccountSnapshot.created_at.desc()).all()
 
 
 @router.get("/{client_id}/profile")
-def get_client_profile(client_id: int, db: Session = Depends(get_db)):
-    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+def get_client_profile(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first()
     if not profile:
         return None
     return profile
 
 
 @router.post("/{client_id}/profile")
-def save_client_profile(client_id: int, profile: ClientProfileUpdate, db: Session = Depends(get_db)):
-    item = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+def save_client_profile(client_id: int, profile: ClientProfileUpdate, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
+    item = db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first()
 
     if not item:
-        item = ClientProfile(client_id=client_id)
+        item = ClientProfile(client_id=client_id, tenant_id=current_user.tenant_id)
         db.add(item)
 
     for field, value in profile.dict(exclude_unset=True).items():
@@ -191,15 +267,15 @@ def save_client_profile(client_id: int, profile: ClientProfileUpdate, db: Sessio
 
 
 @router.post("/{client_id}/brief/upload")
-async def upload_client_brief(client_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_client_brief(client_id: int, file: UploadFile = File(...), current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     import os
     import json
     from datetime import datetime
     from openpyxl import load_workbook
-
-    client = db.query(Client).filter(Client.id == client_id).first()
-    if not client:
-        raise HTTPException(status_code=404, detail="Клиент не найден")
 
     if not file.filename.endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="Нужен файл .xlsx")
@@ -232,6 +308,7 @@ async def upload_client_brief(client_id: int, file: UploadFile = File(...), db: 
 
     brief = ClientBriefFile(
         client_id=client_id,
+        tenant_id=current_user.tenant_id,
         filename=file.filename,
         file_path=file_path,
         status="parsed",
@@ -246,14 +323,22 @@ async def upload_client_brief(client_id: int, file: UploadFile = File(...), db: 
 
 
 @router.get("/{client_id}/brief/latest")
-def get_latest_client_brief(client_id: int, db: Session = Depends(get_db)):
+def get_latest_client_brief(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     return db.query(ClientBriefFile).filter(
         ClientBriefFile.client_id == client_id
     ).order_by(ClientBriefFile.created_at.desc()).first()
 
 
 @router.post("/{client_id}/profile/from-brief")
-def generate_profile_from_brief(client_id: int, db: Session = Depends(get_db)):
+def generate_profile_from_brief(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     import json
     from datetime import datetime
 
@@ -273,10 +358,10 @@ def generate_profile_from_brief(client_id: int, db: Session = Depends(get_db)):
         if key and value:
             answers[key] = str(value).strip()
 
-    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first()
 
     if not profile:
-        profile = ClientProfile(client_id=client_id)
+        profile = ClientProfile(client_id=client_id, tenant_id=current_user.tenant_id)
         db.add(profile)
 
     profile.product = answers.get("product", profile.product)
@@ -320,7 +405,11 @@ def generate_profile_from_brief(client_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{client_id}/generate-intelligence")
-def generate_client_intelligence(client_id: int, db: Session = Depends(get_db)):
+def generate_client_intelligence(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     import os
     import json
     from datetime import datetime
@@ -341,14 +430,14 @@ def generate_client_intelligence(client_id: int, db: Session = Depends(get_db)):
     if not client_obj:
         raise HTTPException(status_code=404, detail="Клиент не найден")
 
-    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
-    brief = db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id).order_by(ClientBriefFile.created_at.desc()).first()
-    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id).all()
-    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id).all()
-    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id).all()
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first()
+    brief = db.query(ClientBriefFile).filter(ClientBriefFile.client_id == client_id, ClientBriefFile.tenant_id == current_user.tenant_id).order_by(ClientBriefFile.created_at.desc()).first()
+    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).all()
+    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id, ClientGoal.tenant_id == current_user.tenant_id).all()
+    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id, ClientKPI.tenant_id == current_user.tenant_id).all()
     snapshots = db.query(ClientAccountSnapshot).join(
         ClientChannel, ClientAccountSnapshot.channel_id == ClientChannel.id
-    ).filter(ClientChannel.client_id == client_id).order_by(ClientAccountSnapshot.created_at.desc()).all()
+    ).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).order_by(ClientAccountSnapshot.created_at.desc()).all()
 
     input_data = {
         "client": {
@@ -414,9 +503,9 @@ def generate_client_intelligence(client_id: int, db: Session = Depends(get_db)):
         print("CLAUDE RAW RESPONSE END")
         raise HTTPException(status_code=500, detail="Claude вернул невалидный JSON")
 
-    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id).first()
+    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id, ClientIntelligence.tenant_id == current_user.tenant_id).first()
     if not intelligence:
-        intelligence = ClientIntelligence(client_id=client_id)
+        intelligence = ClientIntelligence(client_id=client_id, tenant_id=current_user.tenant_id)
         db.add(intelligence)
 
     def to_text(value):
@@ -450,7 +539,11 @@ def generate_client_intelligence(client_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{client_id}/generate-strategy")
-def generate_client_strategy(client_id: int, db: Session = Depends(get_db)):
+def generate_client_strategy(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     import os
     import json
     from datetime import datetime
@@ -472,14 +565,14 @@ def generate_client_strategy(client_id: int, db: Session = Depends(get_db)):
     if not client_obj:
         raise HTTPException(status_code=404, detail="Клиент не найден")
 
-    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id).first()
-    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
-    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id).all()
-    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id).all()
-    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id).all()
+    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id, ClientIntelligence.tenant_id == current_user.tenant_id).first()
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first()
+    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id, ClientGoal.tenant_id == current_user.tenant_id).all()
+    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id, ClientKPI.tenant_id == current_user.tenant_id).all()
+    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).all()
     snapshots = db.query(ClientAccountSnapshot).join(
         ClientChannel, ClientAccountSnapshot.channel_id == ClientChannel.id
-    ).filter(ClientChannel.client_id == client_id).order_by(ClientAccountSnapshot.created_at.desc()).all()
+    ).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).order_by(ClientAccountSnapshot.created_at.desc()).all()
 
     def clean(obj):
         if obj is None:
@@ -552,9 +645,9 @@ def generate_client_strategy(client_id: int, db: Session = Depends(get_db)):
             return json.dumps(value, ensure_ascii=False, indent=2)
         return str(value)
 
-    strategy = db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id).first()
+    strategy = db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id, ClientStrategy.tenant_id == current_user.tenant_id).first()
     if not strategy:
-        strategy = ClientStrategy(client_id=client_id)
+        strategy = ClientStrategy(client_id=client_id, tenant_id=current_user.tenant_id)
         db.add(strategy)
 
     strategy.positioning = to_text(data.get("positioning"))
@@ -577,7 +670,11 @@ def generate_client_strategy(client_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{client_id}/content-plan/latest")
-def get_latest_content_plan(client_id: int, db: Session = Depends(get_db)):
+def get_latest_content_plan(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     from models import ClientContentPlan
     plan = db.query(ClientContentPlan).filter(
         ClientContentPlan.client_id == client_id
@@ -588,7 +685,11 @@ def get_latest_content_plan(client_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{client_id}/generate-content-plan")
-def generate_content_plan(client_id: int, db: Session = Depends(get_db)):
+def generate_content_plan(client_id: int, current_user: User = Depends(require_roles("SUPER_ADMIN", "ADMIN", "MANAGER")), db: Session = Depends(get_db)):
+    client = get_tenant_client(client_id, current_user, db)
+    if not client:
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+
     import os
     import json
     from datetime import datetime
@@ -610,12 +711,12 @@ def generate_content_plan(client_id: int, db: Session = Depends(get_db)):
     if not client_obj:
         raise HTTPException(status_code=404, detail="Клиент не найден")
 
-    strategy = db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id).first()
-    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id).first()
-    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id).first()
-    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id).all()
-    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id).all()
-    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id).all()
+    strategy = db.query(ClientStrategy).filter(ClientStrategy.client_id == client_id, ClientStrategy.tenant_id == current_user.tenant_id).first()
+    intelligence = db.query(ClientIntelligence).filter(ClientIntelligence.client_id == client_id, ClientIntelligence.tenant_id == current_user.tenant_id).first()
+    profile = db.query(ClientProfile).filter(ClientProfile.client_id == client_id, ClientProfile.tenant_id == current_user.tenant_id).first()
+    goals = db.query(ClientGoal).filter(ClientGoal.client_id == client_id, ClientGoal.tenant_id == current_user.tenant_id).all()
+    kpis = db.query(ClientKPI).filter(ClientKPI.client_id == client_id, ClientKPI.tenant_id == current_user.tenant_id).all()
+    channels = db.query(ClientChannel).filter(ClientChannel.client_id == client_id, ClientChannel.tenant_id == current_user.tenant_id).all()
 
     def clean(obj):
         if obj is None:
@@ -676,6 +777,7 @@ def generate_content_plan(client_id: int, db: Session = Depends(get_db)):
 
     plan = ClientContentPlan(
         client_id=client_id,
+        tenant_id=current_user.tenant_id,
         month=now.strftime("%B"),
         year=now.year,
         platform_focus=json.dumps(data.get("platform_focus", []), ensure_ascii=False),

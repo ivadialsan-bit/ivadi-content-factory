@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IVADI Login</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 360px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.35);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #f9fafb;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #020617;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      color: #fca5a5;
+      font-size: 13px;
+    }
+
+    .brand {
+      font-size: 12px;
+      letter-spacing: .18em;
+      color: #94a3b8;
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">IVADI CONTENT FACTORY</div>
+    <h1>Вход в систему</h1>
+    <p>Закрытый доступ только для владельца, сотрудников и клиентов.</p>
+
+    <form id="loginForm">
+      <label>Email</label>
+      <input id="email" type="email"  required />
+
+      <label>Пароль</label>
+      <input id="password" type="password"  required />
+
+      <button type="submit">Войти</button>
+
+      <div id="error" class="error">Ошибка входа</div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const errorBox = document.getElementById("error");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorBox.style.display = "none";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Login failed");
+        }
+
+        localStorage.setItem("ivadi_token", data.access_token);
+        localStorage.setItem("ivadi_user", JSON.stringify(data.user));
+
+        window.location.href = "/dashboard.html";
+      } catch (err) {
+        errorBox.innerText = "Неверный email или пароль";
+        errorBox.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>
