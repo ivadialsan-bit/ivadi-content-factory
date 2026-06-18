@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IVADI SaaS Dashboard</title>
+  <link rel="stylesheet" href="/static/dashboard-v2.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">I</div>
+      <div>
+        <div class="brand-title">IVADI</div>
+        <div class="brand-sub">Content Factory</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-page="home">Главная</button>
+      <button class="nav-item" data-page="clients">Клиенты</button>
+      <button class="nav-item" data-page="strategies">Стратегии</button>
+      <button class="nav-item" data-page="plans">Контент-планы</button>
+      <button class="nav-item" data-page="channels">Каналы</button>
+      <button class="nav-item" data-page="youtube">YouTube</button>
+      <button class="nav-item" data-page="users">Пользователи</button>
+      <button class="nav-item" data-page="audit">Аудит</button>
+      <button class="nav-item" data-page="settings">Настройки</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div id="currentUser">Загрузка...</div>
+      <button class="logout" onclick="logout()">Выйти</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">Главная</h1>
+        <p id="pageSubtitle">Операционная панель SaaS</p>
+      </div>
+    </header>
+
+    <section class="page active" data-page="home">
+      <div class="grid">
+        <div class="card"><div class="label">SaaS Core</div><div class="value">95%</div></div>
+        <div class="card"><div class="label">Security</div><div class="value">95%</div></div>
+        <div class="card"><div class="label">Client Portal</div><div class="value">80%</div></div>
+        <div class="card"><div class="label">Production</div><div class="value">70%</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-page="clients">
+      <div class="empty">CRM клиентов будет перенесён сюда из старого dashboard.</div>
+    </section>
+
+    <section class="page" data-page="strategies">
+      <div class="empty">Стратегии клиентов: список, статус, дата генерации.</div>
+    </section>
+
+    <section class="page" data-page="plans">
+      <div class="empty">Контент-планы: календарь, публикации, статусы.</div>
+    </section>
+
+    <section class="page" data-page="channels">
+      <div class="empty">Каналы клиентов: YouTube, VK, Telegram, MAX.</div>
+    </section>
+
+    <section class="page" data-page="youtube">
+      <div class="empty">YouTube управление будет перенесено отдельным модулем.</div>
+    </section>
+
+    <section class="page" data-page="users">
+      <div class="split">
+        <div class="panel">
+          <h2>Создать пользователя</h2>
+          <input id="userEmail" placeholder="Email" />
+          <input id="userPassword" type="password" placeholder="Пароль" />
+          <select id="userRole">
+            <option value="CLIENT">CLIENT</option>
+            <option value="MANAGER">MANAGER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+          <input id="userClientId" placeholder="Client ID для клиента" />
+          <input id="userFirstName" placeholder="Имя" />
+          <input id="userLastName" placeholder="Фамилия" />
+          <button class="primary" onclick="createUser()">Создать</button>
+        </div>
+
+        <div class="panel">
+          <h2>Пользователи</h2>
+          <div id="usersList" class="list">Загрузка...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="audit">
+      <div class="empty">Audit UI будет подключён после API списка логов.</div>
+    </section>
+
+    <section class="page" data-page="settings">
+      <div class="empty">Настройки tenant, интеграций и доступа.</div>
+    </section>
+  </main>
+
+  <script src="/static/dashboard-v2.js"></script>
+</body>
+</html>
