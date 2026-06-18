@@ -12,6 +12,7 @@ from opportunity_routes import router as opportunity_router
 from youtube_routes import router as youtube_router
 from shorts_factory_routes import router as shorts_factory_router
 from grok_video_routes import router as grok_video_router
+from auth_routes import router as auth_router
 from dotenv import load_dotenv
 import os
 
@@ -42,6 +43,7 @@ app.include_router(opportunity_router)
 app.include_router(youtube_router)
 app.include_router(shorts_factory_router)
 app.include_router(grok_video_router)
+app.include_router(auth_router)
 
 @app.get("/api/health")
 def health_check():
