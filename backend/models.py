@@ -366,3 +366,78 @@ class YouTubeContentPlan(Base):
     plan_json = Column(Text, nullable=True)
     status = Column(String(50), default="active")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# =========================
+# AUTH / SAAS FOUNDATION
+# =========================
+
+class Tenant(Base):
+    __tablename__ = "tenants"
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String(200), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False)
+
+    plan = Column(String(50), default="basic")
+    is_active = Column(Boolean, default=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
+
+    email = Column(String(255), unique=True, nullable=False)
+    password_hash = Column(Text, nullable=False)
+
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+
+    role = Column(String(50), default="CLIENT")
+
+    is_active = Column(Boolean, default=True)
+    is_email_verified = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    token_hash = Column(Text, nullable=False)
+
+    expires_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True)
+
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    action = Column(String(255), nullable=False)
+
+    entity_type = Column(String(255), nullable=True)
+    entity_id = Column(Integer, nullable=True)
+
+    ip_address = Column(String(100), nullable=True)
+    user_agent = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
