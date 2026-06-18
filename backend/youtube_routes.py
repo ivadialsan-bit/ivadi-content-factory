@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from auth_routes import get_current_user, require_roles
+from audit import log_event
 from models import YouTubeAccount, YouTubeVideo, User
 import anthropic
 import os, json, tempfile, shutil, requests
@@ -201,6 +202,16 @@ async def upload_video(
         )
         db.add(vid)
         db.commit()
+        db.refresh(vid)
+
+        log_event(
+            db=db,
+            action="YOUTUBE_UPLOAD",
+            user=current_user,
+            entity_type="youtube_video",
+            entity_id=vid.id,
+        )
+
         return {"ok": True, "video_id": video_id, "video_url": video_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

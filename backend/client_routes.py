@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from auth_routes import get_current_user, require_roles
+from audit import log_event
 from models import Client, ClientProject, ClientChannel, ClientGoal, ClientKPI, ClientAccountSnapshot, ClientProfile, ClientBriefFile, ClientIntelligence, ClientStrategy, ClientContentPlan, User
 from schemas import (
     ClientCreate,
@@ -55,6 +56,15 @@ def create_client(
     db.add(db_client)
     db.commit()
     db.refresh(db_client)
+
+    log_event(
+        db=db,
+        action="CLIENT_CREATE",
+        user=current_user,
+        entity_type="client",
+        entity_id=db_client.id,
+    )
+
     return db_client
 
 
@@ -86,6 +96,15 @@ def update_client(
 
     db.commit()
     db.refresh(client)
+
+    log_event(
+        db=db,
+        action="CLIENT_UPDATE",
+        user=current_user,
+        entity_type="client",
+        entity_id=client.id,
+    )
+
     return client
 
 
@@ -666,6 +685,15 @@ def generate_client_strategy(client_id: int, current_user: User = Depends(requir
 
     db.commit()
     db.refresh(strategy)
+
+    log_event(
+        db=db,
+        action="STRATEGY_GENERATE",
+        user=current_user,
+        entity_type="client_strategy",
+        entity_id=strategy.id,
+    )
+
     return strategy
 
 
@@ -793,4 +821,13 @@ def generate_content_plan(client_id: int, current_user: User = Depends(require_r
     db.add(plan)
     db.commit()
     db.refresh(plan)
+
+    log_event(
+        db=db,
+        action="CONTENT_PLAN_GENERATE",
+        user=current_user,
+        entity_type="client_content_plan",
+        entity_id=plan.id,
+    )
+
     return plan

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import User, RefreshToken
+from audit import log_event
 from security import (
     verify_password,
     create_access_token,
@@ -67,6 +68,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     )
     db.add(db_refresh_token)
     db.commit()
+
+    log_event(
+        db=db,
+        action="LOGIN",
+        user=user,
+        entity_type="user",
+        entity_id=user.id,
+    )
 
     return {
         "access_token": access_token,
@@ -140,6 +149,15 @@ def logout(payload: LogoutRequest, db: Session = Depends(get_db)):
     if stored_token:
         stored_token.revoked_at = datetime.utcnow()
         db.commit()
+
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        log_event(
+            db=db,
+            action="LOGOUT",
+            user=user,
+            entity_type="user",
+            entity_id=int(user_id),
+        )
 
     return {"status": "ok"}
 
