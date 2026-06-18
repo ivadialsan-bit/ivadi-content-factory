@@ -1,5 +1,5 @@
 const pageMeta = {
-  home: ["Главная", "Операционная панель SaaS"],
+  home: ["Главная", "Коммерческая панель управления клиентами и контентом"],
   clients: ["Клиенты", "CRM и управление клиентами"],
   strategies: ["Стратегии", "Контент-стратегии клиентов"],
   plans: ["Контент-планы", "Календарь и планы публикаций"],
@@ -68,10 +68,12 @@ function showPage(name){
   document.getElementById("pageSubtitle").textContent = meta[1];
 
   if(name === "users") loadUsers();
+  if(name === "clients") loadClients();
 }
 
 async function loadUsers(){
   const box = document.getElementById("usersList");
+  if(!box) return;
   box.textContent = "Загрузка...";
 
   try{
@@ -83,14 +85,15 @@ async function loadUsers(){
     }
 
     box.innerHTML = users.map(u => `
-      <div class="user-row">
+      <div class="row">
         <div>
-          <div class="user-email">${u.email}</div>
-          <div class="user-meta">
-            role: ${u.role} · tenant: ${u.tenant_id ?? "-"} · client: ${u.client_id ?? "-"} · active: ${u.is_active}
-          </div>
+          <div class="row-title">${u.email}</div>
+          <div class="row-meta">role: ${u.role} · tenant: ${u.tenant_id ?? "-"} · client: ${u.client_id ?? "-"}</div>
         </div>
-        <button class="danger" onclick="deactivateUser(${u.id})">Отключить</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="badge ${u.is_active ? "active" : "disabled"}">${u.is_active ? "ACTIVE" : "OFF"}</span>
+          <button class="danger" onclick="deactivateUser(${u.id})">Отключить</button>
+        </div>
       </div>
     `).join("");
   }catch(e){
@@ -114,11 +117,9 @@ async function createUser(){
       })
     });
 
-    document.getElementById("userEmail").value = "";
-    document.getElementById("userPassword").value = "";
-    document.getElementById("userClientId").value = "";
-    document.getElementById("userFirstName").value = "";
-    document.getElementById("userLastName").value = "";
+    ["userEmail","userPassword","userClientId","userFirstName","userLastName"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
 
     await loadUsers();
     alert("Пользователь создан");
@@ -133,6 +134,56 @@ async function deactivateUser(id){
   try{
     await api("/api/admin/users/" + id, {method:"DELETE"});
     await loadUsers();
+  }catch(e){
+    alert(e.message);
+  }
+}
+
+async function loadClients(){
+  const box = document.getElementById("clientsList");
+  if(!box) return;
+  box.textContent = "Загрузка...";
+
+  try{
+    const clients = await api("/api/clients");
+
+    if(!clients.length){
+      box.textContent = "Клиентов пока нет";
+      return;
+    }
+
+    box.innerHTML = clients.map(c => `
+      <div class="row">
+        <div>
+          <div class="row-title">${c.name || "Без названия"}</div>
+          <div class="row-meta">brand: ${c.brand || "-"} · niche: ${c.niche || "-"} · status: ${c.status || "-"}</div>
+        </div>
+        <button class="primary small" onclick="alert('Карточка клиента будет следующим блоком')">Открыть</button>
+      </div>
+    `).join("");
+  }catch(e){
+    box.innerHTML = `<span style="color:#fca5a5">${e.message}</span>`;
+  }
+}
+
+async function createClient(){
+  try{
+    await api("/api/clients", {
+      method:"POST",
+      body:JSON.stringify({
+        name:document.getElementById("clientName").value.trim(),
+        brand:document.getElementById("clientBrand").value.trim() || null,
+        niche:document.getElementById("clientNiche").value.trim() || null,
+        status:"active"
+      })
+    });
+
+    ["clientName","clientBrand","clientNiche"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+
+    await loadClients();
+    alert("Клиент создан");
   }catch(e){
     alert(e.message);
   }

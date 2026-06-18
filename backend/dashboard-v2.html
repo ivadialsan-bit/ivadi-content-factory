@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IVADI SaaS Dashboard</title>
+  <title>IVADI Content Factory — SaaS Dashboard</title>
   <link rel="stylesheet" href="/static/dashboard-v2.css" />
 </head>
 <body>
@@ -12,20 +12,25 @@
       <div class="brand-mark">I</div>
       <div>
         <div class="brand-title">IVADI</div>
-        <div class="brand-sub">Content Factory</div>
+        <div class="brand-sub">Content Factory SaaS</div>
       </div>
     </div>
 
+    <div class="nav-label">Рабочее пространство</div>
     <nav class="nav">
-      <button class="nav-item active" data-page="home">Главная</button>
-      <button class="nav-item" data-page="clients">Клиенты</button>
-      <button class="nav-item" data-page="strategies">Стратегии</button>
-      <button class="nav-item" data-page="plans">Контент-планы</button>
-      <button class="nav-item" data-page="channels">Каналы</button>
-      <button class="nav-item" data-page="youtube">YouTube</button>
-      <button class="nav-item" data-page="users">Пользователи</button>
-      <button class="nav-item" data-page="audit">Аудит</button>
-      <button class="nav-item" data-page="settings">Настройки</button>
+      <button class="nav-item active" data-page="home"><span>📊</span> Главная</button>
+      <button class="nav-item" data-page="clients"><span>👥</span> Клиенты</button>
+      <button class="nav-item" data-page="strategies"><span>🧠</span> Стратегии</button>
+      <button class="nav-item" data-page="plans"><span>🗓️</span> Контент-планы</button>
+      <button class="nav-item" data-page="channels"><span>📡</span> Каналы</button>
+      <button class="nav-item" data-page="youtube"><span>▶️</span> YouTube</button>
+    </nav>
+
+    <div class="nav-label">Администрирование</div>
+    <nav class="nav">
+      <button class="nav-item" data-page="users"><span>🔐</span> Пользователи</button>
+      <button class="nav-item" data-page="audit"><span>🧾</span> Аудит</button>
+      <button class="nav-item" data-page="settings"><span>⚙️</span> Настройки</button>
     </nav>
 
     <div class="sidebar-footer">
@@ -38,43 +43,120 @@
     <header class="topbar">
       <div>
         <h1 id="pageTitle">Главная</h1>
-        <p id="pageSubtitle">Операционная панель SaaS</p>
+        <p id="pageSubtitle">Коммерческая панель управления клиентами и контентом</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="ghost-link" href="/dashboard.html">Старый dashboard</a>
+        <a class="ghost-link" href="/client-login.html">Client Portal</a>
       </div>
     </header>
 
     <section class="page active" data-page="home">
-      <div class="grid">
-        <div class="card"><div class="label">SaaS Core</div><div class="value">95%</div></div>
-        <div class="card"><div class="label">Security</div><div class="value">95%</div></div>
-        <div class="card"><div class="label">Client Portal</div><div class="value">80%</div></div>
-        <div class="card"><div class="label">Production</div><div class="value">70%</div></div>
+      <div class="hero">
+        <div>
+          <div class="eyebrow">SaaS-ready workspace</div>
+          <h2>Контент-система для управления клиентами, стратегиями и публикациями</h2>
+          <p>Чистый интерфейс для коммерческого использования: без экспериментальных модулей, без мусора, с понятной навигацией по ролям.</p>
+        </div>
+        <button class="primary small" onclick="showPage('clients')">Перейти к клиентам</button>
+      </div>
+
+      <div class="grid stats">
+        <div class="card"><div class="label">SaaS Core</div><div class="value">95%</div><div class="hint">Auth, RBAC, tenants</div></div>
+        <div class="card"><div class="label">Security</div><div class="value">95%</div><div class="hint">JWT + Refresh + Audit</div></div>
+        <div class="card"><div class="label">Client Portal</div><div class="value">80%</div><div class="hint">API + базовый UI</div></div>
+        <div class="card"><div class="label">Commercial UI</div><div class="value">V2</div><div class="hint">В разработке</div></div>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <h3>Что готово к показу</h3>
+          <div class="check-list">
+            <div>✅ Изоляция клиентов по tenant</div>
+            <div>✅ Клиентский кабинет</div>
+            <div>✅ Управление пользователями</div>
+            <div>✅ Аудит действий</div>
+            <div>✅ YouTube защищён ролями</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Следующие коммерческие блоки</h3>
+          <div class="roadmap">
+            <div><b>1</b><span>CRM клиентов в V2</span></div>
+            <div><b>2</b><span>Карточка клиента: профиль, стратегия, план</span></div>
+            <div><b>3</b><span>Client Portal UI v2</span></div>
+            <div><b>4</b><span>Отчёты и ROI</span></div>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="page" data-page="clients">
-      <div class="empty">CRM клиентов будет перенесён сюда из старого dashboard.</div>
+      <div class="page-head">
+        <div>
+          <h2>Клиенты</h2>
+          <p>Рабочая CRM для ведения клиентов внутри SaaS.</p>
+        </div>
+        <button class="primary small" onclick="loadClients()">Обновить</button>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <h3>Создать клиента</h3>
+          <input id="clientName" placeholder="Название клиента" />
+          <input id="clientBrand" placeholder="Бренд" />
+          <input id="clientNiche" placeholder="Ниша" />
+          <button class="primary" onclick="createClient()">Создать клиента</button>
+        </div>
+
+        <div class="panel">
+          <h3>Список клиентов</h3>
+          <div id="clientsList" class="list">Загрузка...</div>
+        </div>
+      </div>
     </section>
 
     <section class="page" data-page="strategies">
-      <div class="empty">Стратегии клиентов: список, статус, дата генерации.</div>
+      <div class="empty-card">
+        <h2>Стратегии</h2>
+        <p>Здесь будет единый список стратегий клиентов: дата генерации, статус, быстрый переход в карточку клиента.</p>
+      </div>
     </section>
 
     <section class="page" data-page="plans">
-      <div class="empty">Контент-планы: календарь, публикации, статусы.</div>
+      <div class="empty-card">
+        <h2>Контент-планы</h2>
+        <p>Здесь будет календарь публикаций по всем клиентам и платформам.</p>
+      </div>
     </section>
 
     <section class="page" data-page="channels">
-      <div class="empty">Каналы клиентов: YouTube, VK, Telegram, MAX.</div>
+      <div class="empty-card">
+        <h2>Каналы</h2>
+        <p>Здесь будут подключённые аккаунты клиентов: YouTube, VK, Telegram, MAX и другие платформы.</p>
+      </div>
     </section>
 
     <section class="page" data-page="youtube">
-      <div class="empty">YouTube управление будет перенесено отдельным модулем.</div>
+      <div class="empty-card">
+        <h2>YouTube</h2>
+        <p>Коммерческий модуль YouTube будет перенесён из старого dashboard отдельным чистым блоком.</p>
+      </div>
     </section>
 
     <section class="page" data-page="users">
+      <div class="page-head">
+        <div>
+          <h2>Пользователи</h2>
+          <p>Создание сотрудников, менеджеров и клиентских доступов.</p>
+        </div>
+        <button class="primary small" onclick="loadUsers()">Обновить</button>
+      </div>
+
       <div class="split">
         <div class="panel">
-          <h2>Создать пользователя</h2>
+          <h3>Создать пользователя</h3>
           <input id="userEmail" placeholder="Email" />
           <input id="userPassword" type="password" placeholder="Пароль" />
           <select id="userRole">
@@ -85,22 +167,28 @@
           <input id="userClientId" placeholder="Client ID для клиента" />
           <input id="userFirstName" placeholder="Имя" />
           <input id="userLastName" placeholder="Фамилия" />
-          <button class="primary" onclick="createUser()">Создать</button>
+          <button class="primary" onclick="createUser()">Создать пользователя</button>
         </div>
 
         <div class="panel">
-          <h2>Пользователи</h2>
+          <h3>Пользователи</h3>
           <div id="usersList" class="list">Загрузка...</div>
         </div>
       </div>
     </section>
 
     <section class="page" data-page="audit">
-      <div class="empty">Audit UI будет подключён после API списка логов.</div>
+      <div class="empty-card">
+        <h2>Аудит</h2>
+        <p>Backend уже пишет события. Следующий шаг — API чтения audit_logs и таблица действий.</p>
+      </div>
     </section>
 
     <section class="page" data-page="settings">
-      <div class="empty">Настройки tenant, интеграций и доступа.</div>
+      <div class="empty-card">
+        <h2>Настройки</h2>
+        <p>Здесь будут настройки tenant, домена, интеграций, безопасности и backup.</p>
+      </div>
     </section>
   </main>
 
