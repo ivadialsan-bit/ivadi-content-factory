@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>IVADI Client Portal — Login</title>
+</head>
+<body>
+  <h1>IVADI Client Portal</h1>
+
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button onclick="login()">Войти</button>
+
+  <p id="error" style="color:red;"></p>
+
+  <script>
+    async function login() {
+      const error = document.getElementById('error');
+      error.textContent = '';
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.access_token) {
+        error.textContent = data.detail || 'Ошибка входа';
+        return;
+      }
+
+      localStorage.setItem('ivadi_access_token', data.access_token);
+      window.location.href = '/client-dashboard.html';
+    }
+  </script>
+</body>
+</html>

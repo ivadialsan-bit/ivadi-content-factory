@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>IVADI Client Portal</title>
+</head>
+<body>
+  <h1>Клиентский кабинет IVADI</h1>
+
+  <button onclick="logout()">Выйти</button>
+
+  <h2>Клиент</h2>
+  <pre id="me">Загрузка...</pre>
+
+  <h2>Профиль</h2>
+  <pre id="profile">Загрузка...</pre>
+
+  <h2>Интеллект-анализ</h2>
+  <pre id="intelligence">Загрузка...</pre>
+
+  <h2>Стратегия</h2>
+  <pre id="strategy">Загрузка...</pre>
+
+  <h2>Контент-план</h2>
+  <pre id="contentPlan">Загрузка...</pre>
+
+  <h2>Брифы</h2>
+  <pre id="briefs">Загрузка...</pre>
+
+  <script>
+    const token = localStorage.getItem('ivadi_access_token');
+
+    if (!token) {
+      window.location.href = '/client-login.html';
+    }
+
+    async function api(path) {
+      const res = await fetch(path, {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('ivadi_access_token');
+        window.location.href = '/client-login.html';
+        return null;
+      }
+
+      return await res.json();
+    }
+
+    function render(id, data) {
+      document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function loadPortal() {
+      render('me', await api('/api/client-portal/me'));
+      render('profile', await api('/api/client-portal/profile'));
+      render('intelligence', await api('/api/client-portal/intelligence'));
+      render('strategy', await api('/api/client-portal/strategy'));
+      render('contentPlan', await api('/api/client-portal/content-plan/latest'));
+      render('briefs', await api('/api/client-portal/briefs'));
+    }
+
+    function logout() {
+      localStorage.removeItem('ivadi_access_token');
+      window.location.href = '/client-login.html';
+    }
+
+    loadPortal();
+  </script>
+</body>
+</html>
