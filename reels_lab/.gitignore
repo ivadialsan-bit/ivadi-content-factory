@@ -1,0 +1,9 @@
+out/
+voice_inputs/
+*.wav
+*.mp3
+*.mp4
+*.report.json
+.venv*/
+__pycache__/
+*.pyc
