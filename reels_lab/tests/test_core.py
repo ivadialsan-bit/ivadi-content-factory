@@ -3,6 +3,7 @@ import unittest
 import wave
 from pathlib import Path
 import numpy as np
+from PIL import ImageStat
 from reels_lab.audio import RATE, read_mono_pcm, timeline, write_mix
 from reels_lab.graphics import frame
 
@@ -34,11 +35,12 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(actual.ndim, 1)
             self.assertLessEqual(float(np.max(np.abs(actual))), 0.961)
 
-    def test_frame_size(self):
+    def test_frame_size_and_visible_graphics(self):
         t = timeline(self.story, self.clips)
         picture = frame(t, 0.5, 360, 640)
         self.assertEqual(picture.size, (360, 640))
-        self.assertNotEqual(picture.getpixel((0, 0)), picture.getpixel((180, 480)))
+        # Avoid sampling two arbitrary pixels that may both be background.
+        self.assertGreater(max(ImageStat.Stat(picture).stddev), 2.0)
 
 
 if __name__ == "__main__":
